@@ -1,0 +1,61 @@
+$brand: var(--dsh-accent, #6b1a96);
+$brand-soft: var(--dsh-accent-tint, rgba(107, 26, 150, 0.06));
+$text-primary: var(--dsh-text, #1a1a2e);
+$text-secondary: var(--dsh-text-soft, #5a5a72);
+$border: var(--dsh-border, #e8e8f0);
+
+.guideStepEntity {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.entityHeader {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.headerTitle {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-primary;
+  letter-spacing: -0.01em;
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.entityBody {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.entityFooter {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid $border;
+}

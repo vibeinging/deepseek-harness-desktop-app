@@ -1,0 +1,215 @@
+
+.dataSourceSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+
+  .selectorLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dsh-text, #303133);
+    white-space: nowrap;
+  }
+}
+
+.noDataSourceHint {
+  padding: 40px 0;
+}
+
+.columnValueDialogContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: calc(76vh - 100px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tableColumnSelectionPanel {
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+  gap: 0;
+}
+
+.selectedConfigsPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.areaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+
+  h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+  }
+}
+
+.configsListContainer {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.noConfigsHint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .hintText {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.columnValueConfigItem {
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  border: 1px solid var(--dsh-border, #e4e7ed);
+  padding: 12px;
+
+  .configItemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .configItemInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .configColumnName {
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+    font-size: 14px;
+  }
+
+  .configRuleSection {
+    margin-bottom: 12px;
+
+    .ruleLabel {
+      display: block;
+      font-size: 12px;
+      color: var(--dsh-muted, #909399);
+      margin-bottom: 6px;
+    }
+  }
+
+  .configMetadataSection {
+    .metadataHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .metadataLabel {
+      font-size: 12px;
+      color: var(--dsh-muted, #909399);
+    }
+
+    .metadataActions {
+      display: flex;
+      gap: 4px;
+    }
+  }
+}
+
+.metadataOptionDesc {
+  font-size: 12px;
+  color: var(--dsh-muted, #909399);
+  margin-left: 8px;
+}
+
+.dataSourceSelectField {
+  width: 300px;
+  max-width: 100%;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+@include mobile {
+  .dataSourceSelector {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 8px;
+
+    .selectorLabel {
+      white-space: normal;
+    }
+  }
+
+  .dataSourceSelectField {
+    width: 100% !important;
+  }
+
+  .columnValueDialogContent {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: min(70vh, 620px);
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .tableColumnSelectionPanel {
+    flex-direction: column;
+    max-height: 42vh;
+    min-height: 200px;
+    overflow: auto;
+  }
+
+  .selectedConfigsPanel {
+    max-height: 38vh;
+    min-height: 160px;
+    overflow: auto;
+  }
+
+  .configMetadataSection .metadataHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    .metadataActions {
+      width: 100%;
+      flex-wrap: wrap;
+
+      button {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+}

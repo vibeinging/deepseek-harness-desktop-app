@@ -1,0 +1,43 @@
+
+.dynamicInferenceEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.fieldSection,
+.descriptionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsh-text, #303133);
+  margin-bottom: 4px;
+}
+
+.hintSection {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dsh-muted, #909399);
+  line-height: 1.5;
+  min-width: 0;
+  flex-wrap: wrap;
+
+  .hintIcon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+@include mobile {
+  .dynamicInferenceEditor {
+    min-width: 0;
+  }
+}

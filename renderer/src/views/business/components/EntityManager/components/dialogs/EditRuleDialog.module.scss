@@ -1,0 +1,64 @@
+.editRuleDialogContent {
+  .ruleInfo {
+    margin-bottom: 16px;
+  }
+
+  .ruleInputSection {
+    .ruleLabel {
+      display: block;
+      font-size: 14px;
+      color: var(--dsh-text-soft, #606266);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    // show-word-limit → word count
+    .wordLimit {
+      text-align: right;
+      font-size: 12px;
+      color: var(--el-text-color-placeholder, #a8abb2);
+      margin-top: 4px;
+    }
+  }
+}
+
+// Simple description table equivalent to el-descriptions (border + size=small)
+.descriptions {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--el-border-color-lighter, #ebeef5);
+  font-size: 13px;
+
+  th,
+  td {
+    border: 1px solid var(--el-border-color-lighter, #ebeef5);
+    padding: 8px 11px;
+    text-align: left;
+  }
+
+  .descLabel {
+    width: 120px;
+    font-weight: 700;
+    color: var(--el-text-color-regular, #606266);
+    background: var(--el-fill-color-light, #fafafa);
+    white-space: nowrap;
+  }
+
+  .descContent {
+    color: var(--el-text-color-primary, #303133);
+    word-break: break-all;
+  }
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+// Mobile: reduce dialog max width while preserving the original media-query intent
+@media (max-width: 767px) {
+  .editRuleEntityDialog {
+    max-width: 96vw;
+    margin: 5vh auto !important;
+  }
+}

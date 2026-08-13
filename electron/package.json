@@ -1,0 +1,135 @@
+{
+  "name": "dsh-desktop",
+  "productName": "dsh-work",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "dsh-work 桌面应用，基于 Electron 承载 React 渲染层与本地 Node 后端",
+  "author": "DeepSeek AI",
+  "private": true,
+  "main": "main.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs",
+    "dev": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs",
+    "dev:prepare": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs --prepare-only",
+    "build:renderer": "node ../scripts/run-with-project-node.mjs npm --prefix .. run build:desktop-assets",
+    "prepare:mac": "node ../scripts/run-with-project-node.mjs node scripts/prepare-package.mjs --platform darwin --arch arm64",
+    "prepare:mac:x64": "node ../scripts/run-with-project-node.mjs node scripts/prepare-package.mjs --platform darwin --arch x64",
+    "prepare:win": "node ../scripts/run-with-project-node.mjs node scripts/prepare-package.mjs --platform win32 --arch x64",
+    "smoke:packaged-server": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-server.mjs ../release/mac-arm64/dsh-work.app",
+    "smoke:packaged-app": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-app.mjs ../release/mac-arm64/dsh-work.app",
+    "smoke:browser-workspace": "node ../scripts/run-with-project-node.mjs exec ./node_modules/.bin/electron scripts/browser-workspace-smoke.cjs",
+    "smoke:mac:x64:server": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-server.mjs ../release/mac/dsh-work.app",
+    "smoke:mac:x64:app": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-app.mjs ../release/mac/dsh-work.app",
+    "smoke:win:server": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-server.mjs ../release/win-unpacked",
+    "smoke:win:app": "node ../scripts/run-with-project-node.mjs node scripts/smoke-packaged-app.mjs ../release/win-unpacked",
+    "package:mac:dir": "node ../scripts/run-with-project-node.mjs npm run package:mac:dir:project",
+    "package:mac:dir:project": "npm run build:renderer && npm run prepare:mac && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --arm64 --dir",
+    "package:mac:x64:dir": "node ../scripts/run-with-project-node.mjs npm run package:mac:x64:dir:project",
+    "package:mac:x64:dir:project": "npm run build:renderer && npm run prepare:mac:x64 && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --x64 --dir",
+    "package:mac": "node ../scripts/run-with-project-node.mjs npm run package:mac:project",
+    "package:mac:project": "npm --prefix .. run release:check:mac:static && npm run build:renderer && npm run prepare:mac && electron-builder --mac --arm64 -c.forceCodeSigning=true -c.mac.notarize=true && npm --prefix .. run release:verify:mac",
+    "package:mac:x64": "node ../scripts/run-with-project-node.mjs npm run package:mac:x64:project",
+    "package:mac:x64:project": "npm --prefix .. run release:check:mac:static && npm run build:renderer && npm run prepare:mac:x64 && electron-builder --mac --x64 -c.forceCodeSigning=true -c.mac.notarize=true && npm --prefix .. run release:verify:mac:x64",
+    "package:win:dir": "node ../scripts/run-with-project-node.mjs npm run package:win:dir:project",
+    "package:win:dir:project": "npm run build:renderer && npm run prepare:win && electron-builder --win --x64 --dir",
+    "package:win": "node ../scripts/run-with-project-node.mjs npm run package:win:project",
+    "package:win:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 -c.forceCodeSigning=true && npm --prefix .. run release:verify:win"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.2",
+    "electron-builder": "^26.0.12",
+    "electron": "^42.4.1"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "overrides": {
+    "js-yaml": "^4.3.1"
+  },
+  "build": {
+    "appId": "ai.deepseek.dsh",
+    "productName": "dsh-work",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "../release",
+      "buildResources": "icons"
+    },
+    "files": [
+      "main.js",
+      "app-update-controller.js",
+      "artifact-context-menu.js",
+      "attachment-grants.js",
+      "preload.js",
+      "browser-workspace.js",
+      "skin-settings-store.js",
+      "network-proxy-settings.js",
+      "web-search-settings.js",
+      "icons/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../renderer/dist",
+        "to": "renderer",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../.desktop-build/server",
+        "to": "server",
+        "filter": ["**/*", "!node_modules/**/*"]
+      },
+      {
+        "from": "../.desktop-build/server/node_modules",
+        "to": "server/node_modules",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../packages/dsh-product-bridge",
+        "to": "packages/dsh-product-bridge",
+        "filter": [
+          "package.json",
+          "cordis.patch.yml",
+          "README.md",
+          "README.zh.md",
+          "src/index.js"
+        ]
+      },
+      {
+        "from": "../LICENSE",
+        "to": "legal/LICENSE"
+      },
+      {
+        "from": "../PRIVACY.md",
+        "to": "legal/PRIVACY.md"
+      },
+      {
+        "from": "../SECURITY.md",
+        "to": "legal/SECURITY.md"
+      },
+      {
+        "from": "../THIRD_PARTY_NOTICES.md",
+        "to": "legal/THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "../legal/openai-agent-runtime-LICENSE.txt",
+        "to": "legal/openai-agent-runtime-LICENSE.txt"
+      }
+    ],
+    "mac": {
+      "icon": "icons/icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "notarize": true,
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "icon": "icons/icon.ico",
+      "target": ["nsis"]
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+  }
+}

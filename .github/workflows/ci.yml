@@ -1,0 +1,81 @@
+name: Desktop CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: ${{ matrix.name }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            os: macos-15
+            package_script: package:mac:dir
+            smoke_server: smoke:packaged-server
+            smoke_app: smoke:packaged-app
+          - name: Windows x64
+            os: windows-2025
+            package_script: package:win:dir
+            smoke_server: smoke:win:server
+            smoke_app: smoke:win:app
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            renderer/package-lock.json
+            server/package-lock.json
+            electron/package-lock.json
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Check native runtime
+        run: npm run doctor
+
+      - name: Audit production dependencies
+        run: npm run audit:prod
+
+      - name: Test
+        run: npm test
+
+      - name: Run deterministic UI Eval
+        if: runner.os == 'macOS'
+        run: npm run eval:pr -- --discard-failure-data
+
+      - name: Upload Eval evidence
+        if: always() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ matrix.name }}
+          path: eval/results/
+          if-no-files-found: ignore
+
+      - name: Build unpacked app
+        run: npm run ${{ matrix.package_script }}
+
+      - name: Smoke packaged server
+        run: npm --prefix electron run ${{ matrix.smoke_server }}
+
+      - name: Smoke packaged app
+        run: npm --prefix electron run ${{ matrix.smoke_app }}

@@ -1,0 +1,3 @@
+- insert:
+    - id: product-bridge
+      name: '@deepseek-ai/dsh-product-bridge'

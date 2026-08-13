@@ -1,0 +1,7 @@
+{
+  "name": "dsh-builtin",
+  "interface": {
+    "displayName": "DSH 内置能力"
+  },
+  "plugins": []
+}

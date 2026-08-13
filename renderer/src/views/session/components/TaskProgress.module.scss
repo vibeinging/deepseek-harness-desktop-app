@@ -1,0 +1,511 @@
+/* ─── Variable mapping ─────────────────────────────────── */
+$blue: var(--el-color-primary, #6366f1);
+$green: var(--el-color-success, #10b981);
+$red: var(--el-color-danger, #ef4444);
+$border: var(--el-border-color-lighter, #e2e8f0);
+$border-lo: var(--el-fill-color-light, #f1f5f9);
+$surface: var(--el-fill-color-extra-light, #f8fafc);
+$txt: var(--el-text-color-primary, #1e293b);
+$txt-2: var(--el-text-color-regular, #64748b);
+$txt-3: var(--el-text-color-placeholder, #94a3b8);
+$amber: var(--el-color-warning, #f59e0b);
+
+/* ─── Container ─────────────────────────────────────── */
+.taskProgress {
+  padding: 10px 0px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Step row (grid) ───────────────────────────── */
+.taskStep {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 0 12px;
+  position: relative;
+}
+
+/* ─── Track column ───────────────────────────────────── */
+.stepTrack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+}
+
+/* Connector line */
+.taskStep:not(:last-child) .stepTrack::after {
+  content: '';
+  flex: 1;
+  width: 1.5px;
+  min-height: 14px;
+  margin-top: 6px;
+  border-radius: 1px;
+  background: $border;
+  transition: background 0.6s ease;
+}
+
+.taskStep.sCompleted:not(:last-child) .stepTrack::after {
+  background: linear-gradient(to bottom, rgba(16, 185, 129, 0.35) 0%, #e2e8f0 100%);
+}
+
+/* ─── Node ─────────────────────────────────────── */
+.stepNode {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pending */
+.sPending .stepNode {
+  background: white;
+  border: 1.5px solid $border;
+}
+
+.nodeNum {
+  font-size: 11px;
+  font-family: var(--el-font-family, 'Helvetica Neue');
+  font-weight: 400;
+  color: $txt-3;
+  line-height: 1;
+}
+
+/* Running */
+.sRunning .stepNode {
+  background: $blue;
+  border: none;
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.35);
+  animation: node-ring 1.8s ease-out infinite;
+}
+
+@keyframes node-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+.nodeSpinner {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: spin 0.65s linear infinite;
+}
+
+/* Completed */
+.sCompleted .stepNode {
+  background: $green;
+  border: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.nodeCheck {
+  display: block;
+}
+
+/* Failed */
+.sFailed .stepNode {
+  background: $red;
+  border: none;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.nodeFail {
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Input Required (user input needed) */
+.sWaitingInput .stepNode {
+  background: $amber;
+  border: none;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35);
+  animation: node-ring-warn 1.8s ease-out infinite;
+}
+
+.sWaitingInput .stepTitle {
+  font-weight: 600;
+  color: $txt;
+}
+
+.nodeWarn {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+@keyframes node-ring-warn {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* ─── Step content ─────────────────────────────────── */
+.stepBody {
+  padding: 8px 0 20px;
+  min-height: 44px;
+}
+
+.taskStep:last-child .stepBody {
+  padding-bottom: 0;
+}
+
+.stepRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  width: 100%;
+}
+
+.stepTitle {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+  transition:
+    color 0.25s,
+    font-weight 0.25s;
+}
+
+/* L2-9: Node type icon (inline before title, neutral gray, not overriding state colors) */
+.stepTypeIcon {
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  color: $txt-3;
+  vertical-align: -2px;
+}
+
+.sPending .stepTitle {
+  font-weight: 400;
+  color: $txt-3;
+}
+
+.sRunning .stepTitle {
+  font-weight: 600;
+  color: $txt;
+}
+
+.sCompleted .stepTitle {
+  font-weight: 500;
+  color: $txt-2;
+}
+
+.sFailed .stepTitle {
+  font-weight: 500;
+  color: $red;
+}
+
+/* Skipped (branch pruning / cascading skip — gray dashed border, L2; separate class, no shared generic properties) */
+.sSkipped .stepNode {
+  background: $surface;
+  border: 1.5px dashed $txt-3;     /* Dashed edge means this condition route was not taken (LangGraph Studio style) */
+  box-shadow: none;
+}
+
+.nodeSkip {
+  font-size: 13px;
+  font-weight: 700;
+  color: $txt-3;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+.sSkipped .stepTitle {
+  font-weight: 400;
+  color: $txt-3;
+  text-decoration: line-through;   /* Strike-through to emphasize the branch was not executed */
+  text-decoration-color: rgba(148, 163, 184, 0.6);
+}
+
+/* Faded connector for skipped nodes, different from solid lines / completed gradient */
+.taskStep.sSkipped:not(:last-child) .stepTrack::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    $txt-3 0 3px,
+    transparent 3px 7px
+  );
+  opacity: 0.5;
+}
+
+/* L2-7: Skipped node reason note (e.g., "branch XX was not taken") */
+.stepSkipReason {
+  margin-left: 8px;
+  font-size: 11px;
+  color: $txt-3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+/* L1-6: Yellow node hint chip (visible during system correction: fallback when view misses / choose best among candidates) */
+.stepHint {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: $amber;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+
+/* ─── Detail chip ────────────────────────────────── */
+.chipDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  color: $txt-3;
+  border: 1px solid $border;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $border;
+    background: $border-lo;
+    color: $txt-2;
+  }
+
+  &.open {
+    background: rgba(99, 102, 241, 0.07);
+    border-color: rgba(99, 102, 241, 0.22);
+    color: $blue;
+  }
+}
+
+.chipChevron {
+  display: inline-block;
+  transition: transform 0.22s ease;
+  opacity: 0.65;
+  font-size: 10px;
+
+  .chipDone.open & {
+    transform: rotate(90deg);
+    opacity: 1;
+  }
+}
+
+/* ─── Expanded details panel ─────────────────────────────── */
+.stepDetail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.24s;
+  opacity: 0;
+
+  &.open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+.stepDetailWrap {
+  overflow: hidden;
+}
+
+.stepDetailInner {
+  margin-top: 12px;
+  padding: 6px;
+  background: $surface;
+  border: 1px solid $border-lo;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Completion summary row ───────────────────────────────── */
+.taskRailFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0 2px;
+  margin-top: 6px;
+  border-top: 1px solid $border-lo;
+}
+
+.trfDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $green;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.18);
+  flex-shrink: 0;
+}
+
+.trfText {
+  font-size: 12px;
+  color: $txt-3;
+  font-weight: 300;
+
+  strong {
+    color: $green;
+    font-weight: 500;
+  }
+}
+
+.trfReviewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 100px;
+  background: rgba(99, 102, 241, 0.05);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--el-color-primary, #6366f1);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.4);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+/* ─── Step loading ────────────────────────────── */
+.stepLoading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  color: $txt-3;
+  font-size: 12px;
+}
+
+.stepLoadingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $blue;
+  animation: loading-pulse 1.4s ease-in-out infinite;
+}
+
+.stepLoadingBounce {
+  display: inline-flex;
+  gap: 3px;
+
+  span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: $txt-3;
+    animation: bounce-dot 1.2s ease-in-out infinite;
+  }
+
+  span:nth-child(2) { animation-delay: 0.2s; }
+  span:nth-child(3) { animation-delay: 0.4s; }
+}
+
+@keyframes bounce-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes loading-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== Mobile Responsive (max-width: 767px) ========== */
+@media (max-width: 767px) {
+  .taskStep {
+    grid-template-columns: 28px 1fr;
+    gap: 0 8px;
+  }
+
+  .stepNode {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nodeNum {
+    font-size: 10px;
+  }
+
+  .nodeSpinner {
+    width: 9px;
+    height: 9px;
+  }
+
+  .nodeWarn {
+    font-size: 12px;
+  }
+
+  .stepBody {
+    padding: 6px 0 14px;
+    min-height: 36px;
+  }
+
+  .stepRow {
+    gap: 6px;
+    min-height: 24px;
+  }
+
+  .stepTitle {
+    font-size: 13px;
+  }
+
+  .chipDone {
+    padding: 2px 8px;
+    font-size: 10px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .stepDetailInner {
+    margin-top: 8px;
+    padding: 4px;
+  }
+
+  .taskRailFooter {
+    padding: 12px 0 2px;
+  }
+
+  .trfText {
+    font-size: 11px;
+  }
+}

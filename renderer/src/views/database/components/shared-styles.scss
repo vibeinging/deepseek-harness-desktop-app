@@ -1,0 +1,186 @@
+/* Shared iOS-style styles used by table info, business rules, and sample data views */
+/* Global styles (non-module): imported once by each database tab view with raw kebab-case class names */
+
+/* Full container */
+.tab-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* Top action card */
+.operations-card {
+  border: 1px solid var(--dsh-border-soft, #e5e7eb);
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.operations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Search card */
+.search-card {
+  border: 1px solid var(--dsh-border-soft, #e5e7eb);
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  padding: 14px 16px;
+  flex-shrink: 0;
+}
+
+/* Stats card */
+.stats-card {
+  border: 1px solid var(--dsh-border-soft, #e5e7eb);
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+/* Main content area - fills remaining height */
+.content-card {
+  border: 1px solid var(--dsh-border-soft, #e5e7eb);
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  padding: 16px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Content scroll container */
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  overflow-x: hidden;
+}
+
+/* Pagination container */
+.pagination-wrapper {
+  padding-top: 16px;
+  border-top: 1px solid var(--dsh-border-soft, #f5f7fa);
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* Empty state */
+.empty-placeholder {
+  display: flex;
+  justify-content: center;
+  min-height: 200px;
+  flex: 1;
+}
+
+/* Loading state */
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  flex: 1;
+
+  .loading-content {
+    text-align: center;
+
+    .loading-icon {
+      color: var(--dsh-accent, #6366f1);
+      margin-bottom: 16px;
+      animation: rotate 2s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 16px;
+      color: var(--dsh-text, #303133);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .loading-subtext {
+      font-size: 14px;
+      color: var(--dsh-muted, #909399);
+    }
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-container {
+    height: auto;
+    display: block;
+  }
+
+  .content-card {
+    flex: none;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding: 12px;
+    display: block;
+  }
+
+  .scrollable-content {
+    overflow-y: auto;
+    display: block;
+  }
+
+  .operations-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    h3 {
+      text-align: center;
+      justify-content: center;
+    }
+  }
+
+  .header-actions {
+    justify-content: center;
+    width: 100%;
+
+    .el-button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+
+  /* Use vertical layout for table structure view on mobile */
+  .table-structure {
+    display: block;
+    height: auto;
+  }
+}

@@ -1,0 +1,437 @@
+/* MetricManager styles were migrated from Vue <style scoped>.
+   shared-styles.scss provided tab-container / content-card / operations-header /
+   header-actions / header-intro, but React has no shared file for them yet, so they are inlined here to keep the same appearance. */
+
+/* ===== Shared layout classes (from shared-styles.scss) ===== */
+.tabContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.operationsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.headerIntro {
+  flex: 1;
+  min-width: 0;
+
+  span {
+    font-size: 13px;
+    color: var(--dsh-text-soft, #606266);
+    line-height: 1.5;
+  }
+}
+
+.contentCard {
+  background: var(--dsh-surface, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== MetricManager-specific styles ===== */
+.metricsSection {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.metricsList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bulkSelectBanner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--el-color-primary-light-9);
+  border: 1px solid var(--el-color-primary-light-7);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+}
+
+.metricsTable {
+  width: 100%;
+  margin-top: 10px;
+
+  thead th {
+    background-color: transparent !important;
+    font-weight: 500;
+    color: var(--dsh-muted, #909399);
+  }
+
+  tbody tr {
+    cursor: pointer;
+  }
+}
+
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .nameText {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dsh-text, #303133);
+  }
+
+  .nameDesc {
+    font-size: 12px;
+    color: var(--dsh-muted, #909399);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.sqlText {
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--dsh-text-soft, #606266);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.embeddingCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  .refreshIcon {
+    font-size: 14px;
+    color: var(--el-color-warning);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    &.loading {
+      animation: rotate 1s linear infinite;
+    }
+  }
+}
+
+.actionLinks {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+
+  .actionLink {
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &.primary {
+      color: var(--el-color-primary);
+    }
+
+    &.danger {
+      color: var(--el-color-danger);
+    }
+
+    &.loading {
+      color: var(--dsh-muted, #909399);
+      cursor: default;
+    }
+
+    &:hover:not(.loading) {
+      opacity: 0.7;
+    }
+  }
+}
+
+.bulkSelectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  user-select: none;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+
+  .bulkSelectCancel {
+    font-size: 12px;
+    color: var(--el-color-primary);
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+.paginationWrapper {
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.bulkImportContent {
+  .selectedFile {
+    margin-top: 16px;
+    padding: 8px;
+    background: var(--dsh-code-bg, #f5f7fa);
+    border-radius: 4px;
+  }
+}
+
+.schemaSection {
+  border: 1px solid var(--dsh-border, #e4e7ed);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.schemaSelectorHeader {
+  padding: 12px 16px;
+  background: var(--dsh-bg, #f8f9fa);
+  border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+  flex-shrink: 0;
+}
+
+.noDatasourceHint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.metricFormRef {
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.fullWidthFormItem {
+  width: 100%;
+}
+
+.rowSC {
+  display: flex;
+  align-items: center;
+}
+
+/* Search dialog styles */
+.searchDialogContent {
+  .searchInput {
+    margin-bottom: 20px;
+  }
+
+  .searchIconBtn {
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--dsh-text-soft, #606266);
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+
+    &:hover {
+      color: #409eff;
+    }
+
+    &.searching {
+      animation: rotate 1s linear infinite;
+    }
+  }
+}
+
+.searchResultsList {
+  max-height: 500px;
+  overflow-y: auto;
+
+  .resultsHeader {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+
+    h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--dsh-text, #303133);
+    }
+  }
+
+  .resultsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .resultItem {
+    border: 1px solid var(--dsh-border, #e4e7ed);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #409eff;
+      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+    }
+
+    .resultHeader {
+      margin-bottom: 8px;
+    }
+
+    .resultBody {
+      .resultName,
+      .resultDescription {
+        margin-bottom: 8px;
+        font-size: 14px;
+
+        .label {
+          color: var(--dsh-muted, #909399);
+          margin-right: 8px;
+        }
+
+        .content {
+          color: var(--dsh-text, #303133);
+        }
+      }
+
+      .resultSql {
+        .label {
+          color: var(--dsh-muted, #909399);
+          margin-right: 8px;
+          font-size: 14px;
+        }
+
+        .content {
+          background: var(--dsh-code-bg, #f5f7fa);
+          padding: 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-family: 'Courier New', monospace;
+          white-space: pre-wrap;
+          word-break: break-word;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+.noResults {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.codeKnowledgeHelpContent {
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+    margin: 20px 0 12px;
+  }
+
+  p {
+    margin: 8px 0;
+  }
+
+  ul {
+    margin: 8px 0;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Tablet ===== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .schemaSelectorHeader {
+    width: 100% !important;
+  }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 767px) {
+  /* Horizontal table scrolling */
+  .metricsList {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: 8px;
+    border: 1px solid var(--el-border-color-lighter);
+    padding: 2px;
+    scrollbar-width: thin;
+
+    .metricsTable {
+      min-width: 700px;
+    }
+  }
+
+  .metricsTable {
+    .actionLinks {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+
+      .actionLink {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 4px;
+      }
+    }
+  }
+
+  .paginationWrapper {
+    padding: 10px 4px;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .metricFormRef {
+    max-height: calc(90vh - 120px);
+    padding: 6px;
+  }
+
+  .schemaSelectorHeader {
+    width: 100% !important;
+  }
+}

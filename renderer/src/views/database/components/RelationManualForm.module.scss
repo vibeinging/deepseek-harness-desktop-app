@@ -1,0 +1,14 @@
+// RelationManualForm.vue has no <style scoped>; this adds equivalent spacing and top label styles
+
+.relationManualForm {
+  width: 100%;
+
+  // el-form-item-like spacing: bottom margin kept, label aligned above
+  .formItem {
+    margin-bottom: 18px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

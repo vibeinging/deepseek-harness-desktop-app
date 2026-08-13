@@ -1,0 +1,185 @@
+.filterableMultiSelect {
+  width: 100%;
+}
+
+.trigger {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--el-border-color);
+  background: var(--el-fill-color-blank);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.triggerOpen {
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 1px rgba(64, 158, 255, 0.16);
+}
+
+.triggerDisabled {
+  cursor: not-allowed;
+  background: var(--el-disabled-bg-color);
+  color: var(--el-text-color-placeholder);
+}
+
+.tags {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.placeholder {
+  min-width: 0;
+  flex: 1;
+  color: var(--el-text-color-placeholder);
+}
+
+.more {
+  color: var(--dsh-muted, #7a869a);
+  font-size: 12px;
+}
+
+.arrow {
+  flex-shrink: 0;
+  color: var(--dsh-faint, #98a2b3);
+  display: inline-flex;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--dsh-border-soft, #edf1f7);
+}
+
+.meta {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dsh-muted, #7a869a);
+}
+
+.toggleAll,
+.option {
+  appearance: none;
+  border: 0;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+}
+
+.toggleAll {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  color: var(--dsh-text-soft, #334155);
+  cursor: pointer;
+}
+
+.toggleAllDisabled {
+  cursor: not-allowed;
+  color: var(--dsh-faint, #98a2b3);
+}
+
+.create {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: var(--el-color-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid var(--dsh-border, #cbd5e1);
+  background: var(--dsh-surface, #fff);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+.checkSelected {
+  border-color: #409eff;
+  background: #409eff;
+  color: #fff;
+}
+
+// Indeterminate (toggle-all): draw a horizontal line inside the square
+.checkIndeterminate {
+  border-color: #409eff;
+  background: #eff6ff;
+
+  &::after {
+    content: '';
+    width: 8px;
+    height: 2px;
+    border-radius: 999px;
+    background: #409eff;
+  }
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--dsh-surface, #fff);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--dsh-hover, #f8fafc);
+  border-color: var(--dsh-border, #d8e3f0);
+}
+
+.optionSelected {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.optionLabel {
+  min-width: 0;
+  display: block;
+  max-width: 100%;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.empty {
+  padding: 16px 0;
+  text-align: center;
+  color: var(--dsh-faint, #98a2b3);
+  font-size: 13px;
+}

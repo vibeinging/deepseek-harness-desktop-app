@@ -1,0 +1,1330 @@
+/**
+ * Shared component styles
+ *
+ * This file contains common UI component style patterns used in the project.
+ * Use classes directly in components without additional imports.
+ */
+
+/* ========================================
+   Color variables
+   ======================================== */
+:root {
+  // Primary color
+  --ad-primary: #6366f1;
+  --ad-primary-light: rgba(99, 102, 241, 0.08);
+  --ad-primary-lighter: rgba(99, 102, 241, 0.04);
+
+  // Text colors
+  --ad-text-primary: #1e293b;
+  --ad-text-secondary: #64748b;
+  --ad-text-muted: #94a3b8;
+
+  // Border colors
+  --ad-border: #e2e8f0;
+  --ad-border-light: #f1f5f9;
+
+  // Background colors
+  --ad-bg-white: #ffffff;
+  --ad-bg-gray: #f8fafc;
+  --ad-bg-hover: #f1f5f9;
+
+  // Danger color
+  --ad-danger: #ef4444;
+  --ad-danger-light: rgba(239, 68, 68, 0.08);
+
+  // Success color
+  --ad-success: #10b981;
+
+  // Warning color
+  --ad-warning: #f59e0b;
+
+  // Spacing
+  --ad-spacing-xs: 4px;
+  --ad-spacing-sm: 8px;
+  --ad-spacing-md: 16px;
+  --ad-spacing-lg: 24px;
+  --ad-spacing-xl: 32px;
+
+  // Border radius
+  --ad-radius-sm: 6px;
+  --ad-radius-md: 8px;
+  --ad-radius-lg: 12px;
+  --ad-radius-xl: 16px;
+
+  // Shadows
+  --ad-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --ad-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --ad-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ========================================
+   Detail view layout (Detail View Layout)
+   For: data source detail, business detail, document detail pages
+   ======================================== */
+
+// Detail view container
+.ad-detail-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ad-bg-white);
+  border-radius: var(--ad-radius-lg);
+  overflow: hidden;
+}
+
+// Detail header with back button and title
+.ad-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-spacing-sm);
+  padding: var(--ad-spacing-md) var(--ad-spacing-lg);
+  border-bottom: 1px solid var(--ad-border-light);
+  background: var(--ad-bg-white);
+  flex-shrink: 0;
+
+  .header-back-btn {
+    color: var(--ad-text-secondary);
+    padding: var(--ad-spacing-xs);
+
+    &:hover {
+      color: var(--ad-primary);
+    }
+  }
+
+  .header-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: var(--ad-spacing-sm);
+    flex-shrink: 0;
+  }
+}
+
+// Detail content area
+.ad-detail-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--ad-spacing-lg);
+}
+
+// Detail tabs
+// Note: :deep() cannot be used in global styles; it only works in Vue SFC scoped styles.
+.ad-detail-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .el-tabs__header {
+    margin: 0;
+    padding: 0 var(--ad-spacing-lg);
+    border-bottom: none;
+  }
+
+  .el-tabs__nav {
+    border-right: none;
+  }
+
+  .el-tabs__nav-wrap::after {
+    display: none;
+  }
+
+  .el-tabs__item {
+    height: 48px;
+    line-height: 48px;
+    font-size: 14px;
+    color: var(--ad-text-secondary);
+
+    &.is-active {
+      color: var(--ad-primary);
+      font-weight: 500;
+    }
+  }
+
+  .el-tabs__content {
+    flex: 1;
+    overflow: auto;
+    padding: var(--ad-spacing-lg);
+  }
+
+  .el-tab-pane {
+    height: 100%;
+  }
+}
+
+/* ========================================
+   List view (List View)
+   For: sidebar list, data source list, document list, etc.
+   ======================================== */
+
+// List toolbar
+.ad-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ad-spacing-md);
+  border-bottom: 1px solid var(--ad-border-light);
+  gap: var(--ad-spacing-md);
+
+  .toolbar-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: var(--ad-spacing-sm);
+    flex-shrink: 0;
+  }
+}
+
+// List container
+.ad-list-container {
+  flex: 1;
+  overflow: auto;
+  padding: var(--ad-spacing-sm);
+}
+
+// List item
+.ad-list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ad-spacing-md);
+  border-radius: var(--ad-radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: var(--ad-spacing-xs);
+
+  &:hover {
+    background: var(--ad-bg-hover);
+  }
+
+  &.is-active {
+    background: var(--ad-primary-light);
+
+    .item-name {
+      color: var(--ad-primary);
+    }
+  }
+
+  .item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--ad-radius-md);
+    background: var(--ad-primary-lighter);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ad-primary);
+    margin-right: var(--ad-spacing-md);
+    flex-shrink: 0;
+  }
+
+  .item-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ad-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-desc {
+    font-size: 12px;
+    color: var(--ad-text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    gap: var(--ad-spacing-xs);
+  }
+
+  &:hover .item-actions {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   Card components (Card Components)
+   For: content cards, action cards, and similar blocks
+   ======================================== */
+
+// Base card
+.ad-card {
+  background: var(--ad-bg-white);
+  border-radius: var(--ad-radius-lg);
+  padding: var(--ad-spacing-lg);
+
+  &.ad-card--bordered {
+    border: 1px solid var(--ad-border);
+  }
+
+  &.ad-card--shadow {
+    box-shadow: var(--ad-shadow-sm);
+  }
+}
+
+// Card header
+.ad-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ad-spacing-md);
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--ad-text-secondary);
+    margin-top: var(--ad-spacing-xs);
+  }
+}
+
+// Card body
+.ad-card-body {
+  // No default special styles
+}
+
+// Card footer
+.ad-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ad-spacing-sm);
+  margin-top: var(--ad-spacing-lg);
+  padding-top: var(--ad-spacing-md);
+  border-top: 1px solid var(--ad-border-light);
+}
+
+/* ========================================
+   Empty state
+   Used when there is no data
+   ======================================== */
+
+.ad-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ad-spacing-xl) var(--ad-spacing-lg);
+  text-align: center;
+
+  .empty-illustration {
+    margin-bottom: var(--ad-spacing-lg);
+    // Illustration container; component implementation provides the artwork
+  }
+
+  .empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+    margin-bottom: var(--ad-spacing-sm);
+  }
+
+  .empty-desc {
+    font-size: 14px;
+    color: var(--ad-text-secondary);
+    max-width: 320px;
+    line-height: 1.6;
+    margin-bottom: var(--ad-spacing-lg);
+  }
+
+  .empty-features {
+    display: flex;
+    gap: var(--ad-spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: var(--ad-spacing-lg);
+  }
+
+  .empty-action {
+    // Action buttons area
+  }
+}
+
+/* ========================================
+   Danger zone
+   For destructive actions like delete or reset
+   ======================================== */
+
+.ad-danger-zone {
+  border: 1px solid var(--ad-danger);
+  border-radius: var(--ad-radius-lg);
+  padding: var(--ad-spacing-lg);
+  background: var(--ad-danger-light);
+
+  .danger-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ad-danger);
+    margin-bottom: var(--ad-spacing-sm);
+  }
+
+  .danger-desc {
+    font-size: 13px;
+    color: var(--ad-text-secondary);
+    margin-bottom: var(--ad-spacing-md);
+  }
+
+  .danger-action {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+/* ========================================
+   Form section
+   For settings forms, edit forms, etc.
+   ======================================== */
+
+.ad-form-section {
+  margin-bottom: var(--ad-spacing-lg);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+    margin-bottom: var(--ad-spacing-md);
+    padding-bottom: var(--ad-spacing-sm);
+    border-bottom: 1px solid var(--ad-border-light);
+  }
+
+  .section-content {
+    // Form content area
+  }
+}
+
+/* ========================================
+   Divider
+   ======================================== */
+
+.ad-divider {
+  height: 1px;
+  background: var(--ad-border-light);
+  margin: var(--ad-spacing-lg) 0;
+
+  &.ad-divider--sm {
+    margin: var(--ad-spacing-md) 0;
+  }
+}
+
+/* ========================================
+   Tags
+   ======================================== */
+
+.ad-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: var(--ad-radius-sm);
+  background: var(--ad-primary-light);
+  color: var(--ad-primary);
+
+  &.ad-tag--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--ad-success);
+  }
+
+  &.ad-tag--warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--ad-warning);
+  }
+
+  &.ad-tag--danger {
+    background: var(--ad-danger-light);
+    color: var(--ad-danger);
+  }
+
+  &.ad-tag--gray {
+    background: var(--ad-bg-gray);
+    color: var(--ad-text-secondary);
+  }
+}
+
+/* ========================================
+   Sidebar layout
+   For left list + right detail layouts
+   ======================================== */
+
+.ad-sidebar-layout {
+  display: flex;
+  height: 100%;
+  gap: var(--ad-spacing-md);
+
+  .sidebar-panel {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--ad-bg-white);
+    border-radius: var(--ad-radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s ease;
+
+    &.is-collapsed {
+      width: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  }
+
+  .main-panel {
+    flex: 1;
+    min-width: 0;
+    background: var(--ad-bg-white);
+    border-radius: var(--ad-radius-lg);
+    overflow: hidden;
+  }
+
+  .collapse-btn {
+    position: absolute;
+    left: 280px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 40px;
+    background: var(--ad-bg-white);
+    border: 1px solid var(--ad-border);
+    border-left: none;
+    border-radius: 0 var(--ad-radius-sm) var(--ad-radius-sm) 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: left 0.3s ease;
+
+    &:hover {
+      background: var(--ad-bg-hover);
+    }
+  }
+}
+
+/* ========================================
+   Card grid (Card Grid)
+   For source lists, business lists, and other card-grid displays
+   ======================================== */
+
+// Card grid container
+.ad-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ad-spacing-md);
+  align-content: flex-start;
+}
+
+// Grid card item - responsive three-column layout
+.ad-grid-card {
+  flex: 1 1 calc(33.333% - 11px);
+  min-width: 360px;
+  max-width: calc(33.333% - 11px);
+  background: var(--ad-bg-white);
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius-lg);
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+  }
+
+  .grid-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--ad-bg-hover);
+    border-bottom: 1px solid var(--ad-border-light);
+  }
+
+  .grid-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .grid-card-actions {
+    display: flex;
+    gap: 8px;
+
+    .el-button {
+      padding: 6px 12px;
+    }
+  }
+
+  .grid-card-body {
+    padding: 14px 18px;
+  }
+
+  .grid-card-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .info-tag {
+      font-size: 13px;
+      color: var(--ad-text-secondary);
+      background: var(--ad-bg-hover);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+  }
+
+  .grid-card-desc {
+    font-size: 13px;
+    color: var(--ad-text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+
+    &.is-empty {
+      color: var(--ad-text-muted);
+      font-style: italic;
+    }
+  }
+
+  .grid-card-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--ad-border-light);
+    background: var(--ad-bg-hover);
+    font-size: 12px;
+    color: var(--ad-text-muted);
+  }
+}
+
+// Responsive breakpoints
+@media (max-width: 1200px) {
+  .ad-grid-card {
+    flex: 1 1 calc(50% - 8px);
+    max-width: calc(50% - 8px);
+  }
+}
+
+@media (max-width: 768px) {
+  .ad-grid-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: auto;
+  }
+}
+
+/* ========================================
+   Create view (Create View)
+   For create source/business form pages
+   ======================================== */
+
+.ad-create-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-create-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: var(--ad-spacing-md);
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+  }
+}
+
+.ad-create-content {
+  flex: 1;
+  overflow-y: auto;
+
+  .create-form {
+    max-width: 600px;
+  }
+}
+
+/* ========================================
+   Full page list view (Page List View)
+   For data source list pages, business list pages, and similar full pages
+   ======================================== */
+
+.ad-page-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-page-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--ad-spacing-md);
+  flex-shrink: 0;
+
+  .toolbar-count {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--ad-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: var(--ad-spacing-sm);
+    flex-shrink: 0;
+  }
+}
+
+.ad-page-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ad-page-empty {
+  width: 100%;
+  // Move empty-state area down a little (original: top was too high and bottom had too much white space).
+  // Use 96px to max 200px with 16vh guidance for better centering; content remains scrollable.
+  padding: clamp(96px, 16vh, 200px) 20px 56px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ========================================
+   Tab label with icon (Tab Label with Icon)
+   For Tabs labels on detail pages
+   ======================================== */
+
+.ad-tab-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ========================================
+   Detail page layout (Detail Page Layout)
+   For database detail, data source detail, and similar pages
+   ======================================== */
+
+// Detail page container
+.ad-detail-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// Detail page header: back button + title
+.ad-detail-page-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  gap: 10px;
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ad-text-primary);
+  }
+}
+
+// Detail page content area
+.ad-detail-page-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// Detail tabs with full-height layout
+// Note: :deep() is not usable in global styles, only in Vue SFC scoped styles.
+.ad-detail-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .el-tabs__header {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .el-tabs__content {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+  }
+
+  .el-tab-pane {
+    height: 100%;
+    padding: 0 5px 10px 5px;
+  }
+}
+
+// Border-card style detail tabs
+// Note: :deep() is not usable in global styles, only in Vue SFC scoped styles.
+.ad-detail-tabs-bordered {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .el-tabs__header {
+    border-bottom: none;
+    flex-shrink: 0;
+  }
+
+  .el-tabs__nav {
+    border-right: none;
+  }
+
+  .el-tabs__content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .el-tab-pane {
+    height: 100%;
+    padding: 0 5px 10px 5px;
+  }
+}
+
+/* ========================================
+   Info display area (Info Display)
+   For project info, metadata display, and similar sections
+   ======================================== */
+
+.ad-info-display {
+  padding: 20px;
+  background: var(--ad-bg-gray);
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #e5e7eb;
+    }
+  }
+
+  .info-label {
+    width: 100px;
+    font-size: 13px;
+    color: var(--ad-text-secondary);
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    font-size: 13px;
+    color: var(--ad-text-primary);
+    font-family: 'SF Mono', Monaco, monospace;
+  }
+}
+
+/* ========================================
+   Utilities
+   ======================================== */
+
+// Single-line text ellipsis
+.ad-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Multi-line ellipsis
+.ad-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ad-line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Disable text selection
+.ad-no-select {
+  user-select: none;
+}
+
+// Clickable styles
+.ad-clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+// Hide scrollbars but keep scrolling
+.ad-hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ========================================
+   Responsive adjustments (Mobile / Tablet)
+   ======================================== */
+
+// Single-column card grid on mobile
+@media (max-width: 767px) {
+  .ad-card-grid {
+    gap: var(--ad-spacing-sm);
+  }
+
+  .ad-grid-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    .grid-card-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+
+    .grid-card-title {
+      white-space: normal;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      row-gap: 6px;
+      min-width: 0;
+
+      > span {
+        word-break: break-word;
+      }
+
+      .el-tag {
+        flex-shrink: 0;
+      }
+    }
+
+    .grid-card-actions {
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+
+      .el-button {
+        min-height: 40px;
+        padding: 6px 10px;
+      }
+    }
+
+    .grid-card-body {
+      padding: 12px 14px;
+    }
+
+    .grid-card-footer {
+      padding: 10px 14px;
+    }
+  }
+}
+
+// Reduce detail view padding on mobile
+@media (max-width: 767px) {
+  .ad-detail-view {
+    border-radius: 0;
+  }
+
+  .ad-detail-header {
+    padding: var(--ad-spacing-sm) var(--ad-spacing-md);
+
+    .header-title {
+      font-size: 15px;
+    }
+  }
+
+  .ad-detail-content {
+    padding: var(--ad-spacing-md);
+  }
+
+  .ad-detail-tabs {
+    :deep(.el-tabs__header) {
+      padding: 0 var(--ad-spacing-md);
+    }
+
+    :deep(.el-tabs__content) {
+      padding: var(--ad-spacing-md);
+    }
+  }
+}
+
+// Make form sections full-width on mobile
+@media (max-width: 767px) {
+  .ad-form-section {
+    margin-bottom: var(--ad-spacing-md);
+
+    .section-title {
+      font-size: 13px;
+    }
+  }
+
+  .ad-create-content {
+    .create-form {
+      max-width: 100%;
+    }
+  }
+
+  .ad-create-header {
+    .header-title {
+      font-size: 16px;
+    }
+  }
+}
+
+// Reduce list container spacing on mobile
+@media (max-width: 767px) {
+  .ad-list-container {
+    padding: var(--ad-spacing-xs);
+  }
+
+  .ad-list-item {
+    padding: var(--ad-spacing-sm) var(--ad-spacing-md);
+
+    .item-icon {
+      width: 32px;
+      height: 32px;
+      margin-right: var(--ad-spacing-sm);
+    }
+
+    // Always show action buttons on mobile
+    .item-actions {
+      opacity: 1;
+    }
+  }
+
+  .ad-list-toolbar {
+    padding: var(--ad-spacing-sm) var(--ad-spacing-md);
+    gap: var(--ad-spacing-sm);
+  }
+}
+
+// Stack sidebar layout vertically on mobile
+@media (max-width: 767px) {
+  .ad-sidebar-layout {
+    flex-direction: column;
+
+    .sidebar-panel {
+      width: 100%;
+      max-height: 40vh;
+      border-radius: var(--ad-radius-md);
+    }
+
+    .collapse-btn {
+      display: none;
+    }
+  }
+}
+
+// Horizontal scroll for tables on mobile
+@media (max-width: 767px) {
+  .el-table {
+    width: 100%;
+    overflow-x: auto;
+
+    &__body-wrapper {
+      overflow-x: auto;
+    }
+  }
+}
+
+// Mobile adaptation for info display area
+@media (max-width: 767px) {
+  .ad-info-display {
+    padding: var(--ad-spacing-md);
+
+    .info-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .info-label {
+      width: auto;
+    }
+  }
+}
+
+// Mobile adaptation for page list views
+@media (max-width: 767px) {
+  .ad-page-list {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .ad-page-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ad-spacing-sm);
+
+    .toolbar-count {
+      white-space: normal;
+    }
+
+    .toolbar-actions {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+
+      .el-button {
+        width: 100%;
+        min-height: 44px;
+        margin: 0;
+      }
+    }
+  }
+
+  .ad-page-empty {
+    padding: clamp(56px, 10vh, 120px) 16px 40px;
+  }
+
+  .ad-create-view {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .ad-create-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ad-create-content {
+    padding-bottom: 16px;
+  }
+
+  /* Detail page header: title and back in one line, actions full-width on next line */
+  .ad-detail-page {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .ad-detail-page-header {
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 6px;
+    margin-bottom: 10px;
+    gap: 8px;
+
+    > .el-tag {
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      flex: 1;
+      min-width: 0;
+      font-size: 16px;
+      line-height: 1.35;
+      word-break: break-word;
+      white-space: normal;
+    }
+
+    .header-actions {
+      flex-basis: 100%;
+      width: 100%;
+      margin-left: 0 !important;
+      justify-content: stretch;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .el-button {
+        flex: 1;
+        min-width: 0;
+        min-height: 44px;
+      }
+    }
+  }
+
+  .ad-detail-page-content {
+    min-width: 0;
+  }
+
+  .ad-detail-tabs,
+  .ad-detail-tabs-bordered {
+    .el-tabs__nav-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 6px;
+    }
+
+    .el-tabs__nav {
+      flex-wrap: nowrap;
+    }
+
+    .el-tabs__item {
+      flex-shrink: 0;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .el-tabs__content {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      padding-left: 8px;
+      padding-right: 10px;
+      box-sizing: border-box;
+    }
+
+    .el-tab-pane {
+      padding: 0 0 12px;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+  }
+}
+
+// Danger zone mobile adaptation
+@media (max-width: 767px) {
+  .ad-danger-zone {
+    padding: var(--ad-spacing-md);
+  }
+}
+
+// Empty state mobile adaptation
+@media (max-width: 767px) {
+  .ad-empty-state {
+    padding: var(--ad-spacing-lg) var(--ad-spacing-md);
+
+    .empty-desc {
+      max-width: 100%;
+    }
+  }
+}
+
+// Profile/password dialogs (and similar) are teleported to body; require global selectors
+@media (max-width: 767px) {
+  .layout-user-dialog.el-dialog {
+    width: min(100%, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 16px);
+    margin: 12px auto !important;
+    box-sizing: border-box;
+  }
+
+  .layout-user-dialog .el-dialog__header {
+    padding: 16px 16px 8px;
+    margin-right: 0;
+  }
+
+  .layout-user-dialog .el-dialog__body {
+    padding: 8px 16px 16px;
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .layout-user-dialog .el-dialog__footer {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 16px 16px;
+  }
+
+  .layout-user-dialog .el-dialog__footer .el-button {
+    width: 100%;
+    margin: 0 !important;
+    min-height: 44px;
+  }
+
+  .layout-user-dialog .el-dialog__body .el-form-item .el-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+// Touch devices: replace hover interactions
+@media (hover: none) and (pointer: coarse) {
+  .ad-list-item {
+    .item-actions {
+      opacity: 1;
+    }
+  }
+
+  .ad-grid-card:hover {
+    transform: none;
+  }
+}
+
+/* ========================================
+   Workflow Run failure notifications (from editor.vue global <style>)
+   Notifications appear under body and are not limited by module scope
+   ======================================== */
+.workflow-run-notify .mantine-Notification-description {
+  white-space: pre-line;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 360px;
+  max-height: 320px;
+  overflow-y: auto;
+}

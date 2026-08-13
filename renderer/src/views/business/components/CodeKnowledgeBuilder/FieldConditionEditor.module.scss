@@ -1,0 +1,81 @@
+
+.fieldConditionEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.enumSection,
+.manualInputSection,
+.descriptionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsh-text, #303133);
+  margin-bottom: 4px;
+}
+
+.enumValuesList {
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 6px;
+  padding: 8px;
+
+  @include mobile {
+    max-height: 160px;
+  }
+}
+
+.enumValueItem {
+  padding: 8px;
+  border-bottom: 1px solid var(--dsh-border-soft, #f5f7fa);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--dsh-hover, #f5f7fa);
+    border-radius: 4px;
+  }
+
+  .valueInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .codeText {
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-weight: 600;
+    color: #409eff;
+    background: #ecf5ff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .labelText {
+    color: var(--dsh-text-soft, #606266);
+    font-size: 13px;
+  }
+}

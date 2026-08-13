@@ -1,0 +1,115 @@
+.dataSourceSettings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.contentCard {
+  background: var(--ad-bg-white);
+  border-radius: 16px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.settingsCard {
+  gap: 20px;
+}
+
+.settingsForm {
+  max-width: 720px;
+  padding-top: 8px;
+}
+
+.formItem {
+  margin-bottom: 24px;
+}
+
+/* Retrieval mode radio styles */
+.retrievalModeContainer {
+  width: 100%;
+}
+
+.retrievalModeGroup {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.retrievalRadio {
+  flex: 1;
+  height: auto;
+  padding: 12px 16px;
+  margin-right: 0;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color, #dcdfe6);
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: var(--el-color-primary, #409eff);
+  }
+
+  &.checked {
+    border-color: var(--el-color-primary, #409eff);
+  }
+}
+
+.radioContent {
+  .radioTitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .radioDesc {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+}
+
+.settingsActions {
+  display: flex;
+  gap: 16px;
+
+  button {
+    min-width: 120px;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 767px) {
+  .dataSourceSettings {
+    min-width: 0;
+  }
+
+  .contentCard {
+    padding: 8px;
+  }
+
+  .settingsForm {
+    max-width: 100%;
+  }
+
+  .retrievalModeGroup {
+    flex-direction: column;
+  }
+
+  .settingsActions {
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      width: 100%;
+      min-height: 44px;
+      min-width: 0 !important;
+    }
+  }
+}

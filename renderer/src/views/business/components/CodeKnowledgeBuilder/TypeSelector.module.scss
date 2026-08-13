@@ -1,0 +1,54 @@
+.typeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--dsh-border-soft, #f5f7fa);
+}
+
+.selectorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &.operatorRow {
+    flex-wrap: wrap;
+  }
+}
+
+.selectorLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsh-text, #303133);
+  white-space: nowrap;
+  min-width: 50px;
+}
+
+.typeSelectInput {
+  width: 200px;
+  max-width: 100%;
+}
+
+// Mobile: < 768px (equivalent to original @include mobile)
+@media (max-width: 767px) {
+  .selectorRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .selectorLabel {
+    white-space: normal;
+    min-width: 0;
+  }
+
+  .typeSelectInput {
+    width: 100% !important;
+  }
+
+  .operatorRow .operatorTag {
+    margin-left: 0 !important;
+    align-self: flex-start;
+  }
+}

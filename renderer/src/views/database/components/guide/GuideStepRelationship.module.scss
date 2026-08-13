@@ -1,0 +1,358 @@
+$brand: #6b1a96;
+$brand-soft: rgba(107, 26, 150, 0.06);
+$brand-muted: rgba(107, 26, 150, 0.35);
+$emerald: #059669;
+$emerald-soft: rgba(5, 150, 105, 0.08);
+$blue: #2563eb;
+$blue-soft: rgba(37, 99, 235, 0.07);
+$amber: #d97706;
+$amber-soft: rgba(217, 119, 6, 0.08);
+$text-primary: var(--dsh-text, #1a1a2e);
+$text-secondary: var(--dsh-text-soft, #5a5a72);
+$text-muted: var(--dsh-muted, #9494a8);
+$border: var(--dsh-border, #e8e8f0);
+
+.guide-step-relationship {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+// ─── Header ───
+.rel-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+}
+
+.header-text {
+  min-width: 0;
+}
+
+.header-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-primary;
+  letter-spacing: -0.01em;
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+// ─── Main body ───
+.rel-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+// ─── Configured state ───
+.configured-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--dsh-surface, #fff);
+  border: 1px solid $border;
+  border-radius: 10px;
+}
+
+.configured-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(107, 26, 150, 0.08);
+  border-radius: 10px;
+  color: $brand;
+}
+
+.configured-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.configured-count {
+  font-size: 15px;
+  font-weight: 600;
+  color: $brand;
+}
+
+.configured-hint {
+  font-size: 13px;
+  color: $text-muted;
+}
+
+// ─── Empty state ───
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 40px;
+  animation: fadeSlideIn 0.35s ease-out;
+}
+
+// ─── Process demo ───
+.concept-demo {
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 40px;
+}
+
+.demo-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.flow-connector {
+  flex-shrink: 0;
+  color: $text-muted;
+  padding: 18px 4px 0;
+}
+
+.flow-node {
+  flex-shrink: 0;
+}
+
+.flow-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: $text-muted;
+}
+
+// User input node
+.flow-input {
+  .flow-label {
+    color: $brand-muted;
+  }
+}
+
+.query-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: $brand-soft;
+  border: 1px solid rgba(107, 26, 150, 0.12);
+  border-radius: 10px;
+
+  .query-prefix {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $brand;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .query-text {
+    font-size: 14px;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+}
+
+// Multi-table relationship node
+.flow-recognize {
+  .flow-label {
+    color: rgba(217, 119, 6, 0.6);
+  }
+}
+
+.recognize-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: $amber-soft;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  border-radius: 10px;
+}
+
+.join-tables {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-primary;
+  background: rgba(217, 119, 6, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.join-badge {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $amber;
+  color: #fff;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.join-key {
+  font-size: 11px;
+  color: $amber;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+// SQL output node
+.flow-output {
+  .flow-label {
+    color: rgba(37, 99, 235, 0.55);
+  }
+}
+
+.sql-box {
+  padding: 10px 16px;
+  background: $blue-soft;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 10px;
+
+  code {
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+
+  .sql-kw {
+    color: $blue;
+    font-weight: 600;
+  }
+
+  .sql-col {
+    color: $emerald;
+    font-weight: 500;
+  }
+}
+
+// ─── Explanatory text ───
+.empty-explain {
+  text-align: center;
+  max-width: 480px;
+}
+
+.explain-main {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 1.7;
+}
+
+.explain-hint {
+  margin: 0;
+  font-size: 12px;
+  color: $text-muted;
+  line-height: 1.5;
+}
+
+// ─── Footer ───
+.rel-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid $border;
+}
+
+// ─── Animation ───
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─── Modal (original unscoped <style> mounted on Modal className) ───
+// Align Mantine Modal internal structure: .mantine-Modal-content / .mantine-Modal-body
+.relationship-dialog {
+  :global(.mantine-Modal-content) {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+  }
+
+  :global(.mantine-Modal-body) {
+    padding: 0;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+.relationship-dialog-body {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+
+  .floating-close-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 20;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    background: var(--dsh-surface, rgba(255, 255, 255, 0.95));
+    box-shadow: var(--dsh-card-shadow, 0 2px 8px rgba(0, 0, 0, 0.12));
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--dsh-text-soft, #606266);
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--dsh-surface, #fff);
+      color: var(--dsh-text, #303133);
+      box-shadow: var(--dsh-card-shadow, 0 2px 12px rgba(0, 0, 0, 0.18));
+    }
+  }
+}

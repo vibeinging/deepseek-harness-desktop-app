@@ -1,0 +1,351 @@
+// Entity search test dialog styles (migrated from SearchTestDialog.vue scoped + dialog body styles)
+
+// Controls dialog body height, matching the original .entity-test-dialog style
+.dialogBody {
+  height: calc(90vh - 154px);
+  overflow: hidden;
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.entityTestDialog {
+  // Placeholder: modal wrapper class to keep selector present
+}
+
+.entitySearchContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.searchInputWrapper {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  .searchInput {
+    flex: 1;
+  }
+}
+
+// ===== Tag-like span styles, equivalent to original el-tag types =====
+.warningTag,
+.successTag,
+.primaryTag,
+.infoTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 22px;
+  border: 1px solid transparent;
+}
+
+.warningTag {
+  color: #e6a23c;
+  background: #fdf6ec;
+  border-color: #f5dab1;
+}
+
+.successTag {
+  color: #67c23a;
+  background: #f0f9eb;
+  border-color: #c2e7b0;
+}
+
+.primaryTag {
+  color: #409eff;
+  background: #ecf5ff;
+  border-color: #b3d8ff;
+}
+
+.infoTag {
+  color: #909399;
+  background: #f4f4f5;
+  border-color: #d3d4d6;
+}
+
+/* Agent replacement result styles */
+.agentResultSection {
+  margin-bottom: 20px;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+// Agent section header gradient background and title color
+.agentResultSection .resultsHeader {
+  background: linear-gradient(135deg, #67c23a10 0%, #e6a23c10 100%);
+
+  .resultsTitle {
+    color: #67c23a;
+  }
+}
+
+.resultsTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.agentResultContent {
+  border: 1px solid var(--dsh-border, #e4e7ed);
+  border-radius: 6px;
+  background: var(--dsh-surface, #fff);
+  padding: 16px;
+
+  .replacementRow :global(.tabler-icon) {
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.originalQuestion,
+.rewrittenQuestion {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+
+  .label {
+    font-weight: 500;
+    color: var(--dsh-text-soft, #606266);
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .value {
+    color: var(--dsh-text, #303133);
+    word-break: break-all;
+
+    &.highlight {
+      color: #67c23a;
+      font-weight: 500;
+      font-family: monospace;
+      background: #67c23a10;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.originalQuestion {
+  background: var(--dsh-bg, #f5f7fa);
+}
+
+.rewrittenQuestion {
+  background: #f0f9eb;
+}
+
+.replacementsList {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--dsh-border, #e4e7ed);
+
+  .replacementsHeader {
+    font-weight: 500;
+    color: var(--dsh-text, #303133);
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  .replacementItem {
+    padding: 12px;
+    background: var(--dsh-code-bg, #fafafa);
+    border-radius: 6px;
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .replacementRow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .replacementDetail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--dsh-muted, #909399);
+    }
+  }
+}
+
+.noReplacements {
+  text-align: center;
+  padding: 20px;
+}
+
+/* Search result styles */
+.searchResults {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+
+  .resultsHeader {
+    background: var(--dsh-bg, #f8f9fa);
+
+    .resultsTitle {
+      color: #409eff;
+    }
+  }
+
+  .resultsList {
+    height: calc(100% - 120px);
+    overflow-y: auto;
+    border: 1px solid var(--dsh-border, #e4e7ed);
+    border-radius: 6px;
+    background: var(--dsh-surface, #fff);
+  }
+
+  .searchResultItem {
+    padding: 16px;
+    border-bottom: 1px solid var(--dsh-border-soft, #f0f2f5);
+    transition: background-color 0.2s;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: var(--dsh-hover, #f8f9fa);
+    }
+
+    .resultHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      .similarityBadge {
+        font-size: 12px;
+        color: #67c23a;
+        font-weight: 500;
+      }
+    }
+
+    .resultLocation {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--dsh-text-soft, #606266);
+      margin-bottom: 8px;
+    }
+
+    .resultMetadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--dsh-border-soft, #f0f2f5);
+
+      .metadataItem {
+        font-size: 12px;
+        background: var(--dsh-bg, #f5f7fa);
+        padding: 4px 8px;
+        border-radius: 3px;
+        display: flex;
+        gap: 4px;
+
+        .metadataKey {
+          font-weight: 500;
+          color: var(--dsh-text, #303133);
+        }
+
+        .metadataValue {
+          color: var(--dsh-text-soft, #606266);
+        }
+      }
+    }
+  }
+}
+
+.noResults {
+  padding: 40px 20px;
+  text-align: center;
+
+  .emptyDesc {
+    color: var(--dsh-muted, #909399);
+    font-size: 14px;
+  }
+
+  p {
+    margin-top: 8px;
+    color: var(--dsh-muted, #909399);
+    font-size: 14px;
+  }
+}
+
+.searchHint {
+  padding: 20px 0;
+
+  p {
+    margin: 8px 0;
+    line-height: 1.6;
+
+    code {
+      background: var(--dsh-bg, #f5f7fa);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #e6a23c;
+    }
+  }
+}
+
+// Matches original @include mobile (project mobile breakpoint is max-width: 767px)
+@media (max-width: 767px) {
+  .searchInputWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    :global(.mantine-Button-root) {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+
+  .agentResultContent {
+    .originalQuestion,
+    .rewrittenQuestion {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+
+      .label {
+        min-width: 0;
+      }
+    }
+
+    .replacementRow {
+      flex-wrap: wrap;
+    }
+  }
+
+  .searchResultItem .resultHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

@@ -1,0 +1,111 @@
+.modal {
+  border: 1px solid color-mix(in srgb, var(--dsh-border) 82%, transparent);
+  border-radius: 20px;
+  background: var(--dsh-surface);
+  box-shadow: 0 24px 70px rgb(9 7 18 / 28%);
+}
+
+.header {
+  padding: 22px 22px 12px;
+  background: transparent;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.body { padding: 0 22px 20px; }
+
+.conversation {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 12px;
+  color: var(--dsh-text-soft);
+  background: color-mix(in srgb, var(--dsh-surface) 94%, var(--dsh-accent) 6%);
+
+  span {
+    overflow: hidden;
+    color: var(--dsh-text);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.label {
+  margin: 18px 0 8px;
+  color: var(--dsh-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.projectList {
+  overflow: hidden;
+  max-height: 280px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+.project {
+  width: 100%;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  border: 0;
+  color: var(--dsh-text);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+
+  & + & { border-top: 1px solid var(--dsh-border); }
+  &:hover { background: var(--dsh-hover); }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.projectSelected {
+  color: var(--dsh-accent);
+  background: color-mix(in srgb, var(--dsh-accent) 10%, transparent);
+}
+
+.empty {
+  padding: 22px 14px;
+  color: var(--dsh-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.hint {
+  margin: 10px 2px 0;
+  color: var(--dsh-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .modal { border-radius: 18px 18px 0 0; }
+  .header { padding: 19px 18px 11px; }
+  .body { padding: 0 18px 18px; }
+}

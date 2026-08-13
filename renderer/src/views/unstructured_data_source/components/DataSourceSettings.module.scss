@@ -1,0 +1,107 @@
+.data-source-settings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.content-card {
+  background: var(--ad-bg-white);
+  border-radius: 16px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-card {
+  gap: 20px;
+}
+
+.operations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f1f3d;
+  margin: 0;
+}
+
+.card-title-icon {
+  color: #6f3ff5;
+}
+
+.settings-form {
+  max-width: 720px;
+  padding-top: 8px;
+}
+
+// Original :deep(.el-form-item) margin-bottom: 24px; Mantine form spacing is handled by Stack/gap
+.form-item {
+  margin-bottom: 24px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.settings-actions .el-button {
+  min-width: 120px;
+  font-weight: 500;
+}
+
+.save-btn {
+  color: #6f3ff5;
+  background-color: rgba(111, 63, 245, 0.12);
+  border-color: transparent;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.save-btn:hover,
+.save-btn:focus {
+  color: #5a2cf0;
+  background-color: rgba(90, 44, 240, 0.18);
+  box-shadow: 0 4px 12px rgba(111, 63, 245, 0.2);
+}
+
+@media (max-width: 768px) {
+  .data-source-settings {
+    min-width: 0;
+  }
+
+  .content-card {
+    padding: 8px;
+  }
+
+  .settings-form {
+    max-width: 100%;
+  }
+
+  .settings-actions {
+    flex-direction: column;
+    width: 100%;
+
+    .save-btn,
+    .delete-btn {
+      width: 100%;
+      min-height: 44px;
+      min-width: 0 !important;
+    }
+  }
+}

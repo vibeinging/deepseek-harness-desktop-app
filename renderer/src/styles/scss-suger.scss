@@ -1,0 +1,292 @@
+/*Absolute-positioned centering helpers outside normal flow*/
+.center-50 {
+  // Center the element
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+.center-top60 {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  z-index: 10;
+}
+.center-top70 {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -70%);
+  z-index: 10;
+}
+.center-top80 {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -80%);
+  z-index: 10;
+}
+.center-top90 {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -90%);
+  z-index: 10;
+}
+/*fixed*/
+.fixed-center-50 {
+  // Center the element
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+.fixed-center-top60 {
+  position: fixed;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  z-index: 10;
+}
+.fixed-center-top70 {
+  position: fixed;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -70%);
+  z-index: 10;
+}
+.fixed-center-top80 {
+  position: fixed;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, -80%);
+  z-index: 10;
+}
+.fixed-center-top90 {
+  position: fixed;
+  top: 90%;
+  left: 50%;
+  transform: translate(-50%, -90%);
+  z-index: 10;
+}
+.fixed-center-top95 {
+  position: fixed;
+  top: 95%;
+  left: 50%;
+  transform: translate(-50%, -95%);
+  z-index: 10;
+}
+
+/*
+Flex layout with first letter as primary axis
+*/
+.wrap {
+  flex-wrap: wrap;
+}
+// Start
+.rowSS {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.rowSC {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+.rowSE {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+
+.rowEE {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+// Space between
+.rowBS {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.rowBC {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.rowBE {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+// Space around
+.rowAS {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+.rowAC {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+.rowAE {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: flex-end;
+}
+// Center
+.rowCS {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+}
+.rowCC {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.rowCE {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.rowEC {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Column layout helpers */
+// Start
+.columnSS {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.columnSC {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+.columnSE {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+// Space between
+.columnBS {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.columnBC {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+.columnBE {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+// Space around
+.columnAS {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+.columnAC {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+.columnAE {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-end;
+}
+// Center
+.columnCS {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.columnCC {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.columnCE {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Icon */
+.star-icon {
+  color: #f56c6c;
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.fix-btn-to-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 10;
+  height: 60px;
+  background: #fff;
+  width: 100vw;
+}
+
+// Table action bar
+.table-operation-btn {
+  span {
+    // Click style
+    cursor: pointer;
+    color: #477ef5;
+  }
+}
+
+// Table action bar
+.btn-click-style {
+  // Click style
+  cursor: pointer;
+  color: #477ef5;
+}

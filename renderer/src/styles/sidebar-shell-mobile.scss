@@ -1,0 +1,49 @@
+@use './responsive.scss' as *;
+
+// =============================================================================
+// Non-ad-* shell layout for database management and structured/unstructured/web search data sources
+// Complements @media (max-width: 767px) rules in each module's views/*/index.css
+// =============================================================================
+
+@media (max-width: #{$breakpoint-mobile - 1px}) {
+  .database-layout,
+  .data-source-layout {
+    min-width: 0;
+  }
+
+  .database-content,
+  .data-source-content {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Use class="datasource-tabs" on page el-tabs so top tabs scroll horizontally and avoid crowding on narrow screens */
+  .datasource-tabs {
+    min-width: 0;
+
+    .el-tabs__header {
+      margin: 0;
+    }
+
+    .el-tabs__nav-wrap {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .el-tabs__nav {
+      flex-wrap: nowrap;
+    }
+
+    .el-tabs__item {
+      flex-shrink: 0;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .el-tabs__content {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+  }
+}

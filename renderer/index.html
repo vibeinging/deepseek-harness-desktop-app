@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>dsh-work</title>
+    <style>
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: #16141b;
+      }
+
+      .app-boot {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: #ebe7f2;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        -webkit-app-region: drag;
+      }
+
+      .app-boot__mark {
+        width: 52px;
+        height: 38px;
+        background: currentColor;
+        -webkit-mask: url('/favicon.svg') center / contain no-repeat;
+        mask: url('/favicon.svg') center / contain no-repeat;
+        animation: appBootPulse 1.1s ease-in-out infinite;
+      }
+
+      @keyframes appBootPulse {
+        0%,
+        100% {
+          opacity: 0.58;
+          transform: scale(0.96);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="app-boot" aria-label="dsh-work 正在启动">
+        <div class="app-boot__mark" aria-hidden="true"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+.worktreeSection {
+  margin-block-start: 16px;
+  padding-block: 12px;
+  border-block-start: 1px solid var(--dsh-border);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 10px;
+
+  > button {
+    flex: 0 0 auto;
+  }
+}
+
+.sectionIntro {
+  min-width: 0;
+
+  strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--dsh-text);
+  }
+
+  span {
+    display: block;
+    margin-block-start: 3px;
+    max-width: 68ch;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--dsh-faint);
+  }
+}
+
+.worktreeList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.worktreeEmpty {
+  padding: 16px 12px;
+  font-size: 11px;
+  color: var(--dsh-faint);
+  text-align: center;
+}
+
+.worktreeItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 6px;
+  background: var(--dsh-surface);
+
+  &[data-active='true'] {
+    border-color: var(--dsh-primary, #228be6);
+    background: rgba(34, 139, 230, 0.04);
+  }
+
+  &[data-available='false'] {
+    background: color-mix(in srgb, var(--dsh-surface) 94%, var(--dsh-faint));
+  }
+}
+
+.worktreeInfo {
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    display: block;
+    font-size: 12px;
+    font-family: var(--dsh-mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  code {
+    display: block;
+    margin-block-start: 2px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: var(--dsh-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.worktreeBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-block-start: 4px;
+}
+
+.worktreeActiveBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 9px;
+  color: var(--dsh-primary, #228be6);
+  background: rgba(34, 139, 230, 0.08);
+  border-radius: 3px;
+}
+
+.worktreeStale {
+  display: inline-block;
+  font-size: 9px;
+  color: var(--dsh-warn, #e8590c);
+}
+
+.worktreeActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.worktreeAlert {
+  margin-block-end: 8px;
+
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  button {
+    margin-block-start: 6px;
+  }
+}
+
+.ownerHint {
+  margin-block-end: 8px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--dsh-surface) 92%, var(--dsh-border));
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dsh-faint);
+}
+
+.createError {
+  margin-block-start: 12px;
+  overflow-wrap: anywhere;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block-start: 18px;
+}
+
+@media (max-width: 640px) {
+  .sectionHeader,
+  .worktreeItem {
+    flex-direction: column;
+  }
+
+  .sectionHeader > button,
+  .worktreeActions {
+    width: 100%;
+  }
+
+  .worktreeActions {
+    justify-content: flex-start;
+  }
+}

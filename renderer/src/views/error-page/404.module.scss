@@ -1,0 +1,53 @@
+.errorPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--el-bg-color);
+}
+
+.errorContent {
+  text-align: center;
+  padding: 40px;
+}
+
+.errorCode {
+  font-size: 120px;
+  font-weight: 700;
+  color: var(--el-color-primary);
+  line-height: 1;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.errorTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  margin: 0 0 8px;
+}
+
+.errorDesc {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin: 0 0 32px;
+}
+
+@media (max-width: 767px) {
+  .errorContent {
+    padding: 20px;
+  }
+
+  .errorCode {
+    font-size: 80px;
+  }
+
+  .errorTitle {
+    font-size: 20px;
+  }
+
+  .errorDesc {
+    font-size: 13px;
+    padding: 0 16px;
+  }
+}

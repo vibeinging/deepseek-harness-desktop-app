@@ -1,0 +1,78 @@
+.root {
+  min-width: 150px;
+}
+
+.input {
+  border-color: var(--dsh-border, var(--mantine-color-default-border));
+  border-radius: var(--dsh-r-el, var(--mantine-radius-md));
+  background: var(--dsh-code-bg, var(--mantine-color-body));
+  color: var(--dsh-text, var(--mantine-color-text));
+  font-family: inherit;
+  font-weight: 500;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.input:hover:not(:disabled) {
+  border-color: color-mix(
+    in srgb,
+    var(--dsh-text-soft, var(--mantine-color-text)) 24%,
+    var(--dsh-border, var(--mantine-color-default-border))
+  );
+}
+
+.input:focus,
+.input:focus-within {
+  border-color: var(--dsh-accent, var(--mantine-primary-color-filled));
+  box-shadow: var(--dsh-ring, 0 0 0 2px color-mix(in srgb, var(--mantine-primary-color-filled) 18%, transparent));
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.section {
+  color: var(--dsh-faint, var(--mantine-color-dimmed));
+}
+
+.dropdown {
+  padding: 5px;
+  border-color: var(--dsh-border, var(--mantine-color-default-border));
+  border-radius: var(--dsh-r-el, var(--mantine-radius-md));
+  background: var(--dsh-surface, var(--mantine-color-body));
+  box-shadow: var(--dsh-card-shadow, var(--mantine-shadow-md));
+}
+
+.options {
+  display: grid;
+  gap: 2px;
+}
+
+.option {
+  min-height: 30px;
+  padding: 6px 9px;
+  border-radius: var(--dsh-r-sm, var(--mantine-radius-sm));
+  color: var(--dsh-text, var(--mantine-color-text));
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.option:hover,
+.option[data-combobox-active] {
+  background: var(--dsh-hover, var(--mantine-color-default-hover));
+}
+
+.option[data-combobox-selected] {
+  background: var(--dsh-accent, var(--mantine-primary-color-filled));
+  color: var(--dsh-on-accent, var(--mantine-color-white));
+}
+
+.empty {
+  padding: 10px;
+  color: var(--dsh-muted, var(--mantine-color-dimmed));
+  font-size: 13px;
+  text-align: center;
+}

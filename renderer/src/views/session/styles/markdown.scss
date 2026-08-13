@@ -1,0 +1,356 @@
+// Markdown content styles
+.markdown-content {
+  line-height: 1.6;
+  color: #374151;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 20px 0 12px 0;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.3;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+  }
+  h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 6px;
+  }
+  h3 {
+    font-size: 1.25rem;
+  }
+  h4 {
+    font-size: 1.125rem;
+  }
+  h5,
+  h6 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 12px 0;
+    line-height: 1.7;
+    color: #374151;
+  }
+
+  pre {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+    color: #f9fafb;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 16px 0;
+    word-break: break-all;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    border: 1px solid #374151;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+      border-radius: 12px 12px 0 0;
+    }
+  }
+
+  code {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #dc2626;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    font-weight: normal;
+  }
+
+  // Code block copy button style
+  pre {
+    .code-copy-button {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: #f9fafb;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      z-index: 10;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &.copied {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #10b981;
+      }
+
+      svg {
+        display: block;
+      }
+    }
+
+    &:hover .code-copy-button {
+      opacity: 1;
+    }
+  }
+
+  ul,
+  ol {
+    margin: 12px 0;
+    padding-left: 28px;
+  }
+
+  li {
+    margin: 6px 0;
+    line-height: 1.6;
+  }
+
+  ul li {
+    position: relative;
+
+    &::marker {
+      color: #3b82f6;
+      font-weight: bold;
+    }
+  }
+
+  ol li {
+    position: relative;
+
+    &::marker {
+      color: #059669;
+      font-weight: bold;
+    }
+  }
+
+  blockquote {
+    border-left: 4px solid #3b82f6;
+    margin: 0 0 4px 0;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #374151;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    position: relative;
+
+    &::before {
+      content: '"';
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 2rem;
+      color: #3b82f6;
+      opacity: 0.3;
+    }
+
+    p {
+      margin: 0;
+      padding-left: 20px;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  th,
+  td {
+    padding: 6px 12px;
+    text-align: left;
+  }
+
+  th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-weight: 600;
+    color: #374151;
+  }
+
+  td {
+    background: #ffffff;
+    color: #374151;
+  }
+
+  tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+
+  a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #2563eb;
+      border-bottom-color: #3b82f6;
+    }
+  }
+
+  strong {
+    font-weight: 700;
+    color: #111827;
+  }
+
+  em {
+    font-style: italic;
+    color: #6b7280;
+  }
+
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+    margin: 24px 0;
+  }
+
+  .hljs {
+    background: transparent !important;
+    color: inherit !important;
+  }
+
+  pre:has(code.language-sql),
+  pre:has(code.language-sql) {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid #334155;
+
+    &::before {
+      background: linear-gradient(90deg, #10b981, #059669, #047857);
+    }
+  }
+
+  pre:has(code.language-error),
+  pre:has(code.language-error) {
+    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+    border: 1px solid #dc2626;
+
+    &::before {
+      background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
+    }
+  }
+}
+
+// ========== Mobile Responsive (max-width: 767px) ==========
+@media (max-width: 767px) {
+  .markdown-content {
+    font-size: 0.9375rem;
+
+    h1 { font-size: 1.375rem; }
+    h2 { font-size: 1.2rem; }
+    h3 { font-size: 1.05rem; }
+
+    p {
+      margin: 8px 0;
+      line-height: 1.65;
+    }
+
+    pre {
+      padding: 14px;
+      font-size: 0.8125rem;
+      border-radius: 8px;
+      margin: 12px 0;
+      -webkit-overflow-scrolling: touch;
+
+      .code-copy-button {
+        opacity: 1;
+        padding: 8px 10px;
+      }
+    }
+
+    code {
+      font-size: 0.8125rem;
+      padding: 2px 6px;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    blockquote {
+      padding: 4px 10px;
+
+      &::before {
+        font-size: 1.5rem;
+      }
+
+      p {
+        padding-left: 14px;
+      }
+    }
+
+    table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 12px 0;
+    }
+
+    th, td {
+      padding: 6px 10px;
+      font-size: 0.8125rem;
+      white-space: nowrap;
+    }
+  }
+}
+
+// ========== Tablet Responsive (768px - 1023px) ==========
+@media (min-width: 768px) and (max-width: 1023px) {
+  .markdown-content {
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.3rem; }
+
+    pre {
+      padding: 16px;
+      font-size: 0.84375rem;
+    }
+  }
+}

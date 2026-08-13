@@ -1,0 +1,203 @@
+.single-edit-structure {
+  .form-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 22px;
+  }
+
+  .form-label {
+    width: 120px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 12px;
+    line-height: 32px;
+    color: var(--dsh-text-soft, #606266);
+    font-size: 14px;
+  }
+
+  .form-content {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// AI generation area styles
+.ai-generate-section {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+
+  .ai-notes-input {
+    flex: 1;
+  }
+
+  button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+// Column toolbar
+.column-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  .column-count {
+    font-size: 13px;
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.column-table {
+  width: 100%;
+}
+
+// Column pagination
+.column-pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.dialog-footer {
+  margin-top: 16px;
+
+  button {
+    background: transparent;
+    border: 1px solid var(--dsh-border, #dcdfe6);
+
+    &:hover {
+      background: transparent;
+      border-color: #409eff;
+      color: #409eff;
+    }
+  }
+}
+
+// Editable field styles
+.editable-field {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px dashed var(--dsh-border, #dcdfe6);
+  gap: 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #409eff;
+    background: var(--dsh-hover, #f5f7fa);
+  }
+
+  .field-value {
+    color: var(--dsh-text-soft, #606266);
+    font-size: 13px;
+
+    &.truncate {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .placeholder {
+    color: var(--dsh-faint, #c0c4cc);
+    font-size: 13px;
+  }
+
+  .count-badge {
+    background: #409eff;
+    color: #fff;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    .placeholder {
+      color: #409eff;
+    }
+  }
+}
+
+// Field editor modal styles
+.field-editor {
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--dsh-text, #303133);
+
+    .editor-tip {
+      font-weight: normal;
+      font-size: 12px;
+      color: var(--dsh-muted, #909399);
+    }
+  }
+
+  .editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+
+    .json-error {
+      font-size: 12px;
+      color: #f56c6c;
+    }
+
+    .footer-buttons {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+  }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  .single-edit-structure {
+    // Align form labels to top
+    .form-item {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-label {
+      width: auto;
+      text-align: left;
+    }
+  }
+
+  // Stack AI generation area vertically
+  .ai-generate-section {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      min-height: 36px;
+    }
+  }
+
+  // Stack column toolbar vertically
+  .column-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  // Horizontal scroll for tables
+  .column-table {
+    min-width: 700px;
+  }
+}

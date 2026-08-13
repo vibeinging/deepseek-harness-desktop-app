@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "themes": [
+    {
+      "id": "fixture-ocean",
+      "name": "Fixture Ocean",
+      "description": "Profile Bundle theme projection fixture",
+      "vars": {
+        "--el-color-primary": "#336699"
+      },
+      "mantineColors": [
+        "#eef5fb",
+        "#dceaf5",
+        "#bad5eb",
+        "#98c0e0",
+        "#76abd6",
+        "#5496cc",
+        "#336699",
+        "#294f77",
+        "#1f3c5a",
+        "#15283c"
+      ],
+      "appearance": {
+        "bgImage": "deep-sea",
+        "panelOpacity": 88
+      }
+    }
+  ]
+}

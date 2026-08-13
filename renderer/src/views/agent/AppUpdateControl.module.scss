@@ -1,0 +1,154 @@
+.trigger {
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #43a96b;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.trigger:hover {
+  background: #38945d;
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--dsh-ring);
+}
+
+.trigger[data-busy='true'] {
+  min-width: 88px;
+  justify-content: center;
+  cursor: progress;
+}
+
+.popover {
+  width: min(420px, calc(100vw - 24px));
+  max-height: min(560px, calc(100vh - 76px));
+  overflow: auto;
+  padding: 17px 18px 14px;
+  border-color: color-mix(in srgb, var(--dsh-border) 84%, transparent);
+  border-radius: 14px;
+  background: var(--dsh-surface, #292929);
+  color: var(--dsh-text, #f4f4f4);
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--dsh-border);
+}
+
+.heading strong {
+  display: block;
+  font-size: 14px;
+}
+
+.heading div div {
+  margin-top: 2px;
+  color: var(--dsh-muted);
+  font-size: 12px;
+}
+
+.required {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #d85b5b 17%, transparent);
+  color: #df6b6b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.section {
+  margin-top: 14px;
+}
+
+.section h3 {
+  margin: 0 0 7px;
+  font-size: 13px;
+}
+
+.section ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--dsh-text-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.section li::marker {
+  color: var(--dsh-muted);
+}
+
+.downloadProgress {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, #43a96b 10%, transparent);
+  font-size: 12px;
+}
+
+.downloadProgress > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.downloadProgress small {
+  color: var(--dsh-muted);
+}
+
+.installing {
+  margin-top: 13px;
+  padding: 10px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, #43a96b 10%, transparent);
+  color: var(--dsh-text-soft);
+  font-size: 12px;
+}
+
+.error {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 13px;
+  padding: 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, #d85b5b 11%, transparent);
+  color: #df6b6b;
+  font-size: 12px;
+}
+
+.error button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.footer {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dsh-border);
+  color: var(--dsh-muted);
+  font-size: 11px;
+}

@@ -1,0 +1,273 @@
+.entitiesListDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tableEntityGroup {
+  background: var(--dsh-surface, #fff);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--dsh-border, #e4e7ed);
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.tableGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--dsh-bg, #f8f9fa);
+  border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+
+  .headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .typeTag {
+      flex-shrink: 0;
+    }
+
+    h4 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--dsh-text, #303133);
+    }
+
+    .tableStats {
+      display: flex;
+      gap: 6px;
+    }
+  }
+
+  .tableActions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+/* Special styling for column names */
+.columnNameGroup {
+  max-height: 200px;
+  display: flex;
+  flex-direction: column;
+
+  .tableGroupHeader {
+    flex-shrink: 0;
+  }
+
+  .columnNameContent {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 6px;
+    padding: 12px 16px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+
+    .columnTag {
+      cursor: default;
+
+      .columnDescIndicator {
+        color: #409eff;
+        margin-left: 2px;
+        font-size: 10px;
+      }
+      .columnAutoPromoted {
+        color: #d97706;
+        margin-left: 3px;
+        font-size: 10px;
+        cursor: help;
+      }
+    }
+  }
+}
+
+/* Auto-generated tag (inside column_value table row — AgenticSearch fb_search fallback promote) */
+.autoPromotedTag {
+  margin-left: 4px;
+}
+
+/* Rule editing styles */
+.ruleCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--dsh-hover, #f5f7fa);
+
+    .editRuleIcon {
+      opacity: 1;
+    }
+  }
+
+  .ruleText {
+    font-size: 13px;
+    color: var(--dsh-text-soft, #606266);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.noRule {
+      color: var(--dsh-faint, #c0c4cc);
+      font-style: italic;
+    }
+  }
+
+  .editRuleIcon {
+    color: #409eff;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    display: inline-flex;
+  }
+}
+
+/* Metadata styles */
+.metadataFieldsInline {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  cursor: default;
+}
+
+.metadataTag {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.moreFields {
+  font-size: 12px;
+  color: var(--dsh-muted, #909399);
+  margin-left: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.metadataTooltip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 300px;
+}
+
+.metadataTooltipTag {
+  margin: 0;
+}
+
+.noMetadata {
+  color: var(--dsh-faint, #c0c4cc);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Loading icon rotation animation (same as EP is-loading) */
+.isLoading {
+  display: inline-flex;
+  margin-right: 2px;
+  animation: el-rotating 2s linear infinite;
+}
+
+@keyframes el-rotating {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Internal wrapper for table horizontal scrolling */
+.tableScroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== Tablet ===== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tableGroupHeader {
+    padding: 10px 12px;
+
+    .headerLeft {
+      flex-wrap: wrap;
+    }
+  }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 767px) {
+  .tableGroupHeader {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    padding: 10px 12px;
+
+    .headerLeft {
+      flex-wrap: wrap;
+
+      h4 {
+        font-size: 14px;
+      }
+
+      .tableStats {
+        flex-wrap: wrap;
+      }
+    }
+
+    .tableActions {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+
+  /* Horizontal table scrolling */
+  .tableScroll {
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 800px;
+    }
+  }
+
+  /* Column label list */
+  .columnNameGroup {
+    max-height: none;
+  }
+
+  .columnNameContent {
+    padding: 10px 12px;
+  }
+}
+
+/* Data-source level disabled state */
+.disabledSwitchWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.7;
+
+  .disabledIcon {
+    font-size: 14px;
+    display: inline-flex;
+  }
+}

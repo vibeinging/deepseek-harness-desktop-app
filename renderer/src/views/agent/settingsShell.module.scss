@@ -1,0 +1,185 @@
+/* Common settings shell layout shared by App Settings (AgentSettings) and Project Settings (full-window desktop ProjectSettings).
+   Full-window two-column structure: left nav (transparent, showing global background) + main right panel (floating rounded card).
+   All colors use .dsh-root --dsh-* tokens, with light/dark auto-switching.
+   This is the single source of truth for layout: return-button placement, sidebar width, and content card are identical for both settings pages through reuse. */
+
+.wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+  background: var(--dsh-bg);
+  color: var(--dsh-text);
+  font-family: var(--dsh-sans);
+}
+
+/* ── Left column (transparent, matching the conversation shell left column) ── */
+.side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 6px 6px;
+}
+.back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 4px 14px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--dsh-r-sm);
+  color: var(--dsh-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.back:hover {
+  color: var(--dsh-text);
+  background: var(--dsh-nav-hover);
+}
+.back svg {
+  flex: none;
+}
+
+.nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+  scrollbar-width: thin;
+}
+.navItem {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border: none;
+  background: transparent;
+  border-radius: var(--dsh-r-el);
+  color: var(--dsh-text-soft);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.navItem:hover {
+  background: var(--dsh-nav-hover);
+  color: var(--dsh-text);
+}
+.navItemNested {
+  padding-left: 29px;
+}
+.navIcon {
+  flex: none;
+  color: var(--dsh-faint);
+}
+.navItemActive,
+.navItemActive:hover {
+  background: var(--dsh-nav-active);
+  color: var(--dsh-accent);
+  font-weight: 600;
+  box-shadow: var(--dsh-active-shadow);
+}
+.navItemActive .navIcon {
+  color: var(--dsh-accent);
+}
+
+.navSep {
+  flex: 0 0 auto;
+  height: 1px;
+  margin: 10px 8px;
+  background: var(--dsh-border-soft);
+}
+
+/* ── Collapsible section heading ── */
+.groupHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 14px 10px 4px;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.groupHeader:hover .groupLabel {
+  color: var(--dsh-muted);
+}
+.groupHeaderNested {
+  margin-top: 6px;
+  margin-left: 18px;
+  margin-bottom: 2px;
+}
+.groupHeaderNested .groupLabel {
+  font-size: 10px;
+  font-weight: 650;
+}
+.groupLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dsh-faint);
+  transition: color 0.12s ease;
+}
+.groupSource {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 108px;
+  margin-left: 3px;
+  padding: 2px 6px;
+  overflow: hidden;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsh-accent-tint) 54%, transparent);
+  color: var(--dsh-muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.groupSource::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  flex: 0 0 4px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--dsh-accent);
+}
+.groupChev {
+  flex: none;
+  color: var(--dsh-faint);
+  transition: transform 0.15s ease;
+}
+.groupChevCollapsed {
+  transform: rotate(-90deg);
+}
+
+/* ── Right main panel: floating rounded card (same style as middle area of conversation shell) ── */
+.main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--dsh-surface);
+  border-radius: var(--dsh-r-card);
+  box-shadow: var(--dsh-card-shadow);
+}

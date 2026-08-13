@@ -1,0 +1,116 @@
+.sqlEditorCm {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--el-border-color);
+  border-radius: 4px;
+  background: var(--el-bg-color);
+}
+
+.sqlEditorCm.hasErrors {
+  border-color: var(--el-color-danger-light-3);
+}
+
+.sqlToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--el-fill-color-lighter);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  gap: 12px;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+}
+
+.errorTag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.selectedSqlTag {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+}
+
+.selectedSqlPopover {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow: auto;
+  background: var(--el-color-success-light-9);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.editorContent {
+  flex: 1;
+}
+
+.editorContent :global(.cm-editor) {
+  height: 100%;
+  outline: none;
+}
+
+.editorContent :global(.cm-editor.cm-focused) {
+  outline: none;
+}
+
+.sqlStatusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--el-fill-color-lighter);
+  border-top: 1px solid var(--el-border-color-lighter);
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.errorIcon {
+  color: var(--el-color-danger);
+}
+
+.shortcutHint {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.isLoading {
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

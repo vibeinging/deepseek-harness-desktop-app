@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "interface": {
+    "display_name": "dsh-work 产品桥接",
+    "description": "把项目、对话和 Office 产物能力接入当前 DSH Web Profile。",
+    "developer_name": "dsh-work",
+    "category": "产品能力",
+    "capabilities": [
+      "项目与对话读取",
+      "Office 产物读取与编辑"
+    ]
+  },
+  "contributions": [
+    {
+      "slot": "agent.workbench.tool",
+      "id": "review",
+      "component": "dsh-work/review",
+      "label": "结果与证据",
+      "icon": "terminal",
+      "order": 10
+    },
+    {
+      "slot": "agent.workbench.tool",
+      "id": "browser",
+      "component": "dsh-work/browser",
+      "label": "浏览器",
+      "icon": "world",
+      "order": 20
+    },
+    {
+      "slot": "agent.workbench.tool",
+      "id": "files",
+      "component": "dsh-work/files",
+      "label": "文件",
+      "icon": "file",
+      "order": 30
+    },
+    {
+      "slot": "agent.workbench.tool",
+      "id": "artifacts",
+      "component": "dsh-work/artifacts",
+      "label": "产物",
+      "icon": "archive",
+      "order": 40
+    },
+    {
+      "slot": "agent.workbench.tool",
+      "id": "sites",
+      "component": "dsh-work/sites",
+      "label": "Site",
+      "icon": "dashboard",
+      "order": 50
+    }
+  ]
+}

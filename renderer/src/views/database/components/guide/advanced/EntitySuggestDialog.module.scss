@@ -1,0 +1,434 @@
+$brand: #6b1a96;
+$brand-light: var(--dsh-accent-tint, rgba(107, 26, 150, 0.08));
+$done: #10b981;
+$error: #f56c6c;
+$error-light: rgba(245, 108, 108, 0.08);
+$text-primary: var(--dsh-text, #1a1a2e);
+$text-secondary: var(--dsh-text-soft, #5a5a72);
+$text-muted: var(--dsh-muted, #9494a8);
+$border: var(--dsh-border, #e8e8f0);
+$surface: var(--dsh-code-bg, #fafafa);
+
+// ─── Modal shell (keeps fixed height for the original unscoped .entity-suggest-dialog) ───
+:global(.entity-suggest-dialog) {
+  .dialogContent {
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    max-height: 90vh;
+  }
+}
+
+.dialogContent {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  max-height: 90vh;
+  min-height: 0;
+}
+
+// ─── Steps bar ───
+.stepsBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+  padding: 0 40px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+
+  .stepDot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--dsh-code-bg, #eef0f4);
+    color: $text-muted;
+    border: 2px solid transparent;
+    transition: background 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+                color 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+                border-color 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+                box-shadow 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .stepLabel {
+    font-size: 13px;
+    color: $text-muted;
+    font-weight: 500;
+    transition: color 0.3s, font-weight 0.3s;
+    user-select: none;
+  }
+
+  .checkIcon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &.active {
+    .stepDot {
+      background: var(--dsh-accent, $brand);
+      color: var(--dsh-on-accent, white);
+      border-color: rgba($brand, 0.25);
+      box-shadow: 0 0 0 4px rgba($brand, 0.12);
+      transform: scale(1.08);
+    }
+    .stepLabel { color: $text-primary; font-weight: 600; }
+  }
+
+  &.done {
+    .stepDot {
+      background: $done;
+      color: white;
+      border-color: transparent;
+      box-shadow: none;
+      transform: scale(1);
+    }
+    .stepLabel { color: $text-secondary; }
+  }
+}
+
+// Connector line (base + fill animation)
+.stepLine {
+  width: 64px;
+  height: 2px;
+  background: var(--dsh-border-soft, #eef0f4);
+  margin: 0 12px;
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.stepLineFill {
+  width: 0;
+  height: 100%;
+  background: $done;
+  border-radius: 1px;
+  transition: width 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+
+  &.done { width: 100%; }
+}
+
+// Step 2 analysis breath pulse
+.pulseRing {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(white, 0.6);
+    animation: step-pulse 1.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  }
+}
+
+@keyframes step-pulse {
+  0% { transform: scale(0.8); opacity: 1; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step .stepDot,
+  .step .stepLabel,
+  .stepLineFill {
+    transition-duration: 0.01ms !important;
+  }
+  .pulseRing::after {
+    animation: none;
+  }
+}
+
+// ─── Dialog body ───
+.dialogBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+// ─── Step 1: Select tables ───
+.selectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.selectTitle { font-size: 14px; font-weight: 600; color: $text-primary; }
+.selectActions { display: flex; align-items: center; gap: 12px; }
+.selectCount { font-size: 13px; color: $text-secondary; font-variant-numeric: tabular-nums; }
+
+.tableSelectList {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid $border;
+  border-radius: 8px;
+  min-height: 0;
+}
+
+.selectItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--dsh-border-soft, #f0f2f5);
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--dsh-hover, #f8f9fb); }
+  &.selected { background: $brand-light; }
+}
+
+.itemName {
+  flex: 1;
+  font-size: 13px;
+  color: $text-primary;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemCols { font-size: 11px; color: $text-muted; white-space: nowrap; }
+
+.tableSearchInput {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.noMatchHint {
+  padding: 24px;
+  text-align: center;
+  color: $text-muted;
+  font-size: 13px;
+}
+
+// ─── Step 2: Analysis progress ───
+.overallProgress { margin-bottom: 16px; flex-shrink: 0; }
+.progressHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.progressTitle { font-size: 14px; font-weight: 600; color: $text-primary; }
+.progressStats { font-size: 13px; color: $text-secondary; font-variant-numeric: tabular-nums; }
+.progressDetail { margin-top: 6px; font-size: 12px; color: $text-muted; }
+
+.tableProgressList {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid $border;
+  border-radius: 8px;
+  min-height: 0;
+}
+
+.progressItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--dsh-border-soft, #f0f2f5);
+
+  &:last-child { border-bottom: none; }
+  &.isRunning { background: $brand-light; }
+  &.isDone .progressTableName { color: $text-muted; }
+  &.isError { background: $error-light; }
+}
+
+.progressItemLeft { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+
+.statusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+
+  .doneIcon { color: $done; font-size: 16px; }
+  .errorIcon { color: $error; font-size: 16px; }
+  .pendingDot { width: 8px; height: 8px; border-radius: 50%; background: var(--dsh-border, #dcdfe6); }
+}
+
+.isLoading {
+  animation: es-rotate 1s linear infinite;
+}
+
+@keyframes es-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.progressTableName {
+  font-size: 13px;
+  color: $text-primary;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progressColCount { font-size: 11px; color: $text-muted; white-space: nowrap; }
+.progressItemRight { flex-shrink: 0; margin-left: 12px; }
+.foundCount { font-size: 12px; color: var(--dsh-accent, $brand); font-weight: 600; }
+.foundNone { font-size: 12px; color: $text-muted; }
+.errorText { font-size: 12px; color: $error; }
+
+// ─── Step 3: Confirm and edit ───
+.resultSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.resultSummary { font-size: 14px; font-weight: 600; color: $text-primary; }
+
+.configList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.configCard {
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.configCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: $surface;
+}
+
+.configCardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.configTableCol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monoText {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: $text-primary;
+}
+
+.configCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.scoreBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  &.scoreHigh { background: rgba($done, 0.12); color: $done; }
+  &.scoreMid { background: rgba(217, 119, 6, 0.12); color: #d97706; }
+  &.scoreLow { background: rgba($error, 0.12); color: $error; }
+}
+
+.samplePreview {
+  font-size: 12px;
+  color: $text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moreText { color: $text-muted; }
+
+.expandBtn {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.configCardBody {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--dsh-border-soft, #f0f2f5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel { font-size: 12px; color: $text-secondary; font-weight: 500; }
+
+.fieldLabelWithActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .fieldLabel { flex: 0 0 auto; }
+}
+
+.metadataOptionDesc {
+  font-size: 11px;
+  color: $text-muted;
+  margin-left: 8px;
+}
+
+.emptyResult {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+// ─── Footer ───
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

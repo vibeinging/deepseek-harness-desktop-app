@@ -1,0 +1,140 @@
+// Unified semantic-layer empty state style aligned with database/structured empty state (illustration + title + description + feature tags + actions).
+.wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(56px, 12vh, 140px) 20px 56px;
+  text-align: center;
+}
+
+.content {
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// --- Top icon illustration (center hub + side icons), matching database empty-state illustration ---
+.illustration {
+  margin-bottom: 28px;
+}
+.illoContainer {
+  position: relative;
+  width: 160px;
+  height: 96px;
+}
+.hub {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #8451fe, #6a36e3); // Brand purple accent, visible in both themes
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(132, 81, 254, 0.3);
+
+  :global(svg) {
+    width: 26px;
+    height: 26px;
+  }
+}
+.sat {
+  position: absolute;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dsh-chip-bg, #eef1f8);
+  color: var(--dsh-accent, #6a36e3);
+  box-shadow: var(--dsh-card-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
+
+  :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+}
+.satLeft {
+  left: 6px;
+}
+.satRight {
+  right: 6px;
+}
+
+// --- Title and description ---
+.intro {
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dsh-text, #1e293b);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--dsh-text-soft, #64748b);
+    line-height: 1.7;
+  }
+}
+
+// --- Feature tags row (icon + short text), matching database emptyFeatures ---
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--dsh-text-soft, #475569);
+}
+.featureIcon {
+  display: inline-flex;
+  color: var(--dsh-accent, #6a36e3);
+}
+
+// --- Centered action buttons ---
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  > button {
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 767px) {
+  .wrap {
+    padding: clamp(40px, 9vh, 96px) 12px 40px;
+  }
+  .features {
+    gap: 16px;
+  }
+  .actions {
+    flex-direction: column;
+
+    > button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+}

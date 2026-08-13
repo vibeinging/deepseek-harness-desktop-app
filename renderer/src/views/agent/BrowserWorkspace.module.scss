@@ -1,0 +1,523 @@
+.root {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: var(--dsh-text);
+  background: var(--dsh-surface);
+}
+
+.tabStrip,
+.toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-bottom: 1px solid var(--dsh-border);
+}
+
+.tabStrip {
+  gap: 5px;
+  min-height: 37px;
+  padding: 5px 8px 0;
+  background: color-mix(in srgb, var(--dsh-bg) 72%, var(--dsh-surface));
+}
+
+.tabs {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: min(190px, 24vw);
+  min-width: 112px;
+  height: 31px;
+  padding: 0 7px 0 10px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  color: var(--dsh-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.tab:hover { color: var(--dsh-text); background: var(--dsh-hover); }
+.tab[data-active='true'] {
+  color: var(--dsh-text);
+  border-color: var(--dsh-border);
+  background: var(--dsh-surface);
+}
+
+.tab > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.loadingDot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid color-mix(in srgb, var(--dsh-muted) 35%, transparent);
+  border-top-color: var(--dsh-accent);
+  border-radius: 50%;
+  animation: browserSpin .75s linear infinite;
+}
+
+@keyframes browserSpin { to { transform: rotate(360deg); } }
+
+.closeTab {
+  display: inline-grid;
+  flex: none;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 5px;
+  opacity: .62;
+}
+
+.closeTab:hover { background: var(--dsh-nav-hover); opacity: 1; }
+
+.toolbar {
+  gap: 4px;
+  min-height: 45px;
+  padding: 6px 9px;
+  background: var(--dsh-surface);
+}
+
+.iconButton,
+.textButton,
+.primaryButton,
+.permissionPrompt button,
+.permissionList button {
+  border: 0;
+  color: var(--dsh-text-soft);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.iconButton {
+  display: inline-grid;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.iconButton:hover:not(:disabled),
+.textButton:hover { color: var(--dsh-text); background: var(--dsh-hover); }
+.iconButton:disabled { cursor: default; opacity: .34; }
+
+.addressForm {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  min-width: 100px;
+  height: 31px;
+  margin: 0 4px;
+  padding: 0 10px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 9px;
+  color: var(--dsh-muted);
+  background: color-mix(in srgb, var(--dsh-bg) 55%, var(--dsh-surface));
+}
+
+.addressForm:focus-within {
+  border-color: color-mix(in srgb, var(--dsh-accent) 46%, var(--dsh-border));
+  box-shadow: var(--dsh-ring);
+}
+
+.addressForm input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--dsh-text);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+
+.addressForm input::placeholder { color: var(--dsh-faint); }
+
+.textButton,
+.primaryButton {
+  flex: none;
+  height: 31px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.textButton { display: flex; align-items: center; gap: 5px; }
+.textButtonActive { color: var(--dsh-text); background: var(--dsh-hover); }
+.primaryButton { color: var(--dsh-on-accent); background: var(--dsh-accent); }
+.primaryButton:hover:not(:disabled) { filter: brightness(1.04); }
+.primaryButton:disabled { cursor: default; opacity: .42; }
+
+.count {
+  display: inline-grid;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--dsh-chip-bg);
+  font-size: 9px;
+}
+
+.permissionPrompt {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--dsh-amber-border);
+  color: var(--dsh-text);
+  background: var(--dsh-amber-bg);
+}
+
+.permissionPrompt > div:first-of-type {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 11px;
+}
+
+.permissionPrompt strong,
+.permissionPrompt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.permissionPrompt span { color: var(--dsh-muted); }
+.permissionActions { display: flex; flex: none; gap: 4px; }
+.permissionPrompt button { padding: 6px 8px; border-radius: 7px; font-size: 10px; }
+.permissionPrompt button:hover { background: color-mix(in srgb, var(--dsh-amber) 11%, transparent); }
+.permissionPrompt .permissionPrimary { color: var(--dsh-on-accent); background: var(--dsh-accent); }
+
+.permissionPanel {
+  flex: none;
+  display: grid;
+  gap: 10px;
+  max-height: min(260px, 32vh);
+  padding: 12px 14px;
+  overflow: auto;
+  border-bottom: 1px solid var(--dsh-border);
+  background: color-mix(in srgb, var(--dsh-bg) 52%, var(--dsh-surface));
+}
+
+.permissionPanel > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.permissionPanel > div:first-child strong { font-size: 12px; }
+.permissionPanel > div:first-child span,
+.permissionPanel > p { margin: 0; color: var(--dsh-muted); font-size: 10px; }
+.permissionList { display: grid; gap: 4px; }
+
+.permissionList > div {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) 100px 50px auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 7px;
+  background: var(--dsh-surface);
+  font-size: 10px;
+}
+
+.permissionList span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.permissionList span:nth-child(2) { color: var(--dsh-muted); }
+.permissionList strong[data-decision='allow'] { color: var(--dsh-ok); }
+.permissionList strong[data-decision='deny'] { color: var(--dsh-danger); }
+.permissionList button { color: var(--dsh-muted); font-size: 10px; }
+.permissionList button:hover { color: var(--dsh-danger); }
+
+.error {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dsh-danger) 25%, var(--dsh-border));
+  color: var(--dsh-danger);
+  background: color-mix(in srgb, var(--dsh-danger) 6%, var(--dsh-surface));
+  font-size: 11px;
+}
+
+.findBar,
+.confirmPanel,
+.toolPanelHeader,
+.settingsRow {
+  display: flex;
+  align-items: center;
+}
+
+.findBar {
+  flex: none;
+  gap: 6px;
+  min-height: 39px;
+  padding: 5px 9px 5px 12px;
+  border-bottom: 1px solid var(--dsh-border);
+  color: var(--dsh-muted);
+  background: color-mix(in srgb, var(--dsh-bg) 52%, var(--dsh-surface));
+}
+.findBar input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 7px;
+  outline: none;
+  color: var(--dsh-text);
+  background: var(--dsh-surface);
+  font: inherit;
+  font-size: 11px;
+}
+.findBar input:focus { box-shadow: var(--dsh-ring); }
+.findBar > span { min-width: 38px; font-size: 10px; text-align: center; }
+.findBar button,
+.toolPanel button,
+.confirmPanel button {
+  display: grid;
+  flex: none;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: var(--dsh-text-soft);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.findBar button:hover,
+.toolPanel button:hover,
+.confirmPanel button:hover { color: var(--dsh-text); background: var(--dsh-hover); }
+
+.browserMenu {
+  flex: none;
+  display: grid;
+  align-self: flex-end;
+  width: min(330px, calc(100% - 16px));
+  margin: 6px 8px;
+  padding: 5px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dsh-surface) 95%, var(--dsh-bg));
+  box-shadow: var(--dsh-card-shadow);
+}
+.browserMenu > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--dsh-text-soft);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.browserMenu > button:hover { color: var(--dsh-text); background: var(--dsh-hover); }
+.browserMenu > button span { flex: 1; }
+.browserMenu > button em {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 9px;
+  background: var(--dsh-chip-bg);
+  font-size: 9px;
+  font-style: normal;
+  text-align: center;
+}
+.menuDivider { height: 1px; margin: 4px 5px; background: var(--dsh-border); }
+.zoomRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 8px 0 9px;
+  color: var(--dsh-text-soft);
+  font-size: 11px;
+}
+.zoomRow > span { flex: 1; }
+.zoomRow strong { min-width: 42px; color: var(--dsh-text); text-align: center; }
+.zoomRow button {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: var(--dsh-text-soft);
+  background: var(--dsh-hover);
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+.zoomRow .resetZoom { width: auto; padding: 0 7px; background: transparent; }
+
+.confirmPanel {
+  flex: none;
+  gap: 7px;
+  padding: 10px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dsh-danger) 22%, var(--dsh-border));
+  background: color-mix(in srgb, var(--dsh-danger) 5%, var(--dsh-surface));
+}
+.confirmPanel > div { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.confirmPanel strong { color: var(--dsh-text); font-size: 11px; }
+.confirmPanel span { color: var(--dsh-muted); font-size: 10px; line-height: 1.45; }
+.confirmPanel .dangerButton { color: var(--dsh-on-accent); background: var(--dsh-danger); }
+
+.toolPanel {
+  flex: none;
+  display: grid;
+  gap: 8px;
+  max-height: min(300px, 42vh);
+  padding: 10px 12px;
+  overflow: auto;
+  border-bottom: 1px solid var(--dsh-border);
+  background: color-mix(in srgb, var(--dsh-bg) 52%, var(--dsh-surface));
+}
+.toolPanelHeader { gap: 7px; }
+.toolPanelHeader > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.toolPanelHeader strong { color: var(--dsh-text); font-size: 12px; }
+.toolPanelHeader span,
+.toolPanel > p { margin: 0; overflow: hidden; color: var(--dsh-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.downloadList { display: grid; gap: 4px; }
+.historyList { display: grid; gap: 4px; }
+.historyItem {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 8px;
+  background: var(--dsh-surface);
+}
+.toolPanel .historyOpen {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: auto;
+  padding: 7px 4px 7px 8px;
+  text-align: left;
+}
+.historyOpen > span { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.historyOpen strong,
+.historyOpen small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.historyOpen strong { color: var(--dsh-text); font-size: 10px; }
+.historyOpen small { color: var(--dsh-muted); font-size: 9px; }
+.historyOpen time { flex: none; color: var(--dsh-muted); font-size: 9px; }
+.historyOpen em {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 8px;
+  color: var(--dsh-muted);
+  background: var(--dsh-chip-bg);
+  font-size: 8px;
+  font-style: normal;
+}
+.toolPanel .historyDelete { margin-right: 4px; color: var(--dsh-muted); }
+.toolPanel .historyDelete:hover { color: var(--dsh-danger); }
+.downloadList > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 8px;
+  background: var(--dsh-surface);
+}
+.downloadList > div > div { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.downloadList strong { overflow: hidden; color: var(--dsh-text); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.downloadList span { color: var(--dsh-muted); font-size: 9px; }
+.settingsRow { gap: 9px; min-height: 32px; padding: 0 4px; font-size: 10px; }
+.settingsRow > span { color: var(--dsh-muted); }
+.settingsRow > strong { flex: 1; overflow: hidden; color: var(--dsh-text); text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.toolPanel .clearPermissions { justify-self: start; color: var(--dsh-danger); }
+
+.viewport {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+}
+
+.unsupported {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-content: center;
+  justify-items: center;
+  color: var(--dsh-muted);
+  background: var(--dsh-surface);
+  text-align: center;
+}
+
+.unsupported h2 { margin: 12px 0 4px; color: var(--dsh-text); font-size: 17px; }
+.unsupported p { margin: 0; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .textButton { width: 32px; padding: 0; overflow: hidden; color: transparent; }
+  .textButton::before { content: '权限'; width: 32px; color: var(--dsh-text-soft); text-align: center; }
+  .primaryButton { padding: 0 8px; }
+  .permissionPrompt { align-items: flex-start; flex-wrap: wrap; }
+  .permissionActions { width: 100%; justify-content: flex-end; }
+  .permissionList > div { grid-template-columns: minmax(120px, 1fr) auto auto; }
+  .permissionList span:nth-child(2) { display: none; }
+}
+
+@container (max-width: 460px) {
+  .toolbar {
+    flex-wrap: wrap;
+    align-content: center;
+    min-height: 80px;
+  }
+
+  .addressForm {
+    flex-basis: calc(100% - 110px);
+    margin-right: 0;
+  }
+
+  .textButton { margin-left: auto; }
+  .permissionPrompt { align-items: flex-start; flex-wrap: wrap; }
+  .permissionActions { width: 100%; justify-content: flex-end; }
+  .permissionList > div { grid-template-columns: minmax(120px, 1fr) auto auto; }
+  .permissionList span:nth-child(2) { display: none; }
+  .browserMenu { width: calc(100% - 12px); margin: 6px; }
+  .confirmPanel { align-items: flex-start; flex-wrap: wrap; }
+  .confirmPanel > div { flex-basis: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingDot { animation: none; }
+}

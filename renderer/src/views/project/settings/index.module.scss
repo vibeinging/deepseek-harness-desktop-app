@@ -1,0 +1,422 @@
+// Project settings page styles (from views/project/settings/index.vue <style scoped>)
+// TODO(migration): Source version uses el-tabs (left / top nav), React migration uses Mantine Tabs.
+//   Desktop uses vertical, mobile uses horizontal. Selectors changed from .el-tabs__*
+//   to Mantine's .mantine-Tabs-list / [role="tab"] to keep visual and interaction behavior aligned.
+
+.projectSettings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+  // Keep original colors by default; when embedded in the app shell, map --ps-* to theme tokens for light/dark auto-adaptation.
+  background: var(--ps-bg, #f5f7fa);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  &.mobile {
+    padding: 12px 8px;
+    overflow-x: hidden;
+
+    .pageHeader {
+      flex-direction: column;
+      gap: 8px;
+      padding-left: 48px;
+      padding-right: 4px;
+
+      .headerLeft h1 {
+        font-size: 20px;
+      }
+
+      .headerRight .projectInfo {
+        max-width: 100%;
+        padding: 8px 12px;
+        min-width: 0;
+
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .settingsPanel {
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    .tabContentWrapper {
+      padding: 8px;
+    }
+  }
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+
+  .headerLeft {
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--ps-text, #1e293b);
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ps-muted, #64748b);
+    }
+  }
+
+  .headerRight {
+    .projectInfo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      color: var(--ps-text, #1e293b);
+
+      .projectInfoIcon {
+        color: var(--ps-accent, #6366f1);
+        font-size: 18px;
+        display: inline-flex;
+      }
+    }
+  }
+}
+
+.contentWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settingsPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--ps-panel, #fff);
+  border-radius: 12px;
+  box-shadow: var(--ps-panel-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
+  overflow: hidden;
+
+  &.settingsPanelEmpty {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.settingsTabs {
+  height: 100%;
+  min-width: 0;
+  // Divider between sidebar and content (.mantine-Tabs-list::before), use --tab-border-color.
+  // Keep it, but use the lightest border color in the theme (lighter than default gray #dee2e6 and follows light/dark theme).
+  // Needs !important because Mantine has same specificity and loads later.
+  --tab-border-color: var(--dsh-border-soft, #eef1f4) !important;
+
+  // Mantine Tabs root (left-side navigation + horizontal content layout when vertical orientation).
+  :global(.mantine-Tabs-root) {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  // Desktop: left vertical tabs with vertical scrolling when many tabs to keep the bottom visible.
+  &:not(.settingsTabsMobile) {
+    :global(.mantine-Tabs-list) {
+      flex-shrink: 0;
+      flex-wrap: nowrap; // Key: Mantine defaults to wrap and moves tabs to multiple lines; set nowrap to keep vertical overflow scroll.
+      align-self: stretch;
+      max-height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      border-right: none;
+      gap: 0;
+      padding-top: 10px;
+      padding-bottom: 10px;
+
+      [role='tab'] {
+        flex: 0 0 auto; // Do not shrink; overflow should scroll as a whole group instead of shrinking each tab.
+        height: 42px;
+        line-height: 42px;
+        padding: 0 24px;
+        text-align: left;
+        justify-content: flex-start;
+        font-size: 14px;
+        color: var(--ps-muted, #64748b);
+        border-radius: 8px;
+        border: none;
+        margin: 3px 12px;
+        transition: all 0.2s;
+
+        &:hover {
+          color: var(--ps-accent, #6366f1);
+          background: var(--ps-accent-bg-weak, rgba(99, 102, 241, 0.05));
+        }
+
+        &[data-active] {
+          color: var(--ps-accent, #6366f1);
+          background: var(--ps-accent-bg, rgba(99, 102, 241, 0.1));
+          font-weight: 500;
+        }
+
+        // Divider for grouped sections (disabled tab styles).
+        &:disabled,
+        &[data-disabled] {
+          padding: 0;
+          height: auto;
+          margin: 16px 12px 8px;
+          pointer-events: none;
+          opacity: 1;
+          background: transparent;
+        }
+      }
+    }
+  }
+
+  // Mobile: top horizontal scrolling navigation
+  &.settingsTabsMobile {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+
+    :global(.mantine-Tabs-root) {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    :global(.mantine-Tabs-list) {
+      flex-shrink: 0;
+      margin: 0;
+      width: 100%;
+      border-bottom: 1px solid var(--ps-border, #e5e7eb);
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      padding: 8px 6px 0;
+      box-sizing: border-box;
+
+      [role='tab'] {
+        flex-shrink: 0;
+        height: 36px;
+        line-height: 36px;
+        padding: 0 12px;
+        margin: 0 2px 8px;
+        font-size: 13px;
+        color: var(--ps-muted, #64748b);
+        border-radius: 8px;
+        border: none;
+        white-space: nowrap;
+        transition: all 0.2s;
+
+        &:hover {
+          color: var(--ps-accent, #6366f1);
+          background: var(--ps-accent-bg-weak, rgba(99, 102, 241, 0.05));
+        }
+
+        &[data-active] {
+          color: var(--ps-accent, #6366f1);
+          background: var(--ps-accent-bg, rgba(99, 102, 241, 0.1));
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // Content area
+  :global(.mantine-Tabs-panel) {
+    flex: 1;
+    padding: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
+  }
+}
+
+// Collapsible group header (plain button with spacing; chevron rotation indicates expand/collapse)
+.groupHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: auto;
+  margin: 14px 12px 4px;
+  padding: 4px 6px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  text-align: left;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--ps-accent-bg-weak, rgba(99, 102, 241, 0.05));
+  }
+}
+.groupLabel {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ps-divider-text, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.groupChevOn,
+.groupChevOff {
+  flex: none;
+  color: var(--ps-divider-text, #94a3b8);
+  transition: transform 0.15s ease;
+}
+.groupChevOff {
+  transform: rotate(-90deg);
+}
+
+// ── Desktop full-window mode: content area (inside SettingsShell .main white card)── //
+// Shell layout (back button/sidebar/content card) is provided by SettingsShell; this file handles:
+//   ① --ps-* → app theme mapping (BasicInfo and related sections follow light/dark); ② consistent internal paddings.
+.shellContent {
+  --ps-bg: var(--dsh-bg);
+  --ps-panel: var(--dsh-surface);
+  --ps-panel-shadow: var(--dsh-card-shadow);
+  --ps-text: var(--dsh-text);
+  --ps-muted: var(--dsh-text-soft);
+  --ps-accent: var(--dsh-accent);
+  --ps-accent-bg: var(--dsh-chip-bg);
+  --ps-accent-bg-weak: var(--dsh-hover);
+  --ps-border: var(--dsh-border);
+  --ps-divider-text: var(--dsh-faint);
+  --ps-inset: var(--dsh-bg);
+  --ps-hover: var(--dsh-hover);
+  --ps-accent-on: var(--dsh-on-accent);
+  --ps-accent-tint: var(--dsh-accent-tint);
+
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 30px 36px;
+}
+
+.pluginUiSurface {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.shellContentFixed {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  > :global(*) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// Dark mode: child pages in --md-* (business management components like metrics/views/entities/data sources),
+// are remapped to app dark tokens; otherwise they keep light defaults and look like white cards in dark mode.
+// Light mode is not overridden and blends with default light values.
+// (Same mapping pattern as AgentSettings embedded page: .wrap[data-theme='dark'] .embed)
+:global(.dsh-root[data-theme='dark']) .shellContent {
+  --md-surface: var(--dsh-bg);
+  --md-subtle: var(--dsh-code-bg);
+  --md-border: var(--dsh-border);
+  --md-border-soft: var(--dsh-border-soft);
+  --md-border-strong: var(--dsh-border);
+  --md-text: var(--dsh-text);
+  --md-text-2: var(--dsh-text-soft);
+  --md-muted: var(--dsh-muted);
+  --md-faint: var(--dsh-faint);
+
+  // Element Plus tokens (mostly inherited --el-* from webui Vue): remap common tokens in dark mode.
+  // Otherwise el borders/primary/fill will fall back to light defaults or undefined values, causing borders to disappear,
+  // primary color to shift blue, and cards to blend in too much.
+  // Keep semantic colors (danger/success/warning/info) and *-rgb tuples unchanged; they remain readable in dark mode.
+  --el-text-color-primary: var(--dsh-text);
+  --el-text-color-regular: var(--dsh-text-soft);
+  --el-text-color-secondary: var(--dsh-muted);
+  --el-text-color-placeholder: var(--dsh-faint);
+  --el-text-color-disabled: var(--dsh-faint);
+  --el-border-color: var(--dsh-border);
+  --el-border-color-light: var(--dsh-border);
+  --el-border-color-lighter: var(--dsh-border-soft);
+  --el-border-color-extra-light: var(--dsh-border-soft);
+  --el-color-primary: var(--dsh-accent);
+  --el-color-primary-light-5: var(--dsh-accent-soft);
+  --el-color-primary-light-9: var(--dsh-accent-tint);
+  --el-fill-color-light: var(--dsh-hover);
+  --el-fill-color-lighter: var(--dsh-code-bg);
+  --el-fill-color-blank: var(--dsh-surface);
+  --el-bg-color: var(--dsh-surface);
+  --el-bg-color-overlay: var(--dsh-surface);
+  --el-bg-color-page: var(--dsh-bg);
+
+  // Map ad-page design system tokens (all light values in styles/components.scss via --ad-*) to dark variants in app dark mode.
+  // Without remapping, child pages using --ad-* (empty states, cards, lists, MCP, etc.) stay light in dark mode and text appears washed out.
+  // Keep semantic colors (danger/success/warning) unchanged; they are already readable in dark mode.
+  --ad-primary: var(--dsh-accent);
+  --ad-primary-light: var(--dsh-chip-bg);
+  --ad-primary-lighter: var(--dsh-hover);
+  --ad-text-primary: var(--dsh-text);
+  --ad-text-secondary: var(--dsh-text-soft);
+  --ad-text-muted: var(--dsh-muted);
+  --ad-border: var(--dsh-border);
+  --ad-border-light: var(--dsh-border-soft);
+  --ad-bg-white: var(--dsh-surface);
+  --ad-bg-gray: var(--dsh-bg);
+  --ad-bg-hover: var(--dsh-hover);
+}
+
+.tabContentWrapper {
+  height: 100%;
+  padding: 12px;
+  overflow: auto;
+
+  // When embedding skill management in settings, hide standalone page title/background and align buttons with tabs.
+  :global(.skill-management) {
+    padding: 0 !important;
+    background: transparent !important;
+
+    > :global(.page-header) {
+      display: none !important;
+    }
+  }
+}
+
+// Tablet
+@media (min-width: 768px) and (max-width: 1023px) {
+  .projectSettings {
+    padding: 16px 8px;
+  }
+
+  .settingsTabs {
+    :global(.mantine-Tabs-list) {
+      [role='tab'] {
+        padding: 0 16px;
+        font-size: 13px;
+      }
+    }
+  }
+}

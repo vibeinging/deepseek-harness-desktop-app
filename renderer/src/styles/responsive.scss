@@ -1,0 +1,179 @@
+/**
+ * Responsive layout utilities
+ *
+ * Includes breakpoint definitions, responsive mixins, device detection, and utility classes.
+ * Injected globally through Vite additionalData so all .vue files can use mixins directly.
+ * Utilities are imported in index.scss and available globally.
+ */
+
+// ========================================
+// Breakpoint definitions
+// ========================================
+$breakpoint-mobile: 768px;
+$breakpoint-tablet: 1024px;
+$breakpoint-desktop: 1200px;
+$breakpoint-wide: 1440px;
+
+// ========================================
+// Responsive mixins
+// ========================================
+
+// Mobile: < 768px
+@mixin mobile {
+  @media (max-width: #{$breakpoint-mobile - 1px}) {
+    @content;
+  }
+}
+
+// Tablet: 768px ~ 1023px
+@mixin tablet {
+  @media (min-width: #{$breakpoint-mobile}) and (max-width: #{$breakpoint-tablet - 1px}) {
+    @content;
+  }
+}
+
+// Tablet and below: < 1024px
+@mixin tablet-and-below {
+  @media (max-width: #{$breakpoint-tablet - 1px}) {
+    @content;
+  }
+}
+
+// Desktop: >= 1024px
+@mixin desktop {
+  @media (min-width: #{$breakpoint-tablet}) {
+    @content;
+  }
+}
+
+// Wide screens: >= 1440px
+@mixin wide {
+  @media (min-width: #{$breakpoint-wide}) {
+    @content;
+  }
+}
+
+// Touch device detection
+@mixin touch-device {
+  @media (hover: none) and (pointer: coarse) {
+    @content;
+  }
+}
+
+// Landscape mode detection (mobile/tablet)
+@mixin landscape {
+  @media (orientation: landscape) and (max-width: #{$breakpoint-tablet - 1px}) {
+    @content;
+  }
+}
+
+// ========================================
+// Utility classes - show/hide by device
+// ========================================
+
+.hide-on-mobile {
+  @include mobile { display: none !important; }
+}
+
+.hide-on-tablet {
+  @include tablet { display: none !important; }
+}
+
+.hide-on-desktop {
+  @include desktop { display: none !important; }
+}
+
+.show-on-mobile {
+  display: none !important;
+  @include mobile { display: block !important; }
+}
+
+.show-on-tablet {
+  display: none !important;
+  @include tablet { display: block !important; }
+}
+
+// ========================================
+// Touch-friendly helpers
+// ========================================
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+// ========================================
+// Mobile Element Plus adaptations
+// ========================================
+
+@media (max-width: #{$breakpoint-mobile - 1px}) {
+  // Make dialogs full-screen on mobile
+  .el-dialog {
+    --el-dialog-width: 92vw !important;
+    margin-top: 5vh !important;
+  }
+
+  // Teleported dialogs: keep within viewport and make footer buttons full width stacked vertically
+  .el-overlay-dialog .el-dialog {
+    max-width: calc(100vw - 16px) !important;
+    box-sizing: border-box;
+  }
+
+  .el-overlay-dialog .el-dialog__footer {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+
+  .el-overlay-dialog .el-dialog__footer .el-button + .el-button {
+    margin-left: 0 !important;
+  }
+
+  .el-overlay-dialog .el-dialog__footer .el-button {
+    width: 100%;
+    margin: 0 !important;
+    min-height: 44px;
+  }
+
+  .el-message-box {
+    width: min(92vw, 400px) !important;
+    max-width: calc(100vw - 24px) !important;
+    box-sizing: border-box;
+  }
+
+  .el-message-box__btns {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .el-message-box__btns .el-button {
+    width: 100%;
+    margin: 0 !important;
+    min-height: 44px;
+  }
+
+  // Full-width form items on mobile
+  .el-form--inline .el-form-item {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  // Message popup adaptation
+  .el-message {
+    min-width: auto !important;
+    max-width: 90vw !important;
+  }
+
+  // Dropdown menu adaptation
+  .el-dropdown-menu {
+    max-width: 90vw;
+  }
+
+  .el-drawer__body {
+    padding: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+}

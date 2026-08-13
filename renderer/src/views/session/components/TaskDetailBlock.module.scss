@@ -1,0 +1,297 @@
+/* ── Base ─────────────────────────────────────────── */
+.tdb {
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ── Header ───────────────────────────────────────── */
+.tdb-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.tdb-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tdb-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tdb-action {
+  font-size: 12px;
+  color: var(--el-text-color-regular, #64748b);
+  font-weight: 400;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tdb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--el-color-primary, #6366f1);
+}
+
+/* ── Body ─────────────────────────────────────────── */
+.tdb-body {
+  margin-top: 6px;
+  position: relative;
+  /* Smooth transition: height changes are animated when autoCollapseOnDone collapses content */
+  transition: max-height 0.25s ease-in-out;
+
+  &.collapsed {
+    overflow: hidden;
+  }
+}
+
+.tdb-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--el-text-color-regular, #64748b);
+  word-break: break-word;
+  transition: max-height 0.25s ease-in-out;
+
+  &.height-clamp {
+    overflow: hidden;
+  }
+
+  :global(p) {
+    margin: 0;
+  }
+
+  :global(p + p) {
+    margin-top: 4px;
+  }
+
+  :global(table) {
+    width: 100%;
+    table-layout: fixed;
+    th:nth-child(1), td:nth-child(1) { width: 160px; }
+    th:nth-child(2), td:nth-child(2) { width: 70px; text-align: center; }
+    th:nth-child(3), td:nth-child(3) { overflow: hidden; text-overflow: ellipsis; }
+  }
+}
+
+/* ── Fade Overlay ─────────────────────────────────── */
+.tdb-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, var(--el-bg-color, #fff));
+  pointer-events: none;
+}
+
+/* ── Collapse Button ──────────────────────────────── */
+.tdb-more {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--el-color-primary, #6366f1);
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+/* ── Color Classes ────────────────────────────────── */
+.c-purple {
+  /* Thinking / analysis block — a subtle side note for AI reasoning.
+     - Very light purple-blue gradient + thin purple left edge, avoiding conflict with final answer
+     - Text uses secondary color and slightly wider line-height for lighter reading weight
+     - Auto-collapses to 2-line preview after done, with fade overlay for a smooth transition */
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.045) 0%,
+    rgba(99, 102, 241, 0.03) 100%
+  );
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  border-left: 3px solid rgba(139, 92, 246, 0.4);
+  padding: 10px 14px;
+  border-radius: 4px 8px 8px 4px;
+  margin: 4px 0 8px;
+
+  .tdb-header {
+    margin-bottom: 2px;
+  }
+
+  .tdb-icon {
+    color: rgba(139, 92, 246, 0.75);
+    opacity: 0.9;
+  }
+
+  .tdb-label {
+    color: rgba(139, 92, 246, 0.9);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+  }
+
+  .tdb-text {
+    color: var(--el-text-color-secondary, #6b7280);
+    line-height: 1.75;
+    font-size: 12.5px;
+  }
+
+  .tdb-more {
+    color: rgba(139, 92, 246, 0.75);
+    font-size: 11px;
+  }
+
+  /* Fade overlay follows the gradient to avoid a bright white edge when collapsed */
+  .tdb-fade {
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgba(252, 251, 255, 0.95)
+    );
+  }
+
+  /* Keep the header loading dots purple to match the section tone */
+  .tdb-loading span {
+    background: rgba(139, 92, 246, 0.7);
+  }
+}
+
+.c-blue {
+  .tdb-icon,
+  .tdb-label {
+    color: var(--el-color-primary, #6366f1);
+  }
+}
+
+.c-gray {
+  .tdb-icon,
+  .tdb-label {
+    color: var(--el-text-color-placeholder, #94a3b8);
+  }
+}
+
+/* ── Loading Animation ────────────────────────────── */
+.tdb-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+
+  span {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--el-color-primary, #6366f1);
+    animation: tdb-bounce 1.2s ease-in-out infinite;
+  }
+
+  span:nth-child(2) { animation-delay: 0.15s; }
+  span:nth-child(3) { animation-delay: 0.3s; }
+}
+
+@keyframes tdb-bounce {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30% { opacity: 1; transform: scale(1); }
+}
+
+.c-green {
+  background: rgba(16, 185, 129, 0.04);
+  border-left: 2px solid rgba(16, 185, 129, 0.2);
+
+  .tdb-icon,
+  .tdb-label {
+    color: var(--el-color-success, #10b981);
+  }
+}
+
+.c-red {
+  background: rgba(239, 68, 68, 0.04);
+  border-left: 2px solid rgba(239, 68, 68, 0.2);
+
+  .tdb-icon,
+  .tdb-label {
+    color: var(--el-color-danger, #ef4444);
+  }
+}
+
+.c-accent {
+  /* Analysis / orchestration blocks — visually separate from "think" and final answers.
+     Use a light cream background with purple left border to indicate a transition state (decompose/plan). */
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 2px solid rgba(139, 92, 246, 0.35);
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border-radius: 0 4px 4px 0;
+
+  .tdb-icon,
+  .tdb-label {
+    color: var(--el-color-primary, #6366f1);
+    font-weight: 500;
+  }
+
+  /* Do not override .tdb-text font-size; keep default 13px */
+  .tdb-text {
+    color: var(--el-text-color-regular, #606266);
+    line-height: 1.7;
+  }
+
+  .tdb-more {
+    font-size: 11px;
+    color: var(--el-color-primary, #6366f1);
+  }
+}
+
+/* ========== Mobile Responsive (max-width: 767px) ========== */
+@media (max-width: 767px) {
+  .tdb {
+    padding: 6px 8px;
+  }
+
+  .tdb-header {
+    gap: 4px;
+    overflow: hidden;
+
+    .tdb-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .tdb-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .tdb-text {
+    font-size: 12px;
+  }
+
+  .tdb-more {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+}

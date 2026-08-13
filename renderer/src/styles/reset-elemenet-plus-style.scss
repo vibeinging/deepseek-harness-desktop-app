@@ -1,0 +1,332 @@
+//leave the padding of  el-scroll sidebar
+.el-scrollbar__view {
+  padding-bottom: 0px;
+}
+
+.el-scrollbar {
+  --el-menu-base-level-padding: 15px;
+}
+
+.el-dialog {
+  border-radius: 10px !important;
+}
+
+/* Center tabs navigation arrows */
+.el-tabs__nav-prev,
+.el-tabs__nav-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin-top: -4px;
+}
+
+/* ========================================
+   Element Plus global style overrides
+   ======================================== */
+
+/* Unified Select dropdown style */
+/* Usage: add popper-class="styled-select-popper" to el-select */
+.styled-select-popper {
+  padding: 8px !important;
+
+  .el-select-dropdown__item {
+    height: auto !important;
+    padding: 10px 14px !important;
+    line-height: 1.5 !important;
+    border-radius: 8px !important;
+    margin-bottom: 4px !important;
+
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    &:hover,
+    &.hover {
+      background: rgba(99, 102, 241, 0.08) !important;
+    }
+
+    &.selected {
+      background: rgba(99, 102, 241, 0.12) !important;
+    }
+  }
+
+  /* Two-line option style (optional) */
+  .select-option-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .option-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #1e293b;
+    }
+
+    .option-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+  }
+}
+
+/* ----------------------------------------
+   Tabs styles
+   ---------------------------------------- */
+
+/* Global transparent tabs header */
+.el-tabs__header {
+  background: transparent !important;
+}
+
+.el-tabs--border-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+
+  > .el-tabs__header {
+    background: transparent !important;
+    border-bottom: 1px solid #e5e7eb;
+
+    .el-tabs__item {
+      background: transparent;
+      border: none;
+
+      &.is-active {
+        background: transparent;
+        border-bottom-color: transparent;
+      }
+    }
+  }
+
+  > .el-tabs__content {
+    padding: 0;
+  }
+}
+
+/* Transparent tabs without background */
+/* Usage: add class="ad-tabs-transparent" to el-tabs */
+.ad-tabs-transparent {
+  &.el-tabs {
+    --el-tabs-header-height: 48px;
+  }
+
+  .el-tabs__nav-wrap::after {
+    display: none;
+  }
+
+  .el-tabs__item {
+    color: #64748b;
+    font-size: 14px;
+
+    &.is-active {
+      color: #6366f1;
+      font-weight: 500;
+    }
+
+    &:hover {
+      color: #6366f1;
+    }
+  }
+
+  .el-tabs__active-bar {
+    background-color: #6366f1;
+  }
+}
+
+/* Card-style tabs */
+/* Usage: add class="ad-tabs-card" to el-tabs */
+.ad-tabs-card {
+  .el-tabs__header {
+    margin: 0;
+    border: none;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .el-tabs__nav-wrap::after {
+    display: none;
+  }
+
+  .el-tabs__nav {
+    border: none !important;
+  }
+
+  .el-tabs__item {
+    border: none !important;
+    border-radius: 6px;
+    color: #64748b;
+    transition: all 0.2s;
+
+    &.is-active {
+      background: #ffffff;
+      color: #6366f1;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    &:hover:not(.is-active) {
+      color: #6366f1;
+    }
+  }
+}
+
+/* ----------------------------------------
+   Button styles
+   ---------------------------------------- */
+
+/* Icon and text spacing in buttons (when text is present) */
+.el-button .el-icon + span:not(:empty) {
+  margin-left: 10px;
+}
+.el-button span:not(:empty) + .el-icon {
+  margin-left: 10px;
+}
+
+/* Primary button style */
+.el-button--primary {
+  --el-button-bg-color: #6366f1;
+  --el-button-border-color: #6366f1;
+  --el-button-hover-bg-color: #4f46e5;
+  --el-button-hover-border-color: #4f46e5;
+  --el-button-active-bg-color: #4338ca;
+  --el-button-active-border-color: #4338ca;
+}
+
+/* Shared link button color */
+.el-button--text,
+.el-button.is-link {
+  --el-button-text-color: #6366f1;
+  --el-button-hover-text-color: #4f46e5;
+}
+
+/* ----------------------------------------
+   Table styles
+   ---------------------------------------- */
+
+/* Simple table style */
+/* Usage: add class="ad-table-simple" to el-table */
+.ad-table-simple {
+  --el-table-border-color: #f1f5f9;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-row-hover-bg-color: #f8fafc;
+
+  .el-table__header th {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  .el-table__body td {
+    color: #1e293b;
+  }
+
+  &.el-table--border {
+    border-radius: 8px;
+    overflow: hidden;
+
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+}
+
+/* ----------------------------------------
+   Form styles
+   ---------------------------------------- */
+
+/* Compact form */
+/* Usage: add class="ad-form-compact" to el-form */
+.ad-form-compact {
+  .el-form-item {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .el-form-item__label {
+    font-weight: 500;
+    color: #1e293b;
+  }
+}
+
+/* ----------------------------------------
+   Input styles
+   ---------------------------------------- */
+
+/* Modern input style */
+/* Usage: add class="ad-input-modern" to el-input */
+.ad-input-modern {
+  .el-input__wrapper {
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px #e2e8f0;
+    transition: all 0.2s;
+
+    &:hover {
+      box-shadow: 0 0 0 1px #cbd5e1;
+    }
+
+    &.is-focus {
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+  }
+}
+
+/* ----------------------------------------
+   Tag styles
+   ---------------------------------------- */
+
+/* Rounded tag */
+.el-tag {
+  border-radius: 6px;
+}
+
+/* ----------------------------------------
+   Empty state styles
+   ---------------------------------------- */
+
+/* Minimal empty state */
+.el-empty {
+  --el-empty-description-margin-top: 16px;
+
+  .el-empty__description {
+    color: #64748b;
+  }
+}
+
+/* ----------------------------------------
+   Dialog styles
+   ---------------------------------------- */
+
+/* Let dialog content adapt its height */
+.ad-dialog-flex {
+  .el-dialog__body {
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+    overflow: hidden;
+  }
+}
+
+/* ----------------------------------------
+   Description list styles
+   ---------------------------------------- */
+
+/* Compact description list */
+.ad-descriptions-compact {
+  .el-descriptions__label {
+    width: 100px;
+    color: #64748b;
+  }
+
+  .el-descriptions__content {
+    color: #1e293b;
+  }
+}

@@ -1,0 +1,558 @@
+// Basic info page: identity header, edit form, and metadata card.
+// Color tokens use --ps-*; when embedded in the app shell, tokens come from theme and auto-switch with light/dark.
+
+.basicInfo {
+  max-width: none; // Fill full content width to avoid large empty margins.
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header section */
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: var(--ps-inset, #f8fafc);
+  border: 1px solid var(--ps-border, #e5e7eb);
+}
+
+.avatar {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: none;
+  background: var(--ps-accent-tint, #eef2ff);
+  color: var(--ps-accent, #6366f1);
+  cursor: default;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    filter 0.14s ease;
+
+  &[data-clickable='true']:not(:disabled) {
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.85;
+  }
+}
+
+.avatarInitial {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.identityMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.identityName {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--ps-text, #1e293b);
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.identitySub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--ps-muted, #64748b);
+  min-width: 0;
+
+  > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.dot {
+  flex: none;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.openBtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ps-border, #e5e7eb);
+  background: var(--ps-panel, #fff);
+  color: var(--ps-text, #1e293b);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+
+  svg {
+    color: var(--ps-accent, #6366f1);
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--ps-hover, #f1f5f9);
+    border-color: var(--ps-accent, #6366f1);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+/* Edit form */
+.form {
+  .formLabel {
+    font-weight: 500;
+    color: var(--ps-text, #374151);
+  }
+}
+
+.formActions {
+  margin-top: 4px;
+}
+
+.folderSection {
+  margin: 4px 0 18px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--ps-text, #374151);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  p {
+    margin-top: 3px;
+    color: var(--ps-muted, #64748b);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.folderList {
+  overflow: hidden;
+  border: 1px solid var(--ps-border, #e5e7eb);
+  border-radius: 11px;
+  background: var(--ps-panel, #fff);
+}
+
+.folderRow,
+.addFolder,
+.folderEmpty {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 13px;
+  color: var(--ps-text, #1e293b);
+}
+
+.folderRow + .folderRow,
+.folderRow + .addFolder,
+.folderRow + .folderEmpty {
+  border-top: 1px solid var(--ps-border, #e5e7eb);
+}
+
+.folderText {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  input,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  input {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    outline: none;
+    background: transparent;
+    color: var(--ps-text, #1e293b);
+    font: inherit;
+    font-size: 13.5px;
+
+    &:focus {
+      border-bottom-color: var(--ps-accent, #6366f1);
+    }
+
+    &:disabled {
+      opacity: 1;
+    }
+  }
+
+  small {
+    color: var(--ps-muted, #64748b);
+    font-size: 11px;
+  }
+}
+
+.folderAvailable,
+.folderUnavailable {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.writeTarget {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ps-muted, #64748b);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+
+  input {
+    width: 13px;
+    height: 13px;
+    margin: 0;
+    accent-color: var(--ps-accent, #6366f1);
+  }
+
+  &:has(input:checked) {
+    color: var(--ps-accent, #6366f1);
+    font-weight: 600;
+  }
+
+  &:has(input:disabled) {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.folderAvailable {
+  background: color-mix(in srgb, #22c55e 12%, transparent);
+  color: #15803d;
+}
+
+.folderUnavailable {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  color: #dc2626;
+}
+
+.folderActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  button {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--ps-muted, #64748b);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--ps-hover, #f1f5f9);
+      color: var(--ps-text, #1e293b);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ps-accent, #6366f1);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.removeFolder,
+.addFolder {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.removeFolder {
+  color: var(--ps-muted, #64748b) !important;
+
+  &:hover {
+    background: var(--ps-hover, #f1f5f9);
+    color: var(--ps-text, #1e293b);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-accent, #6366f1);
+    outline-offset: 1px;
+  }
+}
+
+.addFolder {
+  width: 100%;
+  text-align: left;
+  color: var(--ps-accent, #6366f1);
+  font-size: 13.5px;
+
+  &:hover {
+    background: var(--ps-hover, #f1f5f9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-accent, #6366f1);
+    outline-offset: -2px;
+  }
+}
+
+.folderEmpty,
+.ownerHint {
+  color: var(--ps-muted, #64748b);
+  font-size: 12.5px;
+}
+
+.ownerHint {
+  margin: -4px 0 14px;
+}
+
+/* Metadata card */
+.meta {
+  padding: 4px 18px;
+  background: var(--ps-inset, #f8fafc);
+  border-radius: 12px;
+  border: 1px solid var(--ps-border, #e5e7eb);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--ps-border, #e5e7eb);
+  }
+}
+
+.metaLabel {
+  width: 92px;
+  flex: none;
+  font-size: 13px;
+  color: var(--ps-muted, #64748b);
+}
+
+.metaValue {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ps-text, #1e293b);
+  font-family: 'SF Mono', Monaco, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaPath {
+  unicode-bidi: plaintext; // Keep natural path direction; overflow hides end, full path appears in tooltip.
+}
+
+.metaAction {
+  position: relative; // Positioning anchor for the pure CSS tooltip (::after).
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ps-muted, #64748b);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--ps-hover, #f1f5f9);
+    color: var(--ps-accent, #6366f1);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  // Pure CSS hover tooltip:
+  // anchored to the button, scales with .dsh-zoom, works inside WebView, and stays aligned.
+  &[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: var(--ps-text, #1e293b);
+    color: var(--ps-panel, #fff);
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  }
+
+  &[data-tip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    border: 5px solid transparent;
+    border-top-color: var(--ps-text, #1e293b);
+    pointer-events: none;
+  }
+}
+
+.dangerZone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ps-border, #e5e7eb);
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--ps-text, #1e293b);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--ps-muted, #64748b);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  :global(.mantine-Button-root) {
+    flex: none;
+  }
+}
+
+@include mobile {
+  .basicInfo {
+    max-width: 100%;
+    min-width: 0;
+    gap: 16px;
+  }
+
+  .identity {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+
+  .openBtn {
+    width: 100%;
+    justify-content: center;
+    order: 3;
+  }
+
+  .formActions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    :global(.mantine-Button-root) {
+      width: 100%;
+      min-height: 44px;
+      margin-left: 0 !important;
+    }
+  }
+
+  .meta {
+    padding: 2px 14px;
+  }
+
+  .metaRow {
+    flex-wrap: wrap;
+  }
+
+  .metaLabel {
+    width: auto;
+  }
+
+  .metaValue {
+    white-space: normal;
+    word-break: break-all;
+  }
+
+  .dangerZone {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+
+    :global(.mantine-Button-root) {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "skins": [
+    {
+      "id": "aurora-green",
+      "name": "极光绿",
+      "description": "测试用绿色皮肤。",
+      "base": "lighting",
+      "vars": {
+        "--el-color-primary": "#10B981"
+      },
+      "mantineColors": [
+        "#edfdf6",
+        "#d3f8e8",
+        "#a8efd1",
+        "#76e3b6",
+        "#4fd69c",
+        "#34c489",
+        "#10B981",
+        "#1d9d68",
+        "#168a5b",
+        "#0c6e48"
+      ]
+    },
+    {
+      "id": "sunset-orange",
+      "name": "日落橙",
+      "description": "测试用橙色皮肤。",
+      "base": "lighting",
+      "vars": {
+        "--el-color-primary": "#F97316"
+      },
+      "mantineColors": [
+        "#fff4ed",
+        "#ffe6d4",
+        "#fdc9a8",
+        "#fba874",
+        "#f98b4b",
+        "#f8762c",
+        "#F97316",
+        "#e15410",
+        "#c0470d",
+        "#9d3a0c"
+      ],
+      "dark": {
+        "vars": {
+          "--el-color-primary": "#FB923C"
+        },
+        "mantineColors": [
+          "#fff7ed",
+          "#ffedd5",
+          "#fed7aa",
+          "#fdba74",
+          "#fca35d",
+          "#fb984b",
+          "#FB923C",
+          "#f97316",
+          "#ea580c",
+          "#c2410c"
+        ]
+      },
+      "appearance": {
+        "bgColor": "#fff7ed",
+        "bgImage": "dawn",
+        "bgOpacity": 40,
+        "panelOpacity": 90,
+        "dark": {
+          "bgOpacity": 30,
+          "panelOpacity": 85
+        }
+      }
+    }
+  ]
+}

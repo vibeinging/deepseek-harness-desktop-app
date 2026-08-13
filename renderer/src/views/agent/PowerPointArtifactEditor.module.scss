@@ -1,0 +1,499 @@
+.workbench {
+  --ppt-accent: #d97706;
+  --ppt-accent-soft: color-mix(in srgb, var(--ppt-accent) 14%, transparent);
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  color: var(--dsh-text);
+}
+
+.slideRail {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 2px 7px;
+  scrollbar-width: thin;
+}
+
+.thumbnail {
+  position: relative;
+  flex: 0 0 104px;
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--dsh-surface) 94%, var(--dsh-bg));
+  color: var(--dsh-text);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.thumbnail:hover {
+  border-color: color-mix(in srgb, var(--ppt-accent) 42%, var(--dsh-border));
+  transform: translateY(-1px);
+}
+
+.thumbnail:focus-visible,
+.objectHit:focus-visible,
+.elementItem:focus-visible {
+  outline: 2px solid var(--ppt-accent);
+  outline-offset: 2px;
+}
+
+.thumbnailActive {
+  border-color: var(--ppt-accent);
+  box-shadow: 0 0 0 2px var(--ppt-accent-soft);
+}
+
+.thumbnailNumber {
+  position: absolute;
+  z-index: 3;
+  left: 8px;
+  bottom: 7px;
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgb(18 16 21 / 72%);
+  color: #fff;
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.thumbnailCanvas {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgb(30 22 38 / 7%);
+}
+
+.thumbnailCanvas .previewUnavailable {
+  font-size: 8px;
+}
+
+.hiddenBadge {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgb(18 16 21 / 70%);
+  color: #fff;
+  font-size: 8px;
+}
+
+.thumbnailSelection {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 8px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--ppt-accent);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.hiddenBadge + .thumbnailSelection {
+  top: 26px;
+}
+
+.stagePanel,
+.elementPanel {
+  min-width: 0;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dsh-surface) 96%, var(--dsh-bg));
+}
+
+.stagePanel {
+  padding: 10px;
+}
+
+.stageHeader,
+.elementHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stageHeader {
+  margin-bottom: 9px;
+}
+
+.stageHeader > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.stageHeader strong,
+.elementHead strong {
+  font-size: 12.5px;
+}
+
+.stageHeader span,
+.elementHead span,
+.stageHint {
+  overflow: hidden;
+  color: var(--dsh-faint);
+  font-size: 10.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 7px;
+  box-shadow: 0 12px 30px rgb(21 14 28 / 14%), 0 0 0 1px rgb(31 23 39 / 9%);
+  isolation: isolate;
+}
+
+.svgLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.svgLayer > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.previewUnavailable {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: #f7f5f8;
+  color: #847b8c;
+  font-size: 11px;
+  text-align: center;
+}
+
+.hitLayer {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.objectHit {
+  position: absolute;
+  min-width: 2px;
+  min-height: 2px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transform-origin: center;
+}
+
+.objectHit:hover {
+  border-color: rgb(217 119 6 / 72%);
+  background: rgb(217 119 6 / 5%);
+}
+
+.objectHitActive {
+  border: 2px solid var(--ppt-accent);
+  background: rgb(217 119 6 / 6%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 85%), 0 0 0 4px var(--ppt-accent-soft);
+}
+
+.objectHitActive::before,
+.objectHitActive::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ppt-accent);
+  background: #fff;
+}
+
+.objectHitActive::before {
+  left: -5px;
+  top: -5px;
+}
+
+.objectHitActive::after {
+  right: -5px;
+  bottom: -5px;
+}
+
+.selectionTag {
+  position: absolute;
+  left: -2px;
+  bottom: calc(100% + 5px);
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--ppt-accent);
+  color: #fff;
+  font-size: 9px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.marquee {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid var(--ppt-accent);
+  background: color-mix(in srgb, var(--ppt-accent) 12%, transparent);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 55%) inset;
+  pointer-events: none;
+}
+
+.elementPanel {
+  overflow: hidden;
+}
+
+.elementHead {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--dsh-border-soft);
+}
+
+.elementHead span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--dsh-chip-bg);
+}
+
+.elementHead button {
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--ppt-accent) 26%, var(--dsh-border));
+  border-radius: 999px;
+  background: var(--ppt-accent-soft);
+  color: color-mix(in srgb, var(--ppt-accent) 80%, var(--dsh-text));
+  font: inherit;
+  font-size: 9.5px;
+  cursor: pointer;
+}
+
+.elementHead button:hover {
+  border-color: var(--ppt-accent);
+}
+
+.elementList {
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 5px;
+  scrollbar-width: thin;
+}
+
+.elementItem {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsh-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.elementItem:hover {
+  background: var(--dsh-hover);
+}
+
+.elementItemActive {
+  border-color: color-mix(in srgb, var(--ppt-accent) 38%, var(--dsh-border));
+  background: var(--ppt-accent-soft);
+}
+
+.elementGlyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 7px;
+  background: var(--dsh-surface);
+  color: color-mix(in srgb, var(--ppt-accent) 82%, var(--dsh-text));
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.elementCopy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.elementCopy strong,
+.elementCopy span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.elementCopy strong {
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.elementCopy span,
+.elementItem small {
+  color: var(--dsh-faint);
+  font-size: 9.5px;
+}
+
+.elementEmpty,
+.empty {
+  padding: 18px 12px;
+  color: var(--dsh-faint);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.selectionInfo {
+  padding: 9px 10px 10px;
+  border-top: 1px solid var(--dsh-border-soft);
+  background: color-mix(in srgb, var(--ppt-accent) 5%, transparent);
+}
+
+.selectionInfo > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.selectionInfo > div strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.selectionInfo > div span {
+  flex: none;
+  color: var(--dsh-faint);
+  font-size: 9.5px;
+}
+
+.selectionInfo dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+  margin: 8px 0 0;
+}
+
+.selectionInfo dl > div {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 9.5px;
+}
+
+.selectionInfo dt {
+  color: var(--dsh-faint);
+}
+
+.selectionInfo dd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--dsh-text-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.selectionInfo dd i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgb(0 0 0 / 12%);
+  border-radius: 50%;
+}
+
+.selectionInfo p {
+  display: -webkit-box;
+  margin: 7px 0 0;
+  overflow: hidden;
+  color: var(--dsh-text-soft);
+  font-size: 10px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@container (min-width: 720px) {
+  .workbench {
+    grid-template-columns: 116px minmax(300px, 1fr) minmax(180px, 0.46fr);
+    align-items: start;
+  }
+
+  .slideRail {
+    max-height: 520px;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 2px 7px 2px 2px;
+  }
+
+  .thumbnail {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .elementList {
+    max-height: 350px;
+  }
+}
+
+@container (max-width: 420px) {
+  .thumbnail {
+    flex-basis: 88px;
+  }
+
+  .stagePanel {
+    padding: 7px;
+  }
+
+  .stageHint,
+  .stageHeader > div > span {
+    display: none;
+  }
+
+  .elementList {
+    max-height: 185px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumbnail {
+    transition: none;
+  }
+}

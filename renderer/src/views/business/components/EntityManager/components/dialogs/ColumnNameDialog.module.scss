@@ -1,0 +1,182 @@
+.dataSourceSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+
+  .selectorLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dsh-text, #303133);
+    white-space: nowrap;
+  }
+}
+
+.noDataSourceHint {
+  padding: 40px 0;
+}
+
+.columnNameDialogContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: calc(76vh - 100px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tableColumnSelectionPanel {
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+  gap: 0;
+}
+
+.selectedConfigsPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--dsh-bg, #f8f9fa);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.areaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+
+  h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+  }
+}
+
+.configsListContainer {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.noConfigsHint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .hintText {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.configTableGroup {
+  background: var(--dsh-surface, #fff);
+  border-radius: 6px;
+  border: 1px solid var(--dsh-border, #e4e7ed);
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.configGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--dsh-bg, #f5f7fa);
+  border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+
+  .groupTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .groupCount {
+    font-size: 12px;
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.configColumnsTags {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid var(--dsh-border-soft, #f0f2f5);
+}
+
+.dataSourceSelectField {
+  width: 300px;
+  max-width: 100%;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectOptionItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Mobile adaptation (matches original @include mobile)
+@media (max-width: 767px) {
+  .dataSourceSelector {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 8px;
+
+    .selectorLabel {
+      white-space: normal;
+    }
+  }
+
+  .dataSourceSelectField {
+    width: 100% !important;
+  }
+
+  .columnNameDialogContent {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: min(70vh, 620px);
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .tableColumnSelectionPanel {
+    flex-direction: column;
+    max-height: 42vh;
+    min-height: 200px;
+    overflow: auto;
+  }
+
+  .selectedConfigsPanel {
+    max-height: 38vh;
+    min-height: 160px;
+    overflow: auto;
+  }
+}

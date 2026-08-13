@@ -1,0 +1,11 @@
+.questionPrompt {
+  margin: 6px 0 10px;
+  color: var(--el-text-color-regular, #4b5563);
+  line-height: 1.65;
+  font-size: 14px;
+
+  // Align with original scoped :deep(p)
+  :global(p) {
+    margin: 0;
+  }
+}

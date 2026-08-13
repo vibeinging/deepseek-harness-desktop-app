@@ -1,0 +1,209 @@
+
+.setup-guide {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  // Follow the app background in dark mode and keep the light-mode fallback for cloud use.
+  background: var(--dsh-bg, #f8f9fa);
+  color: var(--dsh-text, #303133);
+}
+
+.guide-close-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--dsh-surface, #fff);
+  border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+
+  // The original el-button link was downgraded to a plain <button>; restore native chrome, pointer, transition, and focus ring.
+  .close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 0;
+    color: var(--dsh-text-soft, #909399);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    transition: color 0.18s ease, background 0.18s ease;
+
+    &:hover {
+      color: var(--dsh-text, #303133);
+      background: var(--dsh-hover, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--dsh-accent, #6a36e3);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: var(--dsh-surface, #fff);
+  border-bottom: 1px solid var(--dsh-border, #e4e7ed);
+}
+
+.guide-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+  transition: all 0.3s;
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.8;
+
+      .step-number {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  // Completed: solid accent circle with checkmark, label uses normal text color (slightly softer than active).
+  &.completed {
+    .step-number {
+      background: var(--dsh-accent, #6a36e3);
+      border-color: var(--dsh-accent, #6a36e3);
+      color: var(--dsh-on-accent, #fff);
+    }
+
+    .step-label {
+      color: var(--dsh-text-soft, #606266);
+    }
+  }
+
+  // Not reached (including locked): show an outline + neutral gray only, to keep it readable;
+  // Do not stack opacity:0.6 + faint styles, which can blur together in dark mode. Locked state only changes the cursor.
+  &.locked {
+    cursor: not-allowed;
+  }
+
+  &.active {
+    .step-number {
+      background: var(--dsh-accent, #6a36e3);
+      border-color: var(--dsh-accent, #6a36e3);
+      color: var(--dsh-on-accent, #fff);
+      box-shadow: var(--dsh-active-shadow, 0 2px 8px rgba(106, 54, 227, 0.3));
+    }
+
+    .step-label {
+      color: var(--dsh-text, #303133);
+      font-weight: 600;
+    }
+  }
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--dsh-border, #dcdfe6);
+  // Use a lighter neutral background than header (#36313f in dark, light gray in light mode) so the circle doesn't blend into the background.
+  // Use neutral gray for the number to keep it readable.
+  background: var(--dsh-bg, #eef1f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dsh-muted, #909399);
+  transition: all 0.3s;
+}
+
+.step-label {
+  font-size: 14px;
+  color: var(--dsh-text-soft, #909399);
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.step-connector {
+  width: 40px;
+  height: 2px;
+  background: var(--dsh-border, #dcdfe6);
+  margin: 0 12px;
+}
+
+.guide-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px 32px;
+}
+
+@include mobile {
+  .setup-guide {
+    min-width: 0;
+    background: var(--dsh-surface, #fff);
+  }
+
+  .guide-close-header {
+    padding: 8px 12px;
+  }
+
+  .guide-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .guide-steps {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    margin: 0 -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .step-connector {
+    width: 20px;
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .step-label {
+    font-size: 12px;
+    max-width: 7em;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .guide-actions {
+    justify-content: flex-end;
+  }
+
+  .guide-content {
+    padding: 12px 12px 16px;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}

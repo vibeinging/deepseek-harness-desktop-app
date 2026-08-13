@@ -1,0 +1,32 @@
+# dsh-work uses the official current DSH Web profile. This overlay changes only the
+# bind and presentation settings required by the embedded desktop surface.
+- id: webserver
+  config:
+    host: 127.0.0.1
+    port: 0
+
+- id: web-runtime
+  config:
+    printUrl: false
+    surfaceContext: false
+    trustedHosts: []
+
+# Match the App's already enforced image admission limits. DSH still validates
+# image bytes and stores only durable content-addressed references in history.
+- id: attachment-local
+  config:
+    maxImageBytes: 20971520
+    maxImagesPerMessage: 8
+    maxMessageImageBytes: 41943040
+    maxImagePixels: 100000000
+
+# Temporary App conversations share the user's Profile, model settings, and
+# credentials, but their logs and UI projections live below an isolated root
+# that the App removes when the conversation closes.
+- id: session-persistence-jsonl
+  config:
+    root: !!js process.env.DSH_RUNTIME_SESSION_ROOT || dshHomePath('sessions')
+
+- id: storage-json
+  config:
+    root: !!js process.env.DSH_RUNTIME_STORAGE_ROOT || dshHomePath('storages')

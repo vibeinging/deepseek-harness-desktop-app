@@ -1,0 +1,466 @@
+.executorEnvBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.envSandbox {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--el-color-success, #10b981);
+}
+
+.envSandboxPending {
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--el-color-warning, #f59e0b);
+}
+
+.envLocal {
+  background: rgba(100, 116, 139, 0.08);
+  color: var(--el-text-color-regular, #64748b);
+}
+
+.metricViewSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+}
+
+.metricViewSummary.isFallback {
+  border-color: #fde68a;
+  background: #fffaf0;
+}
+
+.metricViewSummaryBadge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #409eff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.metricViewSummary.isFallback .metricViewSummaryBadge {
+  background: #d97706;
+}
+
+.metricViewSummaryMain {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.metricViewSummarySub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.sqlBlock {
+  margin: 10px 0;
+  border: 1px solid #d8e1f0;
+  border-radius: 10px;
+  background: #f8fbff;
+  overflow: hidden;
+}
+
+.sqlBlock.taskInlineSql {
+  margin-left: 18px;
+  width: calc(100% - 18px);
+  border-left: 3px solid #c8d6eb;
+}
+
+.sqlHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  color: #24344d;
+  font-weight: 600;
+}
+
+.sqlActions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sqlSummary {
+  padding: 0 14px 12px;
+  color: #5f6f86;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.sqlCode {
+  margin: 0;
+  padding: 14px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.sessionReportBlock {
+  margin: 12px 0;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.sessionReportMain {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.sessionReportIcon {
+  font-size: 22px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.sessionReportCopy {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessionReportTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.5;
+}
+
+.sessionReportSummary {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.sessionReportMeta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.sessionReportActions {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Report ready block style */
+.reportReadyBlock {
+  margin: 12px 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.reportReadyBlock:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.reportReadyMain {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reportMainActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.reportIcon {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+.reportText {
+  flex: 1;
+  min-width: 0;
+}
+
+.reportTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.reportSubtitle {
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reportToggleBtn {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.reportMetaTime {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+}
+
+/* Report expanded content style */
+.reportReadyBlock.expanded {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reportExpandedContent {
+  margin-top: 16px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+/* Report toolbar */
+.reportToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.reportToolbarInfo {
+  font-size: 13px;
+  color: #666;
+}
+
+.reportToolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoomControls .zoomLevel {
+  font-size: 12px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
+  display: inline-block;
+}
+
+.zoomLevel {
+  font-size: 12px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
+  display: inline-block;
+}
+
+.reportContentWrapper {
+  width: 100%;
+  min-height: 500px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.reportInnerWrapper {
+  width: 100%;
+  min-height: 500px;
+}
+
+.reportIframe {
+  width: 100%;
+  min-height: 500px;
+  height: auto;
+  border: none;
+  display: block;
+}
+
+/* ========== Mobile Responsive (max-width: 767px) ========== */
+@media (max-width: 767px) {
+  .metricViewSummary {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .metricViewSummaryMain,
+  .metricViewSummarySub {
+    width: 100%;
+  }
+
+  .reportReadyMain {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .reportIcon {
+    font-size: 28px;
+  }
+
+  .reportText {
+    overflow: hidden;
+  }
+
+  .reportTitle {
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reportSubtitle {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reportMainActions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
+  .reportToggleBtn {
+    flex-shrink: 0;
+  }
+
+  .reportMetaTime {
+    width: 100%;
+    margin-left: 0;
+    text-align: right;
+    font-size: 11px;
+  }
+
+  .reportToolbar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .reportToolbarInfo {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .reportToolbarActions {
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .reportContentWrapper {
+    min-height: 300px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reportInnerWrapper {
+    min-height: 300px;
+  }
+
+  .reportIframe {
+    min-height: 300px;
+  }
+}
+
+/* ========== Tablet Responsive (768px - 1023px) ========== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .reportContentWrapper {
+    min-height: 400px;
+  }
+
+  .reportInnerWrapper {
+    min-height: 400px;
+  }
+
+  .reportIframe {
+    min-height: 400px;
+  }
+}
+
+.memoryAppliedBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 6px 0;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+
+  &.isDisputed {
+    background: rgba(156, 163, 175, 0.12);
+    border-color: rgba(156, 163, 175, 0.4);
+    color: var(--el-text-color-secondary);
+  }
+
+  .memoryAppliedIcon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .memoryAppliedText {
+    flex: 1;
+
+    .memoryAppliedHit {
+      opacity: 0.7;
+      margin-left: 4px;
+    }
+  }
+
+  .memoryAppliedUndo {
+    flex-shrink: 0;
+  }
+}

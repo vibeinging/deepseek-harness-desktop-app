@@ -1,0 +1,306 @@
+.page {
+  width: min(860px, 100%);
+  padding-bottom: 48px;
+  color: var(--dsh-text);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.headerIcon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 11px;
+  color: var(--dsh-accent);
+  background: color-mix(in srgb, var(--dsh-accent) 8%, var(--dsh-surface));
+}
+
+.header h1,
+.sectionHead h2 {
+  margin: 0;
+  color: var(--dsh-text);
+}
+
+.header h1 {
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.header p,
+.sectionHead p {
+  margin: 5px 0 0;
+  color: var(--dsh-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.switches,
+.list,
+.auditList {
+  overflow: hidden;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 12px;
+  background: var(--dsh-surface);
+}
+
+.switchRow {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--dsh-border-soft);
+}
+
+.switchRow:last-child {
+  border-bottom: 0;
+}
+
+.switchRow > div,
+.sourceRow > div,
+.memoryCopy {
+  min-width: 0;
+}
+
+.switchRow strong,
+.switchRow span {
+  display: block;
+}
+
+.switchRow strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.switchRow span {
+  margin-top: 3px;
+  color: var(--dsh-muted);
+  font-size: 12px;
+}
+
+.privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: var(--dsh-muted);
+  background: color-mix(in srgb, var(--dsh-accent) 4%, transparent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.privacy svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--dsh-accent);
+}
+
+.section {
+  margin-top: 30px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.sectionHead h2 {
+  font-size: 15px;
+}
+
+.sectionHead > span {
+  color: var(--dsh-faint);
+  font-size: 12px;
+}
+
+.composer {
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 12px;
+  background: var(--dsh-surface);
+}
+
+.composer textarea,
+.memoryRow textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--dsh-border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  outline: none;
+  color: var(--dsh-text);
+  background: color-mix(in srgb, var(--dsh-bg) 50%, var(--dsh-surface));
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.composer textarea:focus,
+.memoryRow textarea:focus {
+  border-color: var(--dsh-accent-soft);
+}
+
+.composer > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.composer > div > span {
+  color: var(--dsh-faint);
+  font-size: 11px;
+}
+
+.memoryRow,
+.sourceRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--dsh-border-soft);
+}
+
+.memoryRow:last-child,
+.sourceRow:last-child {
+  border-bottom: 0;
+}
+
+.memoryRow {
+  align-items: flex-start;
+}
+
+.memoryCopy {
+  flex: 1;
+}
+
+.memoryCopy p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.memoryCopy span,
+.sourceRow span {
+  display: block;
+  margin-top: 4px;
+  color: var(--dsh-faint);
+  font-size: 10.5px;
+}
+
+.rowActions {
+  display: flex;
+  gap: 3px;
+}
+
+.rowActions button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  color: var(--dsh-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rowActions button:hover,
+.rowActions button:focus-visible {
+  color: var(--dsh-text);
+  background: var(--dsh-hover);
+  outline: none;
+}
+
+.editActions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.sourceRow > svg {
+  flex: 0 0 auto;
+  color: var(--dsh-muted);
+}
+
+.sourceRow > div {
+  flex: 1;
+}
+
+.sourceRow strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.sourceRow[data-excluded='true'] {
+  opacity: 0.64;
+}
+
+.auditList > div:not(.empty) {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--dsh-border-soft);
+}
+
+.auditList > div:last-child {
+  border-bottom: 0;
+}
+
+.auditList strong {
+  font-size: 11.5px;
+  font-weight: 550;
+}
+
+.auditList span {
+  color: var(--dsh-faint);
+  font-size: 10.5px;
+}
+
+.empty {
+  padding: 24px 14px;
+  color: var(--dsh-faint);
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .switchRow {
+    align-items: flex-start;
+  }
+
+  .memoryRow {
+    flex-wrap: wrap;
+  }
+
+  .editActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

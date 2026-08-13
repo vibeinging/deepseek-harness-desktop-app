@@ -1,0 +1,57 @@
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  row-gap: 12px;
+  &.right-actions {
+    margin-left: auto;
+  }
+}
+
+.batch-delete-content {
+  .table-selection {
+    .selection-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-weight: 500;
+      color: var(--dsh-text, #303133);
+
+      .select-all-btn {
+        margin-left: 12px;
+      }
+    }
+
+    .table-checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 12px;
+      background: var(--dsh-bg, #f8f9fa);
+      border-radius: 8px;
+
+      .table-checkbox {
+        margin: 0;
+        padding: 8px 12px;
+        background: var(--dsh-surface, #ffffff);
+        border-radius: 6px;
+        transition: all 0.2s;
+        flex: 0 0 auto;
+
+        &:hover {
+          background: var(--dsh-hover, #f0f9ff);
+          box-shadow: var(--dsh-card-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+        }
+      }
+    }
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

@@ -1,0 +1,65 @@
+/* EntityManager view styles
+ * Migrated from scoped styles in index.vue and reuses .tab-container / .content-card
+ * from shared-styles.scss. Since shared-styles.scss has not been moved to module format yet,
+ * the two shared classes used by this component are inlined here.
+ */
+
+/* Shared: Container layout (iOS style) */
+.tabContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* Shared: Content card */
+.contentCard {
+  background: var(--dsh-surface, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    box-shadow: var(--dsh-card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+  }
+}
+
+.entityManagerContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.configuredEntitiesSection {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+.paginationWrapper {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--el-border-color-lighter);
+  background: var(--el-bg-color);
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* @include mobile => media query (<768px), consistent with responsive.scss */
+@media (max-width: 767px) {
+  .paginationWrapper {
+    padding: 8px 4px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}

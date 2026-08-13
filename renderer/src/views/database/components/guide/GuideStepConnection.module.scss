@@ -1,0 +1,49 @@
+.guideStepConnection {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.stepHeader {
+  margin-bottom: 24px;
+
+  .stepTitle {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dsh-text, #303133);
+  }
+
+  .stepDesc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--dsh-muted, #909399);
+  }
+}
+
+.stepContent {
+  flex: 1;
+  overflow: auto;
+}
+
+.contentCard {
+  background: var(--dsh-surface, #fff);
+  border: 1px solid var(--dsh-border, transparent);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--dsh-card-shadow, 0 2px 12px rgba(0, 0, 0, 0.04));
+}
+
+.stepFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--dsh-border, #e4e7ed);
+
+  .footerRight {
+    display: flex;
+    gap: 12px;
+  }
+}

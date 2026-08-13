@@ -1,0 +1,115 @@
+// SCSS sugar includes common layout helpers, like flex column
+@use './scss-suger.scss';
+// Reset Element Plus styles
+@use 'reset-elemenet-plus-style.scss';
+// Shared component styles
+@use 'components.scss';
+// Transition animations
+@use 'transition.scss';
+// Responsive utility classes
+// Unified mobile support for sidebar and main area (excluding ad-* modules)
+@use 'sidebar-shell-mobile.scss';
+
+//reset style
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+* {
+  box-sizing: border-box;
+}
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+a:focus,
+a:active {
+  outline: none;
+}
+a,
+a:focus,
+a:hover {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+}
+span,
+output {
+  display: inline-block;
+  line-height: 1;
+}
+
+//scroll
+@mixin main-show-wh() {
+  /* CSS declarations */
+  //height: calc(100vh - #{$navBarHeight} - #{$tagViewHeight} - #{$appMainPadding * 2});
+  height: 100vh !important;
+  width: 100%;
+}
+.scroll-y {
+  @include main-show-wh();
+  overflow-y: auto;
+}
+.scroll-x {
+  @include main-show-wh();
+  overflow-x: auto;
+}
+.scroll-xy {
+  @include main-show-wh();
+  overflow: auto;
+}
+
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.shadow {
+  box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.04);
+}
+
+.el-button+.el-button {
+  margin-left: 0px !important;
+}
+
+.el-message-box .el-button {
+  margin-left: 12px !important;
+}
+
+.el-dialog__footer .el-button {
+  margin-left: 12px !important;
+}
+
+// Space between icon and text inside buttons when text is present
+.el-button .el-icon + span:not(:empty),
+.el-button span:not(:empty) + .el-icon {
+  margin-left: 10px;
+}
+
+// // icon and text are in the same span
+// .el-button > span > .el-icon {
+//   margin-right: 6px !important;
+// }
+
+// Keep el-card body overflow visible to avoid clipping input hover shadows
+.el-card__body {
+  overflow: visible;
+}

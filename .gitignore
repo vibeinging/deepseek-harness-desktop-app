@@ -1,0 +1,51 @@
+# 依赖(各级 node_modules)
+**/node_modules/
+
+# 前端构建产物
+renderer/dist/
+coverage/
+eval/results/
+
+# Electron 打包产物
+release/
+.desktop-build/
+.desktop-deps.json
+
+# 本地数据库 / 日志 / 临时
+*.log
+*.db
+*.db-wal
+*.db-shm
+*.duckdb
+*.sqlite
+*.sqlite3
+*.css.map
+.DS_Store
+screenlog.*
+.gstack/
+__pycache__/
+*.py[cod]
+
+# 本地环境变量
+.env
+.env.local
+.env.*.local
+
+# 本地桌面/开发环境配置，不进入公开仓库
+renderer/.env.*
+
+# 本地设计上下文
+/.impeccable.md
+
+# 旧项目/内部说明，不进入首次公开提交
+/CHANGELOG.md
+/CONTRIBUTING.md
+/eval/README.md
+/scripts/sync-dsh-integration-docs.mjs
+
+# 内部文档不进入公开仓库，仅保留 README 展示图
+/docs/*
+!/docs/images/
+/docs/images/*
+!/docs/images/readme/
+!/docs/images/readme/*

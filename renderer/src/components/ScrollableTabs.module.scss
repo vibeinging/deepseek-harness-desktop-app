@@ -1,0 +1,19 @@
+// ScrollableTabs styles
+// The original component had no scoped style and relied on el-tabs built-in horizontal nav scrolling.
+// This file provides equivalent horizontal scrolling behavior for Mantine Tabs while keeping --el-* variables for theme alignment.
+.scrollableTabs {
+  // Prevent tab headers from wrapping; works with internal ScrollArea for horizontal scrolling
+  :global(.mantine-Tabs-list) {
+    flex-wrap: nowrap;
+    border-bottom-color: var(--el-border-color-light, var(--mantine-color-gray-3));
+  }
+
+  :global(.mantine-Tabs-tab) {
+    white-space: nowrap;
+    color: var(--el-text-color-regular, inherit);
+
+    &[data-active] {
+      color: var(--el-color-primary, var(--mantine-color-blue-6));
+    }
+  }
+}

@@ -1,0 +1,482 @@
+/* Agent settings page — full-window two-column layout (left navigation + main panel).
+   Reuses .dsh-root --dsh-* tokens with automatic light/dark switching; visual language matches conversation shell
+   (lavender/gray-black global background + floating cards + purple/neutral-gray accents). */
+
+/* Shared layout shell styles (.wrap / .side / .back / .nav / .navItem / .navSep / .main) are managed
+   in SettingsShell (settingsShell.module.scss), used by both App settings and Project settings.
+   This keeps return-button position, sidebar width, and content card consistent. This file only keeps app-settings-specific styles. */
+
+.bootBtn {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 11px;
+  border: 1px solid var(--dsh-border);
+  background: transparent;
+  border-radius: var(--dsh-r-el);
+  color: var(--dsh-text-soft);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.bootBtn svg {
+  flex: none;
+  color: var(--dsh-accent);
+}
+.bootBtn:hover {
+  border-color: var(--dsh-accent-soft);
+  color: var(--dsh-text);
+}
+.bootBtnActive {
+  border-color: var(--dsh-accent-soft);
+  color: var(--dsh-accent);
+}
+
+/* ── Main panel content (card body .main is provided by SettingsShell) ── */
+.mainInner {
+  min-height: 100%;
+  padding: 26px 30px 34px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .mainInner {
+    padding: 22px 20px 28px;
+  }
+}
+
+@media (max-width: 680px) {
+  .mainInner {
+    padding: 18px 16px 24px;
+  }
+}
+.mainInnerFixed {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pageTitle {
+  margin: 0 0 14px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--dsh-text);
+}
+.pageLead {
+  max-width: 620px;
+  margin: -4px 0 22px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--dsh-muted);
+}
+.badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dsh-text-soft);
+  background: var(--dsh-chip-bg);
+  border: 1px solid var(--dsh-border-soft);
+  border-radius: 7px;
+  padding: 3px 11px;
+}
+
+/* ── Group cards: one level-up panels raised on top of the card ── */
+.section {
+  margin: 0 0 18px;
+}
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 2px 8px;
+}
+.sectionTitle {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--dsh-text);
+}
+.sectionDesc {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dsh-muted);
+}
+.group {
+  background: color-mix(in srgb, var(--dsh-bg) 72%, var(--dsh-surface));
+  border: 1px solid color-mix(in srgb, var(--dsh-border) 82%, transparent);
+  border-radius: var(--dsh-r-el);
+  box-shadow: none;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.section .group {
+  margin-bottom: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 20px;
+  min-height: 76px;
+  box-sizing: border-box;
+  transition:
+    background 0.14s ease,
+    opacity 0.14s ease;
+}
+.row + .row {
+  border-top: 1px solid var(--dsh-border-soft);
+}
+.row:hover {
+  background: color-mix(in srgb, var(--dsh-hover) 42%, transparent);
+}
+.rowStacked {
+  display: block;
+}
+.rowIcon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--dsh-border) 70%, transparent);
+  border-radius: var(--dsh-r-sm);
+  background: color-mix(in srgb, var(--dsh-surface) 70%, transparent);
+  color: var(--dsh-text-soft);
+}
+.rowText {
+  flex: 1;
+  min-width: 0;
+}
+.rowHeadLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rowLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dsh-text);
+}
+.rowDesc {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--dsh-muted);
+}
+.rowCtrl {
+  flex: none;
+}
+.rowDisabled {
+  opacity: 0.58;
+}
+.rowDisabled:hover {
+  background: transparent;
+}
+
+/* ── Segment control ── */
+.seg {
+  display: inline-flex;
+  background: var(--dsh-chip-bg);
+  border-radius: var(--dsh-r-el);
+  padding: 3px;
+  gap: 2px;
+}
+.segBtn {
+  border: none;
+  background: transparent;
+  color: var(--dsh-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 15px;
+  border-radius: calc(var(--dsh-r-el) - 3px);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.segBtn:hover {
+  color: var(--dsh-text-soft);
+}
+.segBtnActive,
+.segBtnActive:hover {
+  background: var(--dsh-surface);
+  color: var(--dsh-accent);
+  font-weight: 600;
+  box-shadow: var(--dsh-active-shadow);
+}
+
+/* ── Toggle switch ── */
+.toggle {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--dsh-border);
+  background: var(--dsh-chip-bg);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.toggle:disabled {
+  cursor: not-allowed;
+}
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dsh-faint);
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+.toggleOn {
+  background: var(--dsh-accent);
+  border-color: transparent;
+}
+.toggleOn .toggleKnob {
+  transform: translateX(16px);
+  background: var(--dsh-on-accent);
+}
+
+/* ── Text input row ── */
+.saveBtn {
+  flex: none;
+  border: 1px solid var(--dsh-border);
+  background: var(--dsh-chip-bg);
+  color: var(--dsh-text-soft);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: var(--dsh-r-sm);
+  cursor: pointer;
+  transition:
+    filter 0.12s ease,
+    opacity 0.12s ease;
+}
+.saveBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.saveBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.actionBtn {
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--dsh-border) 82%, transparent);
+  background: color-mix(in srgb, var(--dsh-chip-bg) 58%, transparent);
+  color: var(--dsh-text-soft);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  padding: 7px 14px;
+  border-radius: var(--dsh-r-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.actionBtn:hover {
+  border-color: color-mix(in srgb, var(--dsh-amber) 52%, var(--dsh-border));
+  background: color-mix(in srgb, var(--dsh-amber-bg) 42%, var(--dsh-chip-bg));
+  color: var(--dsh-text);
+}
+.textInput {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--dsh-code-bg);
+  border: 1px solid var(--dsh-border);
+  border-radius: var(--dsh-r-el);
+  color: var(--dsh-text);
+  font-family: var(--dsh-mono);
+  font-size: 12.5px;
+  padding: 9px 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.textInput::placeholder {
+  color: var(--dsh-faint);
+  font-family: var(--dsh-mono);
+}
+.textInput:focus {
+  border-color: var(--dsh-accent-soft);
+  box-shadow: var(--dsh-ring);
+}
+
+.pathRow {
+  align-items: flex-start;
+}
+.pathEdit {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 34px auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pathInput {
+  min-width: 0;
+  width: 100%;
+  background: var(--dsh-code-bg);
+  border: 1px solid var(--dsh-border);
+  border-radius: var(--dsh-r-el);
+  color: var(--dsh-text);
+  font-family: var(--dsh-mono);
+  font-size: 12.5px;
+  padding: 9px 12px;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.pathInput::placeholder {
+  color: var(--dsh-faint);
+  font-family: var(--dsh-sans);
+}
+.pathInput:focus {
+  border-color: color-mix(in srgb, var(--dsh-amber) 58%, var(--dsh-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsh-amber) 12%, transparent);
+}
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--dsh-border);
+  border-radius: var(--dsh-r-sm);
+  background: var(--dsh-chip-bg);
+  color: var(--dsh-text-soft);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.iconBtn:hover {
+  border-color: color-mix(in srgb, var(--dsh-amber) 52%, var(--dsh-border));
+  background: color-mix(in srgb, var(--dsh-amber-bg) 42%, var(--dsh-chip-bg));
+  color: var(--dsh-text);
+}
+
+/* ── Embedded model-setting pages and similar views: keep spacing only, internal styles are local ── */
+.embed {
+  margin-top: 4px;
+  /* Remove outer form card border so the active tab and card no longer show a divider, making them flush together. */
+  --md-card-border: transparent;
+
+  /* Model settings tabs use Chrome-style pill tabs: active item is a filled rounded top tab whose bottom edge
+     snaps to the card top edge to look like one piece; inactive items are transparent with subtle hover.
+     Color transitions run smoothly on state changes and all colors use --dsh-* / --md-surface with auto theme adaptation. */
+  :global(.model-tabs .mantine-Tabs-list) {
+    --tabs-list-border-width: 0;
+    flex-wrap: nowrap;
+    gap: 4px;
+    border-bottom: none;
+    margin-bottom: 0;
+    margin-left: 10px;
+    padding: 0 6px;
+    position: relative;
+    z-index: 1;
+  }
+  :global(.model-tabs .mantine-Tabs-tab) {
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: -1px;
+    padding: 9px 20px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--dsh-muted);
+    position: relative;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  :global(.model-tabs .mantine-Tabs-tab:hover:not([data-active])) {
+    background: var(--dsh-nav-hover);
+    color: var(--dsh-text-soft);
+  }
+  /* Active tab: same background and border as card, transparent bottom edge so it visually joins the card (Chrome-style glue). */
+  :global(.model-tabs .mantine-Tabs-tab[data-active]) {
+    background: var(--md-surface, #fff);
+    color: var(--dsh-accent);
+    font-weight: 600;
+    border-color: var(--md-border, #e2e8f0);
+    border-bottom-color: var(--md-surface, #fff);
+    z-index: 2;
+  }
+}
+.embedFixed {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  > :global(*) {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+/* Dark mode: remap embedded pages (hard-coded light values already moved to --md-* variables) to app dark tokens.
+   In light mode no override is applied, so embedded pages keep their native light values and blend naturally.
+   Note: since the layout shell moved to SettingsShell, this now anchors to global .dsh-root[data-theme] (since .wrap is no longer in this module). */
+:global(.dsh-root[data-theme='dark']) .embed {
+  --md-surface: var(--dsh-bg);
+  --md-subtle: var(--dsh-code-bg);
+  --md-border: var(--dsh-border);
+  --md-border-soft: var(--dsh-border-soft);
+  --md-border-strong: var(--dsh-border);
+  --md-text: var(--dsh-text);
+  --md-text-2: var(--dsh-text-soft);
+  --md-muted: var(--dsh-muted);
+  --md-faint: var(--dsh-faint);
+  /* Element-plus text variables directly used in embedded forms are added here because dark mode global remaps do not cover them. */
+  --el-text-color-primary: var(--dsh-text);
+  --el-text-color-secondary: var(--dsh-muted);
+}
+
+/* ── Placeholder skeleton ── */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 90px 20px;
+  color: var(--dsh-faint);
+}
+.placeholderText {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dsh-text-soft);
+}
+.placeholderSub {
+  font-size: 13px;
+  color: var(--dsh-muted);
+}

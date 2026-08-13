@@ -1,0 +1,212 @@
+.locator {
+  z-index: 12;
+}
+
+.overlay {
+  position: sticky;
+  top: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.inline {
+  position: sticky;
+  top: 50%;
+  align-self: flex-start;
+  flex: 0 0 44px;
+  width: 44px;
+  height: var(--turn-locator-height, 72px);
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+.rail {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.tickViewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.scrollViewport {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: color-mix(in srgb, var(--dsh-border) 78%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsh-border) 78%, transparent);
+}
+
+.scrollViewport:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dsh-accent) 46%, transparent);
+  outline-offset: -6px;
+  border-radius: 10px;
+}
+
+.tickCanvas {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+}
+
+.scrollCanvas {
+  contain: layout paint style;
+}
+
+.overlay .rail {
+  position: absolute;
+  top: 50dvh;
+  left: clamp(12px, 2.2cqw, 24px);
+  width: 44px;
+  height: var(--turn-locator-height, 72px);
+  transform: translateY(-50%);
+}
+
+.tick {
+  position: absolute;
+  left: 8px;
+  width: 8px;
+  height: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dsh-border) 82%, var(--dsh-faint));
+  opacity: 0.68;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    opacity 0.16s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tick::after {
+  content: '';
+  position: absolute;
+  inset: -8px -36px -8px -5px;
+}
+
+.scrollCanvas .tick::after {
+  inset: -4px -24px -4px -5px;
+}
+
+.tick:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dsh-accent) 46%, transparent);
+  outline-offset: 5px;
+}
+
+.tick[data-active='true'] {
+  background: var(--dsh-text);
+  opacity: 1;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dsh-text) 8%, transparent);
+  transform: translateY(-50%);
+}
+
+.rail[data-hovering='true'] .tick[data-active='true']:not([data-hover-distance]) {
+  background: color-mix(in srgb, var(--dsh-border) 82%, var(--dsh-faint));
+  opacity: 0.68;
+  box-shadow: none;
+}
+
+.tick[data-hover-distance='3'] {
+  background: color-mix(in srgb, var(--dsh-text) 28%, var(--dsh-border));
+  opacity: 0.74;
+  transform: translateY(-50%) scaleX(1.12);
+}
+
+.tick[data-hover-distance='2'] {
+  background: color-mix(in srgb, var(--dsh-text) 44%, var(--dsh-border));
+  opacity: 0.84;
+  transform: translateY(-50%) scaleX(1.32);
+}
+
+.tick[data-hover-distance='1'] {
+  background: color-mix(in srgb, var(--dsh-text) 64%, var(--dsh-border));
+  opacity: 0.94;
+  transform: translateY(-50%) scaleX(1.65);
+}
+
+.tick[data-hover-distance='0'] {
+  background: var(--dsh-text);
+  opacity: 1;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dsh-text) 10%, transparent);
+  transform: translateY(-50%) scaleX(2.1);
+}
+
+.preview {
+  position: absolute;
+  left: 56px;
+  width: min(390px, calc(100cqw - 112px));
+  min-width: 270px;
+  max-width: 390px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 13px 11px;
+  border: 1px solid var(--dsh-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--dsh-surface) 97%, var(--dsh-bg));
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--dsh-text) 12%, transparent);
+  color: var(--dsh-text);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.previewTitle {
+  color: var(--dsh-text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.previewText {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--dsh-muted);
+  font-size: 12.5px;
+  line-height: 1.48;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.previewMeta {
+  color: var(--dsh-faint);
+  font-family: var(--dsh-mono);
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+@container (max-width: 720px) {
+  .overlay {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tick {
+    transition-duration: 0.01ms !important;
+  }
+}

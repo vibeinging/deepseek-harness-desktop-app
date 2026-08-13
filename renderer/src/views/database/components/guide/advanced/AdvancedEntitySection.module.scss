@@ -1,0 +1,225 @@
+$brand: #6b1a96;
+$brand-soft: rgba(107, 26, 150, 0.06);
+$brand-muted: rgba(107, 26, 150, 0.35);
+$emerald: #059669;
+$emerald-soft: rgba(5, 150, 105, 0.08);
+$amber: #d97706;
+$amber-soft: rgba(217, 119, 6, 0.08);
+$blue: #2563eb;
+$blue-soft: rgba(37, 99, 235, 0.07);
+$text-primary: var(--dsh-text, #1a1a2e);
+$text-secondary: var(--dsh-text-soft, #5a5a72);
+$text-muted: var(--dsh-muted, #9494a8);
+$border: var(--dsh-border, #e8e8f0);
+$surface: var(--dsh-bg, #f7f7fa);
+
+.entitySection {
+  height: 100%;
+}
+
+// ─── Existing configs ───
+.existingPanel {
+  animation: fadeSlideIn 0.3s ease-out;
+}
+
+// ─── Empty state ───
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 40px;
+  animation: fadeSlideIn 0.35s ease-out;
+}
+
+// ─── Flow demo ───
+.conceptDemo {
+  width: 100%;
+  max-width: 680px;
+  margin-bottom: 40px;
+}
+
+.demoFlow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.flowConnector {
+  flex-shrink: 0;
+  color: $text-muted;
+  padding: 18px 4px 0;
+}
+
+.flowNode {
+  flex-shrink: 0;
+}
+
+.flowLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: $text-muted;
+}
+
+// User input node
+.flowInput {
+  .flowLabel {
+    color: $brand-muted;
+  }
+}
+
+.queryBubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: $brand-soft;
+  border: 1px solid rgba(107, 26, 150, 0.12);
+  border-radius: 10px;
+
+  .queryPrefix {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $brand;
+    color: #fff;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .queryText {
+    font-size: 14px;
+    color: $text-primary;
+    white-space: nowrap;
+
+    mark {
+      background: rgba(107, 26, 150, 0.15);
+      color: $brand;
+      font-weight: 600;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  }
+}
+
+// AI recognition node
+.flowRecognize {
+  .flowLabel {
+    color: rgba(5, 150, 105, 0.6);
+  }
+}
+
+.recognizeBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: $emerald-soft;
+  border: 1px solid rgba(5, 150, 105, 0.15);
+  border-radius: 10px;
+
+  .recognizeEntity {
+    font-size: 13px;
+    font-weight: 600;
+    color: $emerald;
+  }
+
+  .recognizeArrow {
+    flex-shrink: 0;
+    color: $text-muted;
+  }
+
+  .recognizeTarget {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .recognizeColumn {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-primary;
+    background: rgba(5, 150, 105, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  .recognizeValue {
+    font-size: 11px;
+    color: $emerald;
+    padding-left: 8px;
+  }
+}
+
+// SQL output node
+.flowOutput {
+  .flowLabel {
+    color: rgba(37, 99, 235, 0.55);
+  }
+}
+
+.sqlBox {
+  padding: 10px 16px;
+  background: $blue-soft;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 10px;
+
+  code {
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+
+  .sqlKw {
+    color: $blue;
+    font-weight: 600;
+  }
+
+  .sqlVal {
+    color: $emerald;
+    font-weight: 500;
+  }
+}
+
+// ─── Helper text ───
+.emptyExplain {
+  text-align: center;
+  max-width: 480px;
+}
+
+.explainMain {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: $text-secondary;
+  line-height: 1.7;
+}
+
+.explainHint {
+  margin: 0;
+  font-size: 12px;
+  color: $text-muted;
+  line-height: 1.5;
+}
+
+// ─── Animation ───
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
