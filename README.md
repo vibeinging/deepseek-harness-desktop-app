@@ -1,5 +1,7 @@
 # dsh-work
 
+[English](README.en.md) | 中文
+
 > 拳打 WorkBuddy，脚踢 Codex。
 >
 > 和我们一起释放 Plugin 的力量，把每一个好点子变成影响世界的作品。
