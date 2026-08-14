@@ -35,6 +35,7 @@
     "package:mac": "node scripts/run-with-project-node.mjs npm --prefix electron run package:mac",
     "package:mac:x64": "node scripts/run-with-project-node.mjs npm --prefix electron run package:mac:x64",
     "package:win:dir": "node scripts/run-with-project-node.mjs npm --prefix electron run package:win:dir",
+    "package:win:unsigned": "node scripts/run-with-project-node.mjs npm --prefix electron run package:win:unsigned",
     "package:win": "node scripts/run-with-project-node.mjs npm --prefix electron run package:win",
     "test:renderer": "node scripts/run-with-project-node.mjs npm --prefix renderer test",
     "test:unit": "node scripts/run-with-project-node.mjs node --import ./eval/tests/setup.mjs --test --test-concurrency=1 eval/tests/*.test.mjs",

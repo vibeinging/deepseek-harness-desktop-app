@@ -1,0 +1,68 @@
+name: Windows Release
+
+# 手动触发的 Windows 安装包构建。
+# 刻意不挂在 push/PR 上：日常验证由 ci.yml 负责（它已跑 package:win:dir + smoke），
+# 本工作流只在需要出 NSIS 安装包时消耗一次 Windows runner 时间。
+# 以后若要随版本发布自动化，可再加 `push: tags: ['v*']` 触发。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package-windows:
+    name: windows x64 nsis (unsigned)
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            renderer/package-lock.json
+            server/package-lock.json
+            electron/package-lock.json
+
+      # 缓存 Electron 发行包与 NSIS 工具链，省去每次冷下载（约 2-4 分钟）
+      - name: Cache electron & builder downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-win-x64-v1
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Check native runtime
+        run: npm run doctor
+
+      - name: Build unsigned NSIS installer
+        run: npm run package:win:unsigned
+
+      - name: Smoke packaged server
+        run: npm --prefix electron run smoke:win:server
+
+      - name: Smoke packaged app
+        run: npm --prefix electron run smoke:win:app
+
+      # 只传安装器本体（win-unpacked 目录数百 MB，不占 artifact 存储）
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-work-win-x64-unsigned
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 14
