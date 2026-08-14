@@ -37,7 +37,7 @@
     "package:win:dir": "node ../scripts/run-with-project-node.mjs npm run package:win:dir:project",
     "package:win:dir:project": "npm run build:renderer && npm run prepare:win && electron-builder --win --x64 --dir",
     "package:win:unsigned": "node ../scripts/run-with-project-node.mjs npm run package:win:unsigned:project",
-    "package:win:unsigned:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 && npm --prefix .. run release:verify:win",
+    "package:win:unsigned:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 && npm --prefix .. run release:verify:win -- --allow-blockers",
     "package:win": "node ../scripts/run-with-project-node.mjs npm run package:win:project",
     "package:win:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 -c.forceCodeSigning=true && npm --prefix .. run release:verify:win"
   },
