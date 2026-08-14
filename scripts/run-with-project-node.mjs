@@ -64,7 +64,8 @@ const child = spawn(command, args, {
   cwd: process.cwd(),
   env,
   stdio: 'inherit',
-  shell: false,
+  // Windows 上 npm 的 bin shim 是 .cmd，spawn 不经 shell 无法按名解析
+  shell: process.platform === 'win32' && mode === 'exec',
 })
 
 function forwardSignal(signal) {
