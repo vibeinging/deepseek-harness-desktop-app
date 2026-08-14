@@ -11,6 +11,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "postinstall": "patch-package",
     "start": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs",
     "dev": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs",
     "dev:prepare": "node ../scripts/run-with-project-node.mjs node scripts/run-dev.mjs --prepare-only",
@@ -35,13 +36,16 @@
     "package:mac:x64:project": "npm --prefix .. run release:check:mac:static && npm run build:renderer && npm run prepare:mac:x64 && electron-builder --mac --x64 -c.forceCodeSigning=true -c.mac.notarize=true && npm --prefix .. run release:verify:mac:x64",
     "package:win:dir": "node ../scripts/run-with-project-node.mjs npm run package:win:dir:project",
     "package:win:dir:project": "npm run build:renderer && npm run prepare:win && electron-builder --win --x64 --dir",
+    "package:win:unsigned": "node ../scripts/run-with-project-node.mjs npm run package:win:unsigned:project",
+    "package:win:unsigned:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 && npm --prefix .. run release:verify:win",
     "package:win": "node ../scripts/run-with-project-node.mjs npm run package:win:project",
     "package:win:project": "npm --prefix .. run release:check:win:static && npm run build:renderer && npm run prepare:win && electron-builder --win --x64 -c.forceCodeSigning=true && npm --prefix .. run release:verify:win"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.2",
+    "electron": "^42.4.1",
     "electron-builder": "^26.0.12",
-    "electron": "^42.4.1"
+    "patch-package": "^8.0.1"
   },
   "dependencies": {
     "electron-updater": "6.8.9"
@@ -76,12 +80,17 @@
       {
         "from": "../.desktop-build/server",
         "to": "server",
-        "filter": ["**/*", "!node_modules/**/*"]
+        "filter": [
+          "**/*",
+          "!node_modules/**/*"
+        ]
       },
       {
         "from": "../.desktop-build/server/node_modules",
         "to": "server/node_modules",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "../packages/dsh-product-bridge",
@@ -142,11 +151,16 @@
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
       "notarize": true,
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "win": {
       "icon": "icons/icon.ico",
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   }

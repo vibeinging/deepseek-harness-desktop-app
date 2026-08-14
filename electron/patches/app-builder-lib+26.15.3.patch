@@ -1,0 +1,13 @@
+diff --git a/node_modules/app-builder-lib/out/macPackager.js b/node_modules/app-builder-lib/out/macPackager.js
+index 024d4ed..2cceef5 100644
+--- a/node_modules/app-builder-lib/out/macPackager.js
++++ b/node_modules/app-builder-lib/out/macPackager.js
+@@ -331,7 +331,7 @@ class MacPackager extends platformPackager_1.PlatformPackager {
+             identityHash: (identity === null || identity === void 0 ? void 0 : identity.hash) || "none",
+             provisioningProfile: provisioningProfile || "none",
+         }, customSign ? "executing custom sign" : "signing");
+-        return customSign ? Promise.resolve(customSign(opts, this)) : (0, macCodeSign_1.sign)({ ...opts, identity: identity ? identity.name : undefined });
++        return customSign ? Promise.resolve(customSign(opts, this)) : (0, macCodeSign_1.sign)({ ...opts, identity: identity ? identity.hash || identity.name : undefined });
+     }
+     //noinspection JSMethodCanBeStatic
+     async doFlat(appPath, outFile, identity, keychain) {
