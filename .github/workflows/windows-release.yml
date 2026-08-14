@@ -45,6 +45,10 @@ jobs:
 
       - name: Install
         run: npm ci --no-audit --no-fund
+        env:
+          # lock 文件生成自国内镜像(r2.cnpmjs.org)，其证书已过期且海外不可达；
+          # 让 npm 在安装时把 resolved host 替换回官方 registry
+          npm_config_replace_registry_host: registry.npmjs.org
 
       - name: Check native runtime
         run: npm run doctor
