@@ -40,8 +40,8 @@ type BuiltinAgentPalettes = Record<'light' | 'dark', BuiltinAgentPalette>
  */
 export const BUILTIN_AGENT_PALETTES: Record<string, BuiltinAgentPalettes> = {
   lighting: {
-    light: { bg: '#f4f7fb', surface: '#fbfcfe', hover: '#edf1f7', text: '#172033', textSoft: '#3d4a61', muted: '#68758a', faint: '#9da8b8' },
-    dark: { bg: '#202733', surface: '#111720', hover: '#19212c', text: '#f0f4fa', textSoft: '#d4dce8', muted: '#aeb9c8', faint: '#7f8b9c' }
+    light: { bg: '#f1f5fb', surface: '#fbfcfe', hover: '#e8eef7', text: '#111827', textSoft: '#334155', muted: '#475569', faint: '#5f6f85' },
+    dark: { bg: '#1c2738', surface: '#121a27', hover: '#1b2636', text: '#f8fafc', textSoft: '#dbe4f0', muted: '#b8c4d4', faint: '#94a3b8' }
   }
 }
 

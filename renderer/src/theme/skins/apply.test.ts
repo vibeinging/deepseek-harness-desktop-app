@@ -52,8 +52,8 @@ describe('applySkin', () => {
     expect(state.classes.has('lighting-theme')).toBe(true)
     expect(state.styles.get('--el-color-primary')).toBe('#3f6fd8')
     expect(state.styles.get('--el-color-primary-rgb')).toBe('63, 111, 216')
-    expect(state.styles.get('--skin-dsh-bg')).toBe('#f4f7fb')
-    expect(state.styles.get('--skin-dsh-text')).toBe('#172033')
+    expect(state.styles.get('--skin-dsh-bg')).toBe('#f1f5fb')
+    expect(state.styles.get('--skin-dsh-text')).toBe('#111827')
   })
 
   it('自定义主题继承默认专业蓝，再叠加安全主色', () => {
@@ -91,8 +91,8 @@ describe('applySkin', () => {
     expect(state.styles.get('--el-color-primary')).toBe('#1e6fff')
     refreshSkinScheme('dark')
     expect(state.styles.get('--el-color-primary')).toBe(darkPrimary)
-    expect(state.styles.get('--skin-dsh-bg')).toBe('#202733')
-    expect(state.styles.get('--skin-dsh-text')).toBe('#f0f4fa')
+    expect(state.styles.get('--skin-dsh-bg')).toBe('#1c2738')
+    expect(state.styles.get('--skin-dsh-text')).toBe('#f8fafc')
   })
 
   it('应用时清理旧版本的内置主题类', () => {

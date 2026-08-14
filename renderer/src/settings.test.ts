@@ -4,7 +4,7 @@ import settings, { featureEnabled } from './settings'
 describe('renderer feature parameters', () => {
   it('uses the Profile-owned professional theme as the product default', () => {
     expect(settings.defaultTheme).toBe('profile:%40deepseek-ai%2Fdsh-theme-pack:professional-blue')
-    expect(settings.enableCustomThemes).toBe(false)
+    expect(settings.enableCustomThemes).toBe(true)
   })
 
   it('enables custom themes by default and accepts explicit off values', () => {

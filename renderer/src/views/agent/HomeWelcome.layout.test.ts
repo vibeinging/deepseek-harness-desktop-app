@@ -45,12 +45,22 @@ describe('homepage character', () => {
     expect(styles).toContain('z-index: 3')
     expect(styles).toContain('z-index: 2')
     expect(styles).toContain('color: var(--dsh-muted)')
-    expect(styles).toContain('color: var(--dsh-faint)')
     expect(styles).toContain('object-fit: contain')
     expect(styles).not.toContain('@keyframes home-character-breathe')
     expect(styles).not.toContain('animation: home-character')
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
     expect(styles).toContain('@container (max-width: 760px)')
+  })
+
+  it('uses primary and secondary semantic text colors on the formal home', () => {
+    const styles = read('./HomeWelcome.module.scss')
+    const title = styles.match(/\.title\s*\{([\s\S]*?)\}/)?.[1] || ''
+    const subtitle = styles.match(/\.subtitle\s*\{([\s\S]*?)\}/)?.[1] || ''
+
+    expect(title).toContain('color: var(--dsh-text)')
+    expect(title).toContain('font-weight: 650')
+    expect(subtitle).toContain('color: var(--dsh-text-soft)')
+    expect(subtitle).toContain('font-size: 13px')
   })
 
   it.each([

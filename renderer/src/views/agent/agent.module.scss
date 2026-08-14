@@ -739,7 +739,11 @@
 .center {
   position: relative;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--dsh-surface) 94%, var(--dsh-bg)) 0%, var(--dsh-surface) 210px);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--dsh-surface) 54%, var(--brand-bg-color, var(--dsh-bg))) 0%,
+      color-mix(in srgb, var(--dsh-surface) 68%, var(--brand-bg-color, var(--dsh-bg))) 210px
+    );
   border-radius: var(--dsh-r-card);
   min-width: 0;
   display: flex;
@@ -3724,7 +3728,7 @@
   field-sizing: content;
 }
 .ta::placeholder {
-  color: var(--dsh-faint);
+  color: var(--dsh-muted);
 }
 .composerBar {
   display: flex;

@@ -256,9 +256,9 @@ test("the app-owned Profile Bundles use the current public SDK names", () => {
   assert.equal(professional.vars["--el-color-primary"], "#405fd2");
   assert.equal(professional.dark.vars["--el-color-primary"], "#7b9cff");
   assert.deepEqual(professional.appearance, {
-    bgColor: "#f4f6fc",
-    panelOpacity: 96,
-    dark: { bgColor: "#111827", panelOpacity: 94 },
+    bgColor: "#edf2fa",
+    panelOpacity: 98,
+    dark: { bgColor: "#1b2d49", panelOpacity: 96 },
   });
   const anime = themes.find((theme) => theme.manifest_id === "anime-blue");
   assert.equal(anime.vars["--el-color-primary"], "#5b8def");

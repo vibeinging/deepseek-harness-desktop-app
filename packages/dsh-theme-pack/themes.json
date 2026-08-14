@@ -39,11 +39,11 @@
         ]
       },
       "appearance": {
-        "bgColor": "#f4f6fc",
-        "panelOpacity": 96,
+        "bgColor": "#edf2fa",
+        "panelOpacity": 98,
         "dark": {
-          "bgColor": "#111827",
-          "panelOpacity": 94
+          "bgColor": "#1b2d49",
+          "panelOpacity": 96
         }
       }
     },

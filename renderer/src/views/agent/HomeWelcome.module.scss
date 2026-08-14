@@ -18,9 +18,9 @@
 
 .title {
   margin: 0;
-  color: var(--dsh-muted);
+  color: var(--dsh-text);
   font-size: clamp(20px, 2.2cqw, 26px);
-  font-weight: 520;
+  font-weight: 650;
   letter-spacing: -0.025em;
   line-height: 1.18;
 }
@@ -28,8 +28,8 @@
 .subtitle {
   max-width: 560px;
   margin: 0;
-  color: var(--dsh-faint);
-  font-size: 12.5px;
+  color: var(--dsh-text-soft);
+  font-size: 13px;
   line-height: 1.55;
 }
 
