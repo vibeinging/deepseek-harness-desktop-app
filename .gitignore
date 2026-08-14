@@ -49,3 +49,4 @@ renderer/.env.*
 /docs/images/*
 !/docs/images/readme/
 !/docs/images/readme/*
+.playwright-mcp/
