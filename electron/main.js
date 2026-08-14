@@ -1098,7 +1098,8 @@ function createWindow(surfaceUrl = rendererSurfaceUrl) {
   if (SMOKE_TEST) {
     mainWindow.webContents.on('console-message', (details) => {
       if (details?.level !== 'error') return;
-      rendererErrors.push(String(details.message || '未知 Renderer 错误'));
+      const location = details.location ? ` @${details.location.url || ''}:${details.location.line || 0}` : '';
+      rendererErrors.push(String(details.message || '未知 Renderer 错误') + location);
     });
     mainWindow.webContents.once('did-finish-load', async () => {
       try {
