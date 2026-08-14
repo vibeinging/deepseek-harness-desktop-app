@@ -117,7 +117,8 @@ function npmDistribution(appRoot, env) {
     entryPath,
     installAnchor: manifestPath,
     version: typeof manifest.version === "string" ? manifest.version : null,
-    execArgv: [],
+    // DSH profile boot 无条件创建 Cordis HMR 服务，其内部模块解析器依赖该 flag
+    execArgv: ["--expose-internals"],
   });
 }
 
