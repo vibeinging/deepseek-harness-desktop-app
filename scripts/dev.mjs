@@ -6,7 +6,6 @@ import process from 'node:process'
 import { nodeArch, nodeVersion, projectNodeEnv, resolveNpmCli, resolveProjectNode } from './project-runtime.mjs'
 
 const APP_DIR = dirname(dirname(fileURLToPath(import.meta.url)))
-const CUSTOM_RENDERER_URL = process.env.DSH_DEV_URL
 
 function resolvePort(value, fallback) {
   const explicitPort = Number(value)
@@ -14,9 +13,7 @@ function resolvePort(value, fallback) {
   return fallback
 }
 
-const RENDERER_PORT = resolvePort(process.env.DSH_RENDERER_PORT, 52731)
 const SERVER_PORT = resolvePort(process.env.DSH_SERVER_PORT || process.env.SERVER_PORT, 52838)
-const RENDERER_URL = CUSTOM_RENDERER_URL || `http://127.0.0.1:${RENDERER_PORT}`
 
 const children = new Set()
 let shuttingDown = false
@@ -34,26 +31,6 @@ function isPortOpen(port) {
       resolve(false)
     })
   })
-}
-
-async function waitForPort(port, timeoutMs = 30000) {
-  const start = Date.now()
-  while (Date.now() - start < timeoutMs) {
-    if (await isPortOpen(port)) return true
-    await new Promise((resolve) => setTimeout(resolve, 250))
-  }
-  return false
-}
-
-async function isExpectedRenderer(url) {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(1500) })
-    if (!response.ok) return false
-    const html = await response.text()
-    return html.includes('id="app"') && html.includes('dsh-work')
-  } catch {
-    return false
-  }
 }
 
 function run(name, command, args, options = {}) {
@@ -97,7 +74,7 @@ const PROJECT_NODE = resolveProjectNode({ appDir: APP_DIR })
 const PROJECT_NODE_ENV = projectNodeEnv(PROJECT_NODE)
 
 console.log(`[dev] 项目 Node: ${PROJECT_NODE} (${nodeArch(PROJECT_NODE)}, v${nodeVersion(PROJECT_NODE)})`)
-console.log(`[dev] 开发端口: Renderer ${RENDERER_PORT}, Server ${SERVER_PORT}`)
+console.log(`[dev] App API 端口: ${SERVER_PORT}`)
 
 async function ensureDesktopDependencies() {
   const npmCli = resolveNpmCli(PROJECT_NODE)
@@ -123,8 +100,29 @@ try {
   process.exit(1)
 }
 
-const rendererPortBusy = CUSTOM_RENDERER_URL ? false : await isPortOpen(RENDERER_PORT)
-const rendererAlreadyRunning = await isExpectedRenderer(RENDERER_URL)
+async function buildDshClientPlugin() {
+  await new Promise((resolveReady, reject) => {
+    const child = spawn('npm', ['run', 'build:dsh-client'], {
+      cwd: join(APP_DIR, 'renderer'),
+      env: { ...process.env, ...PROJECT_NODE_ENV },
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    })
+    child.once('error', reject)
+    child.once('exit', (code, signal) => {
+      if (code === 0) resolveReady()
+      else reject(new Error(`dsh-work Client Plugin 构建失败(code=${code}, signal=${signal || 'none'})`))
+    })
+  })
+}
+
+try {
+  await buildDshClientPlugin()
+} catch (error) {
+  console.error(`[dev] ${error?.message || error}`)
+  process.exit(1)
+}
+
 const serverPortBusy = await isPortOpen(SERVER_PORT)
 
 if (serverPortBusy) {
@@ -132,36 +130,10 @@ if (serverPortBusy) {
   process.exit(1)
 }
 
-if (CUSTOM_RENDERER_URL) {
-  if (!rendererAlreadyRunning) {
-    console.error(`[dev] DSH_DEV_URL 不是可用的 dsh-work Renderer: ${RENDERER_URL}`)
-    process.exit(1)
-  }
-  console.log(`[dev] 使用 DSH_DEV_URL: ${RENDERER_URL}`)
-} else if (!rendererAlreadyRunning) {
-  if (rendererPortBusy) {
-    console.error(`[dev] ${RENDERER_PORT} 端口已被其他服务占用`)
-    process.exit(1)
-  }
-  run('renderer', 'npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(RENDERER_PORT), '--strictPort'], {
-    cwd: join(APP_DIR, 'renderer'),
-    env: { ...PROJECT_NODE_ENV, DSH_SERVER_PORT: String(SERVER_PORT) },
-    exitOnClose: true,
-  })
-  const ready = await waitForPort(RENDERER_PORT)
-  if (!ready) {
-    console.error(`[dev] renderer 未能在 ${RENDERER_PORT} 端口启动`)
-    shutdown(1)
-  }
-} else {
-  console.log(`[dev] renderer 已在 ${RENDERER_URL} 运行，复用现有服务`)
-}
-
 run('electron', 'npm', ['run', 'dev'], {
   cwd: join(APP_DIR, 'electron'),
   env: {
     ...PROJECT_NODE_ENV,
-    DSH_DEV_URL: RENDERER_URL,
     DSH_NODE_BIN: PROJECT_NODE,
     DSH_SERVER_PORT: String(SERVER_PORT),
   },

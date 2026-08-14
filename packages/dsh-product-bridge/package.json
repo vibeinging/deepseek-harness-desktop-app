@@ -32,14 +32,14 @@
   "license": "BSD-3-Clause",
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-agent": "^0.1.0-rc.2",
-    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.2",
-    "@deepseek-ai/dsh-tools": "^0.1.0-rc.2"
+    "@deepseek-ai/dsh-agent": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-agent": "^0.1.0-rc.2",
-    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.2",
-    "@deepseek-ai/dsh-tools": "^0.1.0-rc.2"
+    "@deepseek-ai/dsh-agent": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "^0.1.0-rc.6"
   }
 }

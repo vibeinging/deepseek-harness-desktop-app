@@ -343,9 +343,8 @@ export default function AgentNav({
       {
         key: 'move',
         icon: <IconFolderOpen size={16} stroke={1.7} />,
-        label: '移到项目…',
-        disabled: !workspaces.some((workspace) => wsKind(workspace.id) === 'project' && workspace.id !== wsId),
-        onClick: () => onMoveConv?.(wsId, c.id, c.title, archived ? 'archived' : 'active')
+        label: '移动对话（DSH 暂不支持）',
+        disabled: true
       },
       archived
         ? {
@@ -703,7 +702,14 @@ export default function AgentNav({
           <DshLogo className={styles.brandMark} />
           <span className={styles.brandName}>{appName}</span>
         </div>
-        <button type="button" className={styles.settingsBtn} onClick={() => onOpenSettings?.()} title="设置">
+        <div className={styles.sidebarPluginActions} data-dsh-sidebar-footer-actions />
+        <button
+          type="button"
+          className={styles.settingsBtn}
+          data-dsh-open-settings
+          onClick={() => onOpenSettings?.()}
+          title="设置"
+        >
           <IconSettings size={17} stroke={1.7} className={styles.settingsGear} />
           <span>设置</span>
         </button>

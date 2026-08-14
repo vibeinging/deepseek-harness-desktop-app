@@ -34,6 +34,12 @@ import { SettingsShell, SettingsNavGroup, SettingsNavItem, SettingsNavSep } from
 import DshOnboarding from './onboarding/DshOnboarding'
 import AppInstructions from './AppInstructions'
 import GlobalChatMemory from './GlobalChatMemory'
+import {
+  DshSettingsSection,
+  useDshClientHost,
+  useHasDshSettingsSection,
+  useDshSettingsSections
+} from '@/dsh-client/DshClientHost'
 import { markAppOnboardingCompleted } from './onboarding/storage'
 import { pickFolder } from './folders'
 import SkinsManager from './SkinsManager'
@@ -232,12 +238,26 @@ const MANAGE_NAV: NavDef[] = [
   { key: 'plugins', label: '插件', Icon: IconSparkles }
 ]
 
+const DSH_SETTINGS_PREFIX = 'dsh-settings:'
+
+function dshSettingsKey(id: string) {
+  return `${DSH_SETTINGS_PREFIX}${id}`
+}
+
+function dshSettingsNavId(id: string) {
+  return `dsh-settings-nav-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+}
+
 export default function AgentSettings({
   onBack,
   initialActive = 'general'
 }: { onBack?: () => void; initialActive?: string }) {
   const { t } = useTranslation()
   const { scheme } = useAgentTheme()
+  const dshClientHost = useDshClientHost()
+  const hasDshGeneralSection = useHasDshSettingsSection('general')
+  const hasDshModelsSection = useHasDshSettingsSection('models')
+  const hasDshPluginsSection = useHasDshSettingsSection('plugins')
   const appLanguage = useConfigStore((s) => s.language)
   const setAppLanguage = useConfigStore((s) => s.setLanguage)
 
@@ -247,6 +267,7 @@ export default function AgentSettings({
   const [webSearch, setWebSearch] = useState<WebSearchSettings>(DEFAULT_WEB_SEARCH_SETTINGS)
   const [defaultDataRoot, setDefaultDataRoot] = useState('')
   const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const dshSettingsSections = useDshSettingsSections()
 
   useEffect(() => {
     setActive(initialActive)
@@ -299,8 +320,11 @@ export default function AgentSettings({
   const set = <K extends keyof AgentSettingsData>(key: K, value: AgentSettingsData[K]) =>
     setData((d) => ({ ...d, [key]: value }))
   const setLanguage = (value: AgentLanguage) => {
-    setAppLanguage(value)
-    set('language', value)
+    if (dshClientHost) dshClientHost.setLocale(value)
+    else {
+      setAppLanguage(value)
+      set('language', value)
+    }
   }
   const setNetwork = <K extends NetworkSettingKey>(key: K, value: NetworkSettings[K]) => {
     if (key === 'httpProxy' && proxyContainsCredentials(value)) {
@@ -328,6 +352,7 @@ export default function AgentSettings({
       }
     : item)
   const activeDef = [...GENERAL_NAV, ...generalGroupNav, ...MANAGE_NAV].find((item) => item.key === active)
+  const activeDshSection = dshSettingsSections.find((section) => dshSettingsKey(section.id) === active)
   const activeGeneralGroup = generalGroupNav.find((item) => item.key === active)
   const isGeneralOverview = active === 'general'
   // 皮肤页有独立管理 UI，不走通用设置框架。
@@ -339,6 +364,10 @@ export default function AgentSettings({
     setOnboardingOpen(false)
   }
   const chooseDataRoot = async () => pickFolder()
+  const closeDshSettingsSection = () => {
+    if (onBack) onBack()
+    else setActive('general')
+  }
 
   return (
     <SettingsShell
@@ -386,6 +415,27 @@ export default function AgentSettings({
             </SettingsNavItem>
           ))}
 
+          {dshSettingsSections.length > 0 && (
+            <>
+              <SettingsNavSep />
+              <SettingsNavGroup label="DSH 扩展" sourceLabel="当前 Profile">
+                {dshSettingsSections.map((section) => (
+                  <SettingsNavItem
+                    key={section.id}
+                    id={dshSettingsNavId(section.id)}
+                    active={active === dshSettingsKey(section.id)}
+                    onClick={() => setActive(dshSettingsKey(section.id))}
+                    icon={<IconSparkles size={17} stroke={1.7} />}
+                    pluginName={section.registrant}
+                    nested
+                  >
+                    {section.label}
+                  </SettingsNavItem>
+                ))}
+              </SettingsNavGroup>
+            </>
+          )}
+
           <SettingsNavSep />
 
           <button
@@ -399,7 +449,7 @@ export default function AgentSettings({
         </>
       }
     >
-      <div className={`${styles.mainInner} ${active === 'plugins' ? styles.mainInnerFixed : ''}`}>
+      <div className={`${styles.mainInner} ${active === 'plugins' || activeDshSection ? styles.mainInnerFixed : ''}`}>
           {isGeneralPage ? (
             <>
               <h1 className={styles.pageTitle}>{isGeneralOverview ? '常规' : activeGeneralGroup?.label}</h1>
@@ -538,7 +588,7 @@ export default function AgentSettings({
 
               {(isGeneralOverview || active === 'interaction-notify') && (
               <SettingsSection title="交互与可见性" desc="控制任务运行时的输入处理方式，以及过程信息的展示密度。">
-                <Row icon={<IconRoute size={17} stroke={1.75} />} label="运行中继续输入" desc="直接补充到当前任务，或按当前会话排队，等任务完成后再开始下一轮。排队内容会保存在本机。">
+                <Row icon={<IconRoute size={17} stroke={1.75} />} label="运行中继续输入" desc="直接补充到当前任务，或按当前会话排队，等任务完成后再开始下一轮。排队内容由当前 DSH 会话保存。">
                   <AppSelect
                     value={data.interaction}
                     onChange={(v) => set('interaction', v)}
@@ -616,6 +666,11 @@ export default function AgentSettings({
                 </Row>
               </SettingsSection>
               )}
+              {isGeneralOverview && hasDshGeneralSection && (
+                <EmbedBoundary>
+                  <DshSettingsSection id="general" onClose={closeDshSettingsSection} />
+                </EmbedBoundary>
+              )}
             </>
           ) : active === 'skins' ? (
             <>
@@ -632,7 +687,9 @@ export default function AgentSettings({
               <h1 className={styles.pageTitle}>模型设置</h1>
               <div className={styles.embed}>
                 <EmbedBoundary>
-                  <ModelsPage readonly={false} showHeader={false} />
+                  {hasDshModelsSection
+                    ? <DshSettingsSection id="models" onClose={closeDshSettingsSection} />
+                    : <ModelsPage readonly={false} showHeader={false} />}
                 </EmbedBoundary>
               </div>
             </>
@@ -640,8 +697,15 @@ export default function AgentSettings({
             <div className={`${styles.embed} ${styles.embedFixed}`}>
               <EmbedBoundary>
                 <PluginCenter />
+                {hasDshPluginsSection && (
+                  <DshSettingsSection id="plugins" onClose={closeDshSettingsSection} />
+                )}
               </EmbedBoundary>
             </div>
+          ) : activeDshSection ? (
+            <EmbedBoundary>
+              <DshSettingsSection id={activeDshSection.id} onClose={closeDshSettingsSection} />
+            </EmbedBoundary>
           ) : (
             <Placeholder title={activeDef?.label || ''} Icon={activeDef?.Icon || IconRocket} />
           )}

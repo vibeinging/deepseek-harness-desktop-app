@@ -3,7 +3,7 @@
   "productName": "dsh-work",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "dsh-work 桌面应用，基于 Electron 承载 React 渲染层与本地 Node 后端",
+  "description": "dsh-work 桌面应用，基于 Electron 承载 DSH Web Profile 与本地 Node 后端",
   "author": "DeepSeek AI",
   "private": true,
   "main": "main.js",
@@ -66,17 +66,13 @@
       "preload.js",
       "browser-workspace.js",
       "skin-settings-store.js",
+      "renderer-surface-port.js",
       "network-proxy-settings.js",
       "web-search-settings.js",
       "icons/**/*",
       "package.json"
     ],
     "extraResources": [
-      {
-        "from": "../renderer/dist",
-        "to": "renderer",
-        "filter": ["**/*"]
-      },
       {
         "from": "../.desktop-build/server",
         "to": "server",
@@ -96,6 +92,28 @@
           "README.md",
           "README.zh.md",
           "src/index.js"
+        ]
+      },
+      {
+        "from": "../packages/dsh-theme-pack",
+        "to": "packages/dsh-theme-pack",
+        "filter": [
+          "package.json",
+          "cordis.patch.yml",
+          "themes.json",
+          "README.md",
+          "src/index.js"
+        ]
+      },
+      {
+        "from": "../packages/dsh-work-shell",
+        "to": "packages/dsh-work-shell",
+        "filter": [
+          "package.json",
+          "cordis.patch.yml",
+          "README.md",
+          "src/index.js",
+          "lib/client.js"
         ]
       },
       {

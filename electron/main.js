@@ -4,7 +4,7 @@
 // 1. Create main window (size/background/custom title bar);
 // 2. Start local Node backend (app/server); stop it when the app exits;
 // 3. Use ipcMain for native file/folder pickers and expose preload bridge;
-// 4. Dev loads Vite (52731 by default); prod loads app/renderer/dist.
+// 4. Load the loopback surface published by the official DSH Web Profile.
 //
 // Backend process model: dev uses system node; prod runs local backend in Electron's Node mode.
 
@@ -21,18 +21,11 @@ const { createAttachmentGrant } = require('./attachment-grants');
 const { createArtifactContextMenu } = require('./artifact-context-menu');
 const { createSettingsStore, saveResult, copyValidatedBgImage } = require('./skin-settings-store');
 const { AppUpdateController } = require('./app-update-controller');
+const { loadOrCreateRendererSurfacePort } = require('./renderer-surface-port');
 
 const isDev = !app.isPackaged;
 const APP_ROOT = isDev ? path.join(__dirname, '..') : process.resourcesPath;
 const SERVER_DIR = path.join(APP_ROOT, 'server');
-const DIST_INDEX = isDev
-  ? path.join(APP_ROOT, 'renderer', 'dist', 'index.html')
-  : path.join(APP_ROOT, 'renderer', 'index.html');
-const configuredRendererPort = Number(process.env.DSH_RENDERER_PORT);
-const devRendererPort = Number.isInteger(configuredRendererPort) && configuredRendererPort >= 1 && configuredRendererPort <= 65535
-  ? configuredRendererPort
-  : 52731;
-const DEV_URL = process.env.DSH_DEV_URL || `http://localhost:${devRendererPort}`;
 const APP_ICON = path.join(__dirname, 'icons', 'icon.png'); // application icon
 const APP_DISPLAY_NAME = 'dsh-work';
 const LEGACY_DEFAULT_APP_NAMES = new Set(['DeepSeek Harness']);
@@ -61,7 +54,20 @@ const API_REQUEST_TIMEOUT_MS = Number(process.env.DSH_API_REQUEST_TIMEOUT_MS || 
 const STREAM_REQUEST_TIMEOUT_MS = Number(process.env.DSH_STREAM_REQUEST_TIMEOUT_MS || 30 * 60_000);
 const BACKEND_STOP_TIMEOUT_MS = Number(process.env.DSH_BACKEND_STOP_TIMEOUT_MS || 8_000);
 const SMOKE_TEST = process.env.DSH_SMOKE_TEST === '1';
+const SMOKE_EXPECT_SELECTOR = String(process.env.DSH_SMOKE_EXPECT_SELECTOR || '').trim();
+const SMOKE_REJECT_SELECTOR = String(process.env.DSH_SMOKE_REJECT_SELECTOR || '').trim();
+const SMOKE_CLICK_SELECTORS = parseSmokeClickSelectors(process.env.DSH_SMOKE_CLICK_SELECTORS);
 const UPDATE_API_BASE_URL = String(process.env.DSH_UPDATE_API_BASE_URL || '').trim();
+
+function parseSmokeClickSelectors(raw) {
+  const source = String(raw || '').trim();
+  if (!source) return [];
+  const parsed = JSON.parse(source);
+  if (!Array.isArray(parsed) || parsed.some((selector) => typeof selector !== 'string' || !selector.trim())) {
+    throw new Error('DSH_SMOKE_CLICK_SELECTORS 必须是非空 CSS selector 字符串数组');
+  }
+  return parsed.map((selector) => selector.trim());
+}
 
 protocol.registerSchemesAsPrivileged([
   { scheme: LOCAL_FILE_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } },
@@ -80,6 +86,7 @@ function getUserDataPath() {
 
 app.setName(APP_DISPLAY_NAME);
 app.setPath('userData', process.env.DSH_USER_DATA_DIR ? path.resolve(process.env.DSH_USER_DATA_DIR) : getUserDataPath());
+const rendererSurfacePort = loadOrCreateRendererSurfacePort({ userDataPath: app.getPath('userData') });
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 if (!hasSingleInstanceLock) app.quit();
@@ -96,6 +103,7 @@ let backendShutdownResolve = null;
 let backendStopPromise = null;
 let backendRestartAttempts = 0;
 let backendStableTimer = null;
+let rendererSurfaceUrl = null;
 let isQuitting = false;
 let allowFinalQuit = false;
 let closePromptOpen = false;
@@ -318,7 +326,9 @@ function configureProductionSecurityHeaders() {
   if (isDev) return;
   const policy = [
     "default-src 'self' data: blob: dsh-file:",
-    "script-src 'self'",
+    // DSH modules injects the reviewed window.__DSH_BOOT__ graph as one inline
+    // script into the App-owned index. Plugin code itself remains same-origin.
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: dsh-file: dsh-skin-asset: https: http:",
     "media-src 'self' data: blob: dsh-file: https: http://localhost:* http://127.0.0.1:*",
@@ -728,6 +738,7 @@ function startBackend() {
   env.DSH_APP_NAME = runtimeAppName; // 用户自定义应用名，server 侧作为 Agent client 身份
   env.DSH_ATTACHMENT_GRANT_SECRET = ATTACHMENT_GRANT_SECRET;
   env.DSH_RUNTIME_DISTRIBUTION = process.env.DSH_RUNTIME_DISTRIBUTION || 'npm';
+  env.DSH_DESKTOP_WEB_PORT = String(rendererSurfacePort);
   if (isDev) {
     env.DSH_SOURCE_ROOT = process.env.DSH_SOURCE_ROOT || path.resolve(APP_ROOT, '..', 'test-vibeinging');
   }
@@ -1010,7 +1021,8 @@ async function handleMainWindowCloseRequest(win = mainWindow) {
 }
 
 // ── Main window (default 1200x800, bg #36313f, custom title bar with traffic lights kept)──
-function createWindow() {
+function createWindow(surfaceUrl = rendererSurfaceUrl) {
+  if (!surfaceUrl) throw new Error('DSH Client 地址尚未就绪');
   const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
   const width = Math.min(1400, Math.round(sw * 0.92));
   const height = Math.min(900, Math.round(sh * 0.92));
@@ -1055,21 +1067,21 @@ function createWindow() {
   mainWindow.on('leave-full-screen', sendWindowFullScreenState);
   mainWindow.center();
   lockPageZoom(mainWindow);
-  let productionLoadRetried = false;
-  if (!isDev) {
-    mainWindow.webContents.on('did-fail-load', (_event, errorCode, _errorDescription, _validatedURL, isMainFrame) => {
-      if (!isMainFrame || errorCode === -3 || productionLoadRetried) return;
-      productionLoadRetried = true;
-      mainWindow?.loadFile(DIST_INDEX);
-    });
-  }
+  let surfaceLoadRetried = false;
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, _errorDescription, _validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3 || surfaceLoadRetried) return;
+    surfaceLoadRetried = true;
+    mainWindow?.loadURL(surfaceUrl);
+  });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const current = mainWindow?.webContents.getURL() || '';
-    if (url === current || (isDev && url.startsWith(DEV_URL))) return;
+    let sameSurface = false;
+    try { sameSurface = new URL(url).origin === new URL(surfaceUrl).origin; } catch { /* invalid navigation */ }
+    if (url === current || sameSurface) return;
     event.preventDefault();
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
   });
@@ -1082,25 +1094,49 @@ function createWindow() {
     if (/^about:(?:srcdoc|blank)(?:$|[#?])/i.test(String(details.url || ''))) return;
     details.preventDefault();
   });
-  if (isDev) {
-    mainWindow.loadURL(DEV_URL);
-  } else {
-    mainWindow.loadFile(DIST_INDEX);
-  }
+  const rendererErrors = [];
   if (SMOKE_TEST) {
+    mainWindow.webContents.on('console-message', (details) => {
+      if (details?.level !== 'error') return;
+      rendererErrors.push(String(details.message || '未知 Renderer 错误'));
+    });
     mainWindow.webContents.once('did-finish-load', async () => {
       try {
-        const state = await mainWindow.webContents.executeJavaScript(`({ title: document.title, appReady: document.documentElement.dataset.appReady === 'true' })`);
-        console.log(`[smoke] Renderer 已加载 title=${state.title} appReady=${state.appReady}`);
-        if (!state.appReady) process.exitCode = 1;
+        const deadline = Date.now() + 30_000;
+        let state = null;
+        let nextClickIndex = 0;
+        while (Date.now() < deadline) {
+          state = await mainWindow.webContents.executeJavaScript(`({ title: document.title, appReady: document.documentElement.dataset.appReady === 'true', runtime: document.documentElement.dataset.dshWorkRuntime || null, bodyText: document.body?.innerText?.slice(0, 500) || '', expectedSurface: ${JSON.stringify(SMOKE_EXPECT_SELECTOR)} === '' || document.querySelector(${JSON.stringify(SMOKE_EXPECT_SELECTOR)}) !== null, rejectedSurfaceAbsent: ${JSON.stringify(SMOKE_REJECT_SELECTOR)} === '' || document.querySelector(${JSON.stringify(SMOKE_REJECT_SELECTOR)}) === null })`);
+          if (state.appReady && nextClickIndex < SMOKE_CLICK_SELECTORS.length) {
+            const selector = SMOKE_CLICK_SELECTORS[nextClickIndex];
+            const clicked = await mainWindow.webContents.executeJavaScript(`(() => { const target = document.querySelector(${JSON.stringify(selector)}); if (!target) return false; target.click(); return true })()`);
+            if (clicked) nextClickIndex += 1;
+          }
+          if (state.appReady && nextClickIndex === SMOKE_CLICK_SELECTORS.length && state.expectedSurface) break;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        if (SMOKE_REJECT_SELECTOR && state?.appReady) {
+          await new Promise((resolve) => setTimeout(resolve, 2_500));
+          state = await mainWindow.webContents.executeJavaScript(`({ title: document.title, appReady: document.documentElement.dataset.appReady === 'true', runtime: document.documentElement.dataset.dshWorkRuntime || null, expectedSurface: true, rejectedSurfaceAbsent: document.querySelector(${JSON.stringify(SMOKE_REJECT_SELECTOR)}) === null })`);
+        }
+        const clicksCompleted = nextClickIndex === SMOKE_CLICK_SELECTORS.length;
+        console.log(`[smoke] Renderer 已加载 title=${state.title} appReady=${state.appReady} clicks=${nextClickIndex}/${SMOKE_CLICK_SELECTORS.length}`);
+        if (!state.appReady) console.error(`[smoke] Renderer 页面摘要: ${String(state.bodyText || '').replace(/\s+/g, ' ').trim()}`);
+        if (rendererErrors.length) console.error(`[smoke] Renderer 控制台错误: ${rendererErrors.join(' | ')}`);
+        if (!state.appReady || state.runtime !== 'dsh-client' || !clicksCompleted || !state.expectedSurface || !state.rejectedSurfaceAbsent || rendererErrors.length) process.exitCode = 1;
       } catch (error) {
         console.error('[smoke] Renderer 验证失败:', error?.message || error);
         process.exitCode = 1;
       } finally {
+        // Let startup IPC invoked by mounted React effects settle before the
+        // smoke-only teardown makes their sender untrusted or stops Server.
+        await new Promise((resolve) => setTimeout(resolve, 1_000));
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
         quitApplication();
       }
     });
   }
+  mainWindow.loadURL(surfaceUrl);
   mainWindow.on('close', (event) => {
     if (isQuitting) return;
     event.preventDefault();
@@ -1538,6 +1574,26 @@ function requestBackend(req = {}, { timeoutMs = API_REQUEST_TIMEOUT_MS } = {}) {
   });
 }
 
+function normalizeRendererSurface(value) {
+  const url = new URL(String(value || ''));
+  if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port
+    || url.username || url.password || url.pathname !== '/' || url.search || url.hash) {
+    throw new Error('DSH Client 必须使用受信任的 loopback HTTP origin');
+  }
+  return `${url.origin}/`;
+}
+
+async function resolveRendererSurface() {
+  const response = await requestBackend({
+    method: 'GET',
+    url: '/api/agents/runtime/client-surface',
+  }, { timeoutMs: 90_000 });
+  if (response.status !== 200 || response.json?.success !== true) {
+    throw new Error(response.json?.message || `DSH Client 启动失败（HTTP ${response.status}）`);
+  }
+  return normalizeRendererSurface(response.json?.data?.url);
+}
+
 ipcMain.handle('api-request', async (event, req) => {
   requireTrustedRenderer(event);
   const authorized = authorizeAgentAttachmentRequest(req);
@@ -1622,8 +1678,8 @@ async function startApplicationWindow() {
   for (;;) {
     try {
       await startBackend();
-      if (!isDev && !fs.existsSync(DIST_INDEX)) throw new Error(`Renderer 文件不存在: ${DIST_INDEX}`);
-      createWindow();
+      rendererSurfaceUrl = await resolveRendererSurface();
+      createWindow(rendererSurfaceUrl);
       return;
     } catch (error) {
       console.error('[electron] 应用启动失败:', error?.message || error);
@@ -1680,7 +1736,7 @@ if (hasSingleInstanceLock) {
     initializeAppUpdater();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        if (backendState === 'ready') createWindow();
+        if (backendState === 'ready' && rendererSurfaceUrl) createWindow(rendererSurfaceUrl);
         else void startApplicationWindow();
         return;
       }
@@ -1702,7 +1758,8 @@ app.on('before-quit', (event) => {
   event.preventDefault();
   void stopBackendGracefully().finally(() => {
     allowFinalQuit = true;
-    app.quit();
+    if (SMOKE_TEST) app.exit(process.exitCode || 0);
+    else app.quit();
   });
 });
 process.on('exit', () => {

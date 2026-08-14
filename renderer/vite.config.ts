@@ -10,7 +10,13 @@ const resolvePort = (value: string | undefined, fallback: number) => {
 // Renderer build configuration: alias '@' -> src and env-based dev proxy.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const devPort = resolvePort(env.VITE_APP_DEV_PORT || env.VITE_DEV_PORT, 52731)
+  const devPort = resolvePort(
+    process.env.VITE_APP_DEV_PORT
+      || process.env.VITE_DEV_PORT
+      || env.VITE_APP_DEV_PORT
+      || env.VITE_DEV_PORT,
+    52731
+  )
   const configuredBackendPort = process.env.DSH_SERVER_PORT || process.env.SERVER_PORT
   const devBackendPort = resolvePort(configuredBackendPort, 52838)
   const proxyTarget = process.env.VITE_PROXY_URL
@@ -26,6 +32,11 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       open: false,
       host: true,
+      hmr: {
+        host: '127.0.0.1',
+        clientPort: devPort,
+        protocol: 'ws'
+      },
       // Dev proxy: forward VITE_PROXY_BASE_URL (for example /api) to the running backend VITE_PROXY_URL.
       // Backend routes are already under /api/*, so keep the prefix and avoid rewriting to /projects.
       proxy: env.VITE_PROXY_BASE_URL

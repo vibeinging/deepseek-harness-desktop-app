@@ -552,7 +552,40 @@ class BrowserWorkspaceController {
         error: cleanText(description, 500) || `页面加载失败 (${code})`,
       });
     });
-    contents.on('found-in-page', (_event, result = {}) => {
+    contents.on('found-in-page', async (_event, result = {}) => {
+      if (tab.findRequestId !== result.requestId) return;
+      if (result.finalUpdate && result.matches === 0 && tab.findQuery) {
+        try {
+          const fallback = await contents.executeJavaScript(`(() => {
+            const query = ${JSON.stringify(tab.findQuery)};
+            const needle = query.toLocaleLowerCase();
+            const text = String(document.body?.innerText || '').toLocaleLowerCase();
+            let matches = 0;
+            let offset = 0;
+            while (needle && (offset = text.indexOf(needle, offset)) >= 0) {
+              matches += 1;
+              offset += needle.length;
+            }
+            return {
+              matches,
+              found: window.find(query, false, ${!tab.findForward}, true, false, true, false),
+            };
+          })()`);
+          if (tab.findRequestId !== result.requestId) return;
+          const matches = fallback?.found ? Math.max(1, finiteInteger(fallback.matches) || 0) : 0;
+          const previous = Math.min(matches, Math.max(1, tab.findActiveMatch || 1));
+          const activeMatch = tab.findRestart || matches <= 1
+            ? (tab.findForward ? 1 : matches)
+            : (tab.findForward ? (previous % matches) + 1 : ((previous + matches - 2) % matches) + 1);
+          this.updateTab(tab, {
+            findMatches: matches,
+            findActiveMatch: matches ? activeMatch : 0,
+          });
+          return;
+        } catch {
+          // Chromium's native result below remains authoritative when the page fallback is unavailable.
+        }
+      }
       this.updateTab(tab, {
         findMatches: Math.max(0, finiteInteger(result.matches) || 0),
         findActiveMatch: Math.max(0, finiteInteger(result.activeMatchOrdinal) || 0),
@@ -592,6 +625,9 @@ class BrowserWorkspaceController {
       findMatches: 0,
       findActiveMatch: 0,
       findQuery: '',
+      findRequestId: null,
+      findForward: true,
+      findRestart: true,
       suppressNextHistory: false,
     };
     this.tabs.push(tab);
@@ -671,19 +707,36 @@ class BrowserWorkspaceController {
     const query = cleanText(text, 500);
     if (!query) {
       tab.view.webContents.stopFindInPage('clearSelection');
-      this.updateTab(tab, { findQuery: '', findMatches: 0, findActiveMatch: 0 });
+      this.updateTab(tab, {
+        findQuery: '',
+        findMatches: 0,
+        findActiveMatch: 0,
+        findRequestId: null,
+        findForward: true,
+        findRestart: true,
+      });
       return this.getState();
     }
-    const findNext = tab.findQuery !== query;
+    const findNext = tab.findQuery !== query || tab.findMatches === 0;
     tab.findQuery = query;
-    tab.view.webContents.findInPage(query, { forward: Boolean(forward), findNext });
+    tab.findForward = Boolean(forward);
+    tab.findRestart = findNext;
+    tab.view.webContents.focus();
+    tab.findRequestId = tab.view.webContents.findInPage(query, { forward: Boolean(forward), findNext });
     return this.getState();
   }
 
   stopFindInPage(tabId) {
     const tab = this.tabById(tabId) || this.activeTab();
     tab?.view.webContents.stopFindInPage('clearSelection');
-    if (tab) this.updateTab(tab, { findQuery: '', findMatches: 0, findActiveMatch: 0 });
+    if (tab) this.updateTab(tab, {
+      findQuery: '',
+      findMatches: 0,
+      findActiveMatch: 0,
+      findRequestId: null,
+      findForward: true,
+      findRestart: true,
+    });
     return this.getState();
   }
 

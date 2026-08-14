@@ -1,0 +1,19 @@
+# dsh-work keeps the official frontend, transport, Client graph, services, and
+# feature rows, but owns the visible root and the standard Slots it adopts.
+# ui-layout must not keep the same child-slot declaration authority while the
+# product shell owns root.
+- id: ui-layout
+  disabled: true
+
+- id: ui-sidebar
+  disabled: true
+
+- id: ui-conversation
+  disabled: true
+
+- id: ui-settings-general
+  disabled: true
+
+- insert:
+    - id: dsh-work-shell
+      name: '@deepseek-ai/dsh-work-shell'

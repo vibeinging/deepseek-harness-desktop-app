@@ -2,12 +2,14 @@
   "schema_version": 1,
   "interface": {
     "display_name": "dsh-work 产品桥接",
-    "description": "把项目、对话和 Office 产物能力接入当前 DSH Web Profile。",
+    "description": "把项目、对话、Canvas、Site、Office 产物和结构化界面能力接入当前 DSH Web Profile。",
     "developer_name": "dsh-work",
     "category": "产品能力",
     "capabilities": [
       "项目与对话读取",
-      "Office 产物读取与编辑"
+      "Canvas 与本地 Site 读取、编辑和建议",
+      "Office 产物读取与编辑",
+      "安全结构化界面"
     ]
   },
   "contributions": [

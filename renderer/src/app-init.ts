@@ -5,7 +5,7 @@
  * 皮肤系统取代旧的 config.theme 单 class 切换：
  * - 同步先用 localStorage 已有数据应用激活皮肤 / 外观 / 应用名（首屏不阻塞）。
  * - 再异步从磁盘（Electron userData）恢复（长久保存），完成后重应用。
- * 明暗模式（light/dark/system）仍由 views/agent/themeContext 独立管理，互不干扰。
+ * 正式 DSH Client 启动时，明暗模式和语言由 DSH Runtime 快照提供；独立 Vite 页面才读取本机回退值。
  */
 import i18n from '@/lang'
 import { useConfigStore } from '@/store/config'
@@ -16,6 +16,11 @@ import { DEFAULT_SKIN_ID } from '@/theme/skins/builtin'
 import { resolveInitialScheme } from '@/theme/skins/scheme'
 
 const LEGACY_THEME_MIGRATION_KEY = 'skins:legacy-theme-migrated:v1'
+
+export interface InitAppOptions {
+  scheme?: 'light' | 'dark'
+  language?: 'zh' | 'en'
+}
 
 function localStorageGet(key: string): string | null {
   try { return typeof localStorage === 'undefined' ? null : localStorage.getItem(key) } catch { return null }
@@ -51,15 +56,17 @@ function migrateLegacyThemeOnce(legacyTheme: string | undefined) {
   localStorageSet(LEGACY_THEME_MIGRATION_KEY, 'done')
 }
 
-export function initApp(): Promise<void> {
+export function initApp(options: InitAppOptions = {}): Promise<void> {
   const config = useConfigStore.getState()
+  const language = options.language || config.language
+  if (language !== config.language) config.setLanguage(language)
 
   // 1) 旧 config.theme → skins.activeSkinId 真正的一次性迁移。
   migrateLegacyThemeOnce(config.theme)
 
   // 1.5) 启动时先用持久化的明暗 scheme 设置 store，消除暗色皮肤的浅色闪现。
   //      明暗模式由 views/agent/index.tsx 拥有，启动首屏前在此同步一次。
-  const initialScheme = resolveInitialScheme()
+  const initialScheme = options.scheme || resolveInitialScheme()
   useSkinsStore.setState({ scheme: initialScheme })
   useBrandAppearanceStore.setState({ scheme: initialScheme })
 
@@ -79,7 +86,7 @@ export function initApp(): Promise<void> {
   }
 
   // 3) 语言（brand.initBrand 已设置 document.title 为应用名；这里仅切换语言，不覆盖 title）。
-  i18n.changeLanguage(config.language)
+  i18n.changeLanguage(language)
 
   // 4) 异步从磁盘恢复（Electron userData，长久保存），不阻塞首屏。
   const loadLabels = ['皮肤设置', '品牌外观', '应用名称']
