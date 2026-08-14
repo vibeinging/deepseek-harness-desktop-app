@@ -328,7 +328,9 @@ function configureProductionSecurityHeaders() {
     "default-src 'self' data: blob: dsh-file:",
     // DSH modules injects the reviewed window.__DSH_BOOT__ graph as one inline
     // script into the App-owned index. Plugin code itself remains same-origin.
-    "script-src 'self' 'unsafe-inline'",
+    // unsafe-eval: the DSH web client evaluates Cordis config __jsExpr via
+    // new Function at module top level; without it the whole bundle fails.
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: dsh-file: dsh-skin-asset: https: http:",
     "media-src 'self' data: blob: dsh-file: https: http://localhost:* http://127.0.0.1:*",
