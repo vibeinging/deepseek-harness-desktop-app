@@ -50,5 +50,10 @@ try {
   console.log('[smoke] 随包 App 启动、Renderer 加载和 Server 关闭正常')
 } finally {
   try { child?.kill() } catch { /* ignore */ }
-  await rm(tempDir, { recursive: true, force: true })
+  try {
+    // Windows 上 Electron 退出后句柄释放有延迟，重试；清理失败不得掩盖 smoke 的真实结果
+    await rm(tempDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 })
+  } catch (error) {
+    console.warn(`[smoke] 临时目录清理失败(已忽略): ${error.code || error.message}`)
+  }
 }
