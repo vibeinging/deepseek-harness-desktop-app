@@ -250,10 +250,10 @@ export default function EvidenceCard({
                     {rerunning ? '正在复跑…' : '同一查询复跑'}
                   </button>
                   <button type="button" onClick={() => openReview('runs')} data-evidence-action="runs">
-                    <IconActivityHeartbeat size={14} />运行详情
+                    <IconActivityHeartbeat size={14} />DSH 轨迹
                   </button>
                   <button type="button" onClick={() => openReview('trace')} data-evidence-action="trace">
-                    <IconActivityHeartbeat size={14} />Trace
+                    <IconActivityHeartbeat size={14} />轨迹事件
                   </button>
                   {(bundle.artifacts || []).filter((artifact) => artifact.path).map((artifact) => (
                     <button key={artifact.id || artifact.path} type="button" onClick={() => artifact.path && void revealInFinder(artifact.path)}>

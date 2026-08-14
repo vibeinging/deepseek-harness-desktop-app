@@ -3,7 +3,9 @@
 - id: webserver
   config:
     host: 127.0.0.1
-    port: 0
+    # Electron persists this loopback port so Chromium storage keeps one origin
+    # across launches. Non-Electron profile runs retain OS-assigned port 0.
+    port: !!js Number(process.env.DSH_DESKTOP_WEB_PORT || 0)
 
 - id: web-runtime
   config:

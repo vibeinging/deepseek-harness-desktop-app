@@ -16,10 +16,35 @@ import {
 } from "../../server/src/engine/dsh_runtime/product_host_dispatcher.js";
 import {
   createDshWorkProductTools,
+  createDshWorkInstructionMessage,
+  createDshWorkMemoryMessage,
+  createCanvasProductTools,
   createOfficeProductTools,
+  createPresentationProductTools,
+  sendRuntimeParentMessage,
 } from "../../packages/dsh-product-bridge/src/index.js";
 
 const emptyDb = { query() {}, queryOne() {}, transaction() {} };
+
+test("product bridge IPC treats parent shutdown as a normal lifecycle edge", () => {
+  const messages = [];
+  const errors = [];
+  const connected = {
+    connected: true,
+    send(message, callback) {
+      messages.push(message);
+      callback(Object.assign(new Error("Channel closed"), { code: "ERR_IPC_CHANNEL_CLOSED" }));
+    },
+  };
+  assert.equal(sendRuntimeParentMessage(
+    connected,
+    { type: "client-ready" },
+    (error) => errors.push(error.code),
+  ), true);
+  assert.deepEqual(messages, [{ type: "client-ready" }]);
+  assert.deepEqual(errors, ["ERR_IPC_CHANNEL_CLOSED"]);
+  assert.equal(sendRuntimeParentMessage({ connected: false }, { type: "ready" }), false);
+});
 
 function bindSession(dispatcher, overrides = {}) {
   return dispatcher.bind({
@@ -174,6 +199,84 @@ test("session dispatcher forwards conversationList with projectId from binding",
   assert.equal(reply.result.value.items[1].archived, true);
 });
 
+test("conversationMemory returns parent-selected global memory without accepting identity from the child", async () => {
+  let captured = null;
+  const previous = overrideServices({
+    loadGlobalChatMemory: async (input) => {
+      captured = input;
+      return {
+        text: "<saved_memories>结论优先</saved_memories>",
+        entries: [{ id: "memory-1", content: "结论优先" }],
+        sources: [{ session_id: "source-1", title: "发布计划", messages: [{ role: "user", text: "周四上线" }] }],
+      };
+    },
+  });
+  const db = {
+    query() {},
+    queryOne: async () => ({ action_type: "agentic_chat", session_config: "{}" }),
+    transaction() {},
+  };
+  const dispatcher = createSessionProductHostDispatcher();
+  bindSession(dispatcher, {
+    db,
+    projectId: "__chat__",
+    appSessionId: "app-memory",
+    userId: "memory-user",
+  });
+  try {
+    const reply = await dispatcher.handle({
+      id: "memory-request",
+      sessionId: "dsh-s1",
+      method: "conversationMemory",
+      payload: { query: "海王星发布计划", userId: "forged-user" },
+    });
+    assert.equal(reply.result.ok, true);
+    assert.equal(captured.userId, "memory-user");
+    assert.equal(captured.currentSessionId, "app-memory");
+    assert.equal(reply.result.value.presentation.type, "global_memory");
+    assert.equal(reply.result.value.presentation.content.entries[0].content, "结论优先");
+  } finally {
+    overrideServices(previous);
+    await dispatcher.dispose();
+  }
+});
+
+test("the product bridge creates one immutable DSH recall message with presentation provenance", () => {
+  const message = createDshWorkMemoryMessage({
+    text: "<saved_memories>结论优先</saved_memories>",
+    presentation: { type: "global_memory", content: { entries: [{ id: "m1", content: "结论优先" }], conversations: [] } },
+  });
+  assert.equal(message.role, "user");
+  assert.deepEqual(message.source, {
+    kind: "plugin",
+    plugin: "dsh-work-memory",
+    form: "recall",
+    dshWorkMemory: { type: "global_memory", content: { entries: [{ id: "m1", content: "结论优先" }], conversations: [] } },
+  });
+  assert.equal(message.content[0].text.includes("saved_memories"), true);
+  assert.equal(Object.isFrozen(message), true);
+  assert.equal(createDshWorkMemoryMessage({ text: "", presentation: null }), null);
+});
+
+test("the product bridge logs parent-owned instructions with explicit scope provenance", () => {
+  const message = createDshWorkInstructionMessage({
+    instructions: {
+      text: "## Application instructions\n\n先给结论。",
+      scopes: { application: true, project: false, temporary: true },
+    },
+  });
+  assert.equal(message.role, "user");
+  assert.deepEqual(message.source, {
+    kind: "plugin",
+    plugin: "dsh-work-context",
+    form: "instructions",
+    dshWorkInstructions: { application: true, project: false, temporary: true },
+  });
+  assert.match(message.content[0].text, /Application instructions/);
+  assert.equal(Object.isFrozen(message), true);
+  assert.equal(createDshWorkInstructionMessage({ instructions: { text: "", scopes: {} } }), null);
+});
+
 test("session dispatcher rejects conversationList without projectId binding", async () => {
   const dispatcher = createSessionProductHostDispatcher();
   bindSession(dispatcher, { projectId: null });
@@ -310,6 +413,187 @@ test("the DSH product bridge registers scoped office tools with native tool resu
   );
 });
 
+test("Canvas tools use the parent-bound App Session and project", async () => {
+  const calls = [];
+  const canvas = {
+    id: "canvas-1",
+    session_id: "app-canvas-session",
+    project_id: "canvas-project",
+    kind: "document",
+    current_version: { id: "canvas-v2" },
+  };
+  const previous = overrideServices({
+    getCanvas: async (ctx, input) => {
+      calls.push({ kind: "inspect", ctx, input });
+      return canvas;
+    },
+    createCanvas: async (ctx, input) => {
+      calls.push({ kind: "create", ctx, input });
+      return { canvas: { ...canvas, current_version: { id: "canvas-v1" } }, created: true };
+    },
+    editCanvas: async (ctx, input) => {
+      calls.push({ kind: "edit", ctx, input });
+      return { canvas, version: canvas.current_version };
+    },
+    createCanvasSuggestion: async (ctx, input) => {
+      calls.push({ kind: "suggest", ctx, input });
+      return { id: "suggestion-1", canvas_id: input.canvasId, status: "pending" };
+    },
+  });
+  const dispatcher = createSessionProductHostDispatcher();
+  bindSession(dispatcher, {
+    userId: "canvas-user",
+    projectId: "canvas-project",
+    appSessionId: "app-canvas-session",
+  });
+  try {
+    const inspected = await dispatcher.handle({
+      id: "canvas-inspect",
+      sessionId: "dsh-s1",
+      method: "canvasInspect",
+      payload: { canvas_id: "canvas-1" },
+    });
+    const created = await dispatcher.handle({
+      id: "canvas-create",
+      sessionId: "dsh-s1",
+      method: "canvasCreate",
+      payload: { kind: "document", content: "First" },
+    });
+    const edited = await dispatcher.handle({
+      id: "canvas-edit",
+      sessionId: "dsh-s1",
+      method: "canvasEdit",
+      payload: { canvas_id: "canvas-1", base_version_id: "canvas-v1", content: "Second" },
+    });
+    const suggested = await dispatcher.handle({
+      id: "canvas-suggest",
+      sessionId: "dsh-s1",
+      method: "canvasSuggest",
+      payload: {
+        canvas_id: "canvas-1",
+        base_version_id: "canvas-v2",
+        start: 0,
+        end: 6,
+        selected_text: "Second",
+        replacement_text: "Ready",
+      },
+    });
+    assert.ok([inspected, created, edited, suggested].every((reply) => reply.result.ok === true));
+    assert.deepEqual(calls.map((call) => call.kind), ["inspect", "create", "edit", "suggest", "inspect"]);
+    assert.ok(calls.every((call) => call.ctx.userId === "canvas-user"));
+    assert.ok(calls.every((call) => call.input.sessionId === "app-canvas-session"));
+    assert.equal(calls[1].input.metadata.created_by, "canvas_create");
+    assert.equal(calls[2].input.metadata.edited_by, "canvas_edit");
+    assert.equal(suggested.result.value.suggestion.id, "suggestion-1");
+  } finally {
+    overrideServices(previous);
+    await dispatcher.dispose();
+  }
+});
+
+test("the DSH product bridge registers Canvas and local Site tools", async () => {
+  const calls = [];
+  const productHost = {
+    async request(sessionId, method, payload, signal) {
+      calls.push({ sessionId, method, payload, signal });
+      return { success: true, canvas: { id: "canvas-1" } };
+    },
+  };
+  const agent = { session: { id: "dsh-canvas-session" } };
+  const tools = createCanvasProductTools(productHost, agent);
+  assert.deepEqual(new Set(tools.keys()), new Set([
+    "canvas_inspect",
+    "canvas_create",
+    "canvas_edit",
+    "canvas_suggest",
+  ]));
+  assert.deepEqual(tools.get("canvas_suggest").definition.parameters.required, [
+    "canvas_id",
+    "base_version_id",
+    "start",
+    "end",
+    "selected_text",
+    "replacement_text",
+  ]);
+  const signal = new AbortController().signal;
+  await tools.get("canvas_inspect").definition.execute(
+    { canvas_id: "canvas-1" },
+    { agent, signal },
+  );
+  assert.deepEqual(calls[0], {
+    sessionId: "dsh-canvas-session",
+    method: "canvasInspect",
+    payload: { canvas_id: "canvas-1" },
+    signal,
+  });
+});
+
+test("ui_render is validated by the bound parent and registered in the DSH Agent scope", async () => {
+  const dispatcher = createSessionProductHostDispatcher();
+  bindSession(dispatcher, {
+    userId: "ui-user",
+    projectId: "ui-project",
+    appSessionId: "app-ui-session",
+  });
+  const document = {
+    schema_version: 1,
+    surface_id: "release-status",
+    revision: 1,
+    title: "Release status",
+    summary: "Two checks passed",
+    root: {
+      id: "status",
+      type: "metric",
+      label: "Checks",
+      value: "2/2",
+    },
+  };
+  try {
+    const rendered = await dispatcher.handle({
+      id: "ui-render",
+      sessionId: "dsh-s1",
+      method: "uiRender",
+      payload: document,
+    });
+    assert.equal(rendered.result.ok, true);
+    assert.equal(rendered.result.value.project_id, "ui-project");
+    assert.equal(rendered.result.value.session_id, "app-ui-session");
+    assert.equal(rendered.result.value.generative_ui.surface_id, "release-status");
+    assert.match(rendered.result.value.document_hash, /^sha256:[a-f0-9]{64}$/);
+
+    const rejected = await dispatcher.handle({
+      id: "ui-render-invalid",
+      sessionId: "dsh-s1",
+      method: "uiRender",
+      payload: { ...document, root: { id: "bad", type: "script" } },
+    });
+    assert.equal(rejected.result.ok, false);
+    assert.match(rejected.result.error.message, /must be one of|unsupported|unknown node type/i);
+  } finally {
+    await dispatcher.dispose();
+  }
+
+  const calls = [];
+  const productHost = {
+    async request(sessionId, method, payload) {
+      calls.push({ sessionId, method, payload });
+      return { success: true, generative_ui: payload };
+    },
+  };
+  const agent = { session: { id: "dsh-ui-session" } };
+  const tools = createPresentationProductTools(productHost, agent);
+  assert.deepEqual([...tools.keys()], ["ui_render"]);
+  assert.deepEqual(tools.get("ui_render").definition.parameters.required, [
+    "schema_version",
+    "surface_id",
+    "revision",
+    "summary",
+    "root",
+  ]);
+  await tools.get("ui_render").definition.execute(document, { agent });
+  assert.deepEqual(calls[0], { sessionId: "dsh-ui-session", method: "uiRender", payload: document });
+});
+
 test("the DSH product bridge owns project tools removed from the current SDK", async () => {
   const calls = [];
   const productHost = {
@@ -326,6 +610,11 @@ test("the DSH product bridge owns project tools removed from the current SDK", a
     "artifact_office_inspect",
     "artifact_office_create",
     "artifact_office_edit",
+    "canvas_inspect",
+    "canvas_create",
+    "canvas_edit",
+    "canvas_suggest",
+    "ui_render",
   ]));
   await tools.get("project_list").definition.execute({ search: "alpha" }, { agent });
   await tools.get("conversation_list").definition.execute({ archived: true }, { agent });

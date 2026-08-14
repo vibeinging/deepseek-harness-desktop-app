@@ -143,10 +143,13 @@ test('hasSql recognizes SQL carried in tool trace metadata', () => {
   assert.equal(appAssert._checks[0].ok, true);
 });
 
-test('stream driver reuses the renderer reducer and preserves block content for SQL assertions', () => {
+test('stream driver works from the built DSH Client and preserves block content for SQL assertions', () => {
   const src = readFileSync(path.join(process.cwd(), 'eval/lib/driver.mjs'), 'utf8');
-  assert.match(src, /import\('\/src\/views\/agent\/stream\/reducer\.ts'\)/);
+  assert.doesNotMatch(src, /import\('\/src\/views\/agent\/stream\/reducer\.ts'\)/);
+  assert.match(src, /window\.electronAPI/);
+  assert.match(src, /electronAPI\.streamStart/);
   assert.match(src, /const patch = reduceStreamEvent\(e\)/);
+  assert.match(src, /Array\.isArray\(item\.contentItems\)/);
   assert.match(src, /block\.metadata\?\.mode === 'append'/);
   assert.match(src, /content: b\.content \|\| ''/);
 });

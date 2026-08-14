@@ -29,7 +29,7 @@ const DSH_WORK_HOST_COMPONENTS = new Map([
   ["sites", "dsh-work/sites"],
 ]);
 const DSH_WORK_HOST_ICONS = new Set(["archive", "dashboard", "file", "terminal", "world"]);
-const CURRENT_DSH_SDK_VERSION = "0.1.0-rc.2";
+const CURRENT_DSH_SDK_VERSION = "0.1.0-rc.6";
 const CURRENT_CORDIS_VERSION = "4.0.1";
 const EXACT_REGISTRY_SPEC = /^(?<name>(?:@[a-z0-9._~-]+\/)?[a-z0-9._~-]+)@(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$/;
 const EXACT_EXTERNAL_GIT_SPEC = /^github:dsh-external\/(?<repo>[a-z0-9._-]+)#(?<commit>[0-9a-f]{40})$/i;
@@ -142,10 +142,22 @@ function sourceView(packageName, spec, packageDir, managed) {
   return { type: "npm", package: packageName, version: spec, label: "npm 固定版本" };
 }
 
-function bundleView({ packageName, packageDir, manifest, dependencySpec, index, descriptor, managed, themeCount }) {
+function bundleView({
+  packageName,
+  packageDir,
+  manifest,
+  dependencySpec,
+  index,
+  descriptor,
+  managed,
+  themeCount,
+  enabled = true,
+  blockedReason = null,
+}) {
   const ui = productInterface(manifest, descriptor);
   const source = sourceView(packageName, dependencySpec || "", packageDir, managed);
   const version = typeof manifest.version === "string" ? manifest.version : null;
+  const dshClient = manifest?.dsh?.client?.platform === "web";
   return {
     id: packageName,
     name: packageName,
@@ -160,12 +172,22 @@ function bundleView({ packageName, packageDir, manifest, dependencySpec, index, 
     available_version: version,
     update_available: false,
     installed: true,
-    enabled: true,
+    enabled,
+    blocked_reason: blockedReason,
     runtime_kind: "profile_bundle",
     profile_name: PROFILE_NAME,
     profile_order: index,
     managed_by: managed,
     product_plugin: Boolean(descriptor),
+    ui_runtime: {
+      kind: dshClient ? "dsh_client" : descriptor ? "dsh_work_descriptor" : "host_only",
+      client_graph: dshClient && enabled,
+      ...(dshClient && !enabled ? { declares_client: true, isolation: "quarantined" } : {}),
+      host_supported_slots: dshClient && enabled
+        ? ["settings.section", "shell.overlay", "sidebar.footer.action", "conversation.composer.dock"]
+        : [],
+      host_unmapped_slots: dshClient ? ["sidebar", "conversation", "details"] : [],
+    },
     profile_theme_count: themeCount,
     installation: managed === "system" || managed === "app" ? "INSTALLED_BY_DEFAULT" : "AVAILABLE",
     authentication: "ON_USE",
@@ -216,7 +238,12 @@ function currentReleaseRange(value, version) {
 /** Require one coherent official SDK release before a Bundle reaches the live tree. */
 export function validateProfileBundleSdk(manifest) {
   const dependencies = { ...manifest?.dependencies, ...manifest?.peerDependencies };
-  if (dependencies.cordis) {
+  const optionalLegacyCordisPeer = Boolean(
+    manifest?.peerDependencies?.cordis
+    && manifest?.peerDependenciesMeta?.cordis?.optional === true
+    && dependencies["@deepseek-ai/cordis"],
+  );
+  if (dependencies.cordis && !optionalLegacyCordisPeer) {
     throw profileError(
       `${manifest.name} 仍使用旧的 cordis 包，需要改用 @deepseek-ai/cordis@${CURRENT_CORDIS_VERSION}`,
       "DSH_PROFILE_LEGACY_SDK",
@@ -240,6 +267,54 @@ export function validateProfileBundleSdk(manifest) {
   }
 }
 
+function clientExportOf(manifest) {
+  const declared = manifest?.exports?.["./client"];
+  if (typeof declared === "string") return declared;
+  if (declared && typeof declared === "object" && !Array.isArray(declared)
+    && typeof declared.default === "string") return declared.default;
+  return null;
+}
+
+function inspectDshClientManifest(manifest, { clientEntryAvailable = true } = {}) {
+  const declaration = manifest?.dsh?.client;
+  if (declaration === undefined) return [];
+  const packageName = String(manifest?.name || "候选插件");
+  if (!declaration || typeof declaration !== "object" || Array.isArray(declaration)
+    || declaration.platform !== "web"
+    || (declaration.inject !== undefined
+      && (!Array.isArray(declaration.inject) || declaration.inject.some((name) => typeof name !== "string")))
+    || (declaration.immediately !== undefined && typeof declaration.immediately !== "boolean")) {
+    return [{
+      code: "DSH_PROFILE_CLIENT_MANIFEST_INVALID",
+      message: `${packageName} 的 package.json#dsh.client 必须声明 web platform，并使用字符串 inject 列表`,
+    }];
+  }
+  const entry = clientExportOf(manifest);
+  if (typeof entry !== "string" || !entry.startsWith("./")) {
+    return [{
+      code: "DSH_PROFILE_CLIENT_EXPORT_MISSING",
+      message: `${packageName} 声明了 dsh.client，但没有有效的 exports["./client"] 浏览器入口`,
+    }];
+  }
+  if (!clientEntryAvailable) {
+    return [{
+      code: "DSH_PROFILE_CLIENT_BUNDLE_MISSING",
+      message: `${packageName} 没有提交 exports["./client"] 指向的浏览器构建产物`,
+    }];
+  }
+  return [];
+}
+
+/** Block community renderer code until it can run outside the privileged Electron renderer. */
+export function inspectCommunityClientIsolation(manifest) {
+  if (manifest?.dsh?.client === undefined) return [];
+  const packageName = String(manifest?.name || "候选插件");
+  return [{
+    code: "DSH_PROFILE_CLIENT_ISOLATION_REQUIRED",
+    message: `${packageName} 包含 dsh.client 浏览器代码；当前主窗口尚未把社区 UI 与 Electron API 隔离，只能安装 Host 侧 Bundle`,
+  }];
+}
+
 async function defaultCommandRunner(resolved, args, env) {
   try {
     return await execFileAsync(process.execPath, [...resolved.execArgv, resolved.entryPath, ...args], {
@@ -258,7 +333,7 @@ async function defaultCommandRunner(resolved, args, env) {
       const dependencies = [...new Set([...stdout.matchAll(/@deepseek-ai(?:%2f|\/)([a-z0-9._-]+)/ig)]
         .map((match) => `@deepseek-ai/${match[1]}`))];
       throw profileError(
-        "候选插件依赖的 DSH SDK 包或版本无法从当前私有 registry 读取",
+        "候选插件依赖的 DSH SDK 包或版本无法从当前公开 registry 读取",
         "DSH_PROFILE_SDK_UNAVAILABLE",
         { exit_code: error?.code ?? null, dependencies, command_output: output },
       );
@@ -278,7 +353,10 @@ async function defaultCommandRunner(resolved, args, env) {
   }
 }
 
-export function inspectProfileBundleManifest(manifest, { builtEntryAvailable = true } = {}) {
+export function inspectProfileBundleManifest(manifest, {
+  builtEntryAvailable = true,
+  clientEntryAvailable = true,
+} = {}) {
   const issues = [];
   const packageName = String(manifest?.name || "候选插件");
   const patch = manifest?.dsh?.bundle?.patch;
@@ -300,6 +378,7 @@ export function inspectProfileBundleManifest(manifest, { builtEntryAvailable = t
       message: `${packageName} 没有提交运行入口，Git 安装需要执行 prepare 构建脚本`,
     });
   }
+  issues.push(...inspectDshClientManifest(manifest, { clientEntryAvailable }));
   try {
     validateProfileBundleSdk(manifest);
   } catch (error) {
@@ -354,7 +433,16 @@ async function inspectPinnedExternalGitSource(source) {
         builtEntryAvailable = false;
       }
     }
-    return { manifest, builtEntryAvailable };
+    const clientEntry = clientExportOf(manifest);
+    let clientEntryAvailable = true;
+    if (typeof clientEntry === "string" && clientEntry.startsWith("./")) {
+      try {
+        await execFileAsync("git", ["-C", checkout, "cat-file", "-e", `${match.groups.commit}:${clientEntry.slice(2)}`]);
+      } catch {
+        clientEntryAvailable = false;
+      }
+    }
+    return { manifest, builtEntryAvailable, clientEntryAvailable };
   } catch (error) {
     if (error?.code?.startsWith?.("DSH_")) throw error;
     throw profileError(
@@ -373,6 +461,9 @@ function preflightStatus(error) {
   if ([
     "DSH_PROFILE_NOT_A_BUNDLE",
     "DSH_PROFILE_LEGACY_CLIENT_MANIFEST",
+    "DSH_PROFILE_CLIENT_MANIFEST_INVALID",
+    "DSH_PROFILE_CLIENT_EXPORT_MISSING",
+    "DSH_PROFILE_CLIENT_BUNDLE_MISSING",
     "DSH_PROFILE_LEGACY_SDK",
     "DSH_PRODUCT_DESCRIPTOR_INVALID",
     "DSH_PRODUCT_HOST_COMPONENT_FORBIDDEN",
@@ -439,6 +530,7 @@ export class DshProfilePluginService {
     const dshHome = this.home();
     const prepared = await prepareTrustedProfilePlugins({
       appBootPath: resolved.appBootPath,
+      installAnchor: resolved.installAnchor,
       env: { ...this.env, DSH_HOME: dshHome },
       runtimeRoot: resolved.root,
       dshHome,
@@ -449,7 +541,7 @@ export class DshProfilePluginService {
     const trusted = new Set(trustedDshProfilePluginNames());
     const themeBundles = [];
     const themeErrors = [];
-    const plugins = prepared.bundles.map((packageName, index) => {
+    const activePlugins = prepared.bundles.map((packageName, index) => {
       const packageDir = realpathSync(api.resolveBundleDir(
         "dsh-work",
         packageName,
@@ -498,6 +590,19 @@ export class DshProfilePluginService {
         themeCount: themeDescriptor.themes.length,
       });
     });
+    const quarantinedPlugins = prepared.quarantined.map((plugin, index) => bundleView({
+      packageName: plugin.name,
+      packageDir: plugin.root,
+      manifest: plugin.manifest,
+      dependencySpec: dependencies[plugin.name],
+      index: activePlugins.length + index,
+      descriptor: null,
+      managed: "user",
+      themeCount: 0,
+      enabled: false,
+      blockedReason: "社区 dsh.client 已从主窗口运行图隔离；可卸载，但在独立 Renderer 沙箱完成前不能启用",
+    }));
+    const plugins = [...activePlugins, ...quarantinedPlugins];
     return {
       resolved,
       api,
@@ -591,7 +696,10 @@ export class DshProfilePluginService {
       if (packageManifest.name !== packageName) {
         throw profileError("候选 Bundle 包名与 Profile 依赖不一致", "DSH_PROFILE_CANDIDATE_INVALID");
       }
-      const issues = inspectProfileBundleManifest(packageManifest);
+      const issues = [
+        ...inspectProfileBundleManifest(packageManifest),
+        ...inspectCommunityClientIsolation(packageManifest),
+      ];
       const patch = packageManifest?.dsh?.bundle?.patch;
       if (typeof patch === "string" && patch.startsWith("./")) {
         try {
@@ -603,6 +711,23 @@ export class DshProfilePluginService {
           issues.push({
             code: "DSH_PROFILE_NOT_A_BUNDLE",
             message: `${packageName} 的 Bundle patch 不存在或无法读取：${error?.message || error}`,
+          });
+        }
+      }
+      const clientEntry = clientExportOf(packageManifest);
+      if (typeof clientEntry === "string" && clientEntry.startsWith("./")) {
+        try {
+          const clientPath = realpathSync(resolve(packageDir, clientEntry));
+          if (!inside(packageDir, clientPath)) {
+            issues.push({
+              code: "DSH_PROFILE_CLIENT_BUNDLE_MISSING",
+              message: `${packageName} 的 exports["./client"] 越过了包目录`,
+            });
+          }
+        } catch (error) {
+          issues.push({
+            code: "DSH_PROFILE_CLIENT_BUNDLE_MISSING",
+            message: `${packageName} 的浏览器构建产物不存在或无法读取：${error?.message || error}`,
           });
         }
       }
@@ -662,6 +787,7 @@ export class DshProfilePluginService {
       if (inspected) {
         const issues = inspectProfileBundleManifest(inspected.manifest, {
           builtEntryAvailable: inspected.builtEntryAvailable,
+          clientEntryAvailable: inspected.clientEntryAvailable,
         });
         if (issues.length > 0) {
           return preflightFailure(source, profileError(issues[0].message, issues[0].code, {
@@ -708,6 +834,7 @@ export class DshProfilePluginService {
     ]);
     await prepareTrustedProfilePlugins({
       appBootPath: state.resolved.appBootPath,
+      installAnchor: state.resolved.installAnchor,
       env: { ...this.env, DSH_HOME: state.dshHome },
       runtimeRoot: state.resolved.root,
       dshHome: state.dshHome,

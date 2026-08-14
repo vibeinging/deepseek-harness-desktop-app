@@ -1,7 +1,12 @@
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+const requireFromServer = createRequire(new URL("../../server/package.json", import.meta.url));
+const BetterSqlite3 = requireFromServer("better-sqlite3");
 
 function git(root, args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -16,6 +21,30 @@ function createFixture() {
   git(root, ["add", "note.txt"]);
   git(root, ["commit", "-q", "-m", "fixture"]);
   return root;
+}
+
+function seedVisibleConversation(databasePath, sessionId) {
+  const db = new BetterSqlite3(databasePath);
+  try {
+    db.transaction(() => {
+      db.prepare(`
+        INSERT INTO session_messages
+          (id, session_id, role, content_items, sequence_number, created_at, updated_at)
+        VALUES (?, ?, 'user', ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `).run(
+        randomUUID(),
+        sessionId,
+        JSON.stringify([{ type: "text", text: "coding workspace eval fixture" }]),
+      );
+      db.prepare(`
+        UPDATE sessions
+           SET message_count=1, updated_at=CURRENT_TIMESTAMP
+         WHERE id=?
+      `).run(sessionId);
+    })();
+  } finally {
+    db.close();
+  }
 }
 
 export default {
@@ -57,7 +86,7 @@ export default {
       },
     ],
   },
-  async run({ driver, assert }) {
+  async run({ driver, assert, environment }) {
     await driver.login();
     const api = driver.raw.api;
     const ui = driver.ui;
@@ -159,6 +188,7 @@ export default {
       assert.status(session, 200, "创建 Diff 诊断会话", { criterion: "coding.active-root" });
       sid = session.json?.data?.id || "";
       if (!sid) return;
+      seedVisibleConversation(environment.runtime.database_path, sid);
 
       const diff = await api("GET", `/api/agent/threads/${sid}/workspace-diff`);
       assert.status(diff, 200, "读取当前工作区 Diff", { criterion: "coding.active-root" });
@@ -170,52 +200,17 @@ export default {
       });
       const staleHash = diff.json?.data?.diffHash || "";
 
-      await driver.raw.ev(`
-        const React = (await import('/node_modules/.vite/deps/react.js')).default;
-        const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
-        const { ChangesReviewPanel } = await import('/src/views/agent/WorkspaceChanges.tsx');
-        const { applyAgentWorkspaceEdit } = await import('/src/api/agent.ts');
-        const host = document.createElement('div');
-        host.id = 'coding-workspace-eval-host';
-        document.body.appendChild(host);
-        const threadId = ${JSON.stringify(sid)};
-        const workspaceRoot = ${JSON.stringify(worktreePath)};
-        const initial = ${JSON.stringify({
-          turnId: "current-workspace",
-          diff: diff.json?.data?.diff || "",
-          diffHash: diff.json?.data?.diffHash || null,
-          updatedAt: Date.now(),
-          scope: "workspace",
-        })};
-        function Harness() {
-          const [snapshot, setSnapshot] = React.useState(initial);
-          const applyEdit = async (input) => {
-            const response = await applyAgentWorkspaceEdit(threadId, 'current-workspace', {
-              requestId: 'ui-edit:' + Date.now(),
-              ...input,
-              expectedWorkspaceDiffHash: snapshot.diffHash || undefined,
-            });
-            const action = response?.data;
-            setSnapshot((current) => ({
-              ...current,
-              diff: String(action?.currentDiff || ''),
-              diffHash: action?.workspaceDiffHash || null,
-              updatedAt: Date.now(),
-            }));
-            return action;
-          };
-          return React.createElement(ChangesReviewPanel, {
-            snapshot,
-            workspaceRoot,
-            onClose: () => {},
-            onApplyEdit: applyEdit,
-          });
-        }
-        const root = createRoot(host);
-        root.render(React.createElement(Harness));
-        window.__codingWorkspaceEvalRoot = root;
-        return true;
-      `);
+      await ui.goto("/agent");
+      await driver.raw.cdp('Page.reload', { ignoreCache: false });
+      await ui.waitFor('[data-testid="agent-message-input"]', { timeout: 20_000 });
+      await ui.waitFor(`[data-agent-workspace-id="${pid}"]`, { timeout: 15_000 });
+      const sessionVisible = await ui.exists(`[data-agent-conv-id="${sid}"]`);
+      if (!sessionVisible) await ui.click(`[data-agent-workspace-id="${pid}"]`);
+      await ui.waitFor(`[data-agent-conv-id="${sid}"]`, { timeout: 15_000 });
+      await ui.click(`[data-agent-conv-id="${sid}"]`);
+      await ui.waitFor(`[data-agent-conv-id="${sid}"][aria-current="page"]`, { timeout: 15_000 });
+      await ui.waitFor('[data-testid="workspace-changes-open"]', { timeout: 15_000 });
+      await ui.click('[data-testid="workspace-changes-open"]');
       await ui.waitFor('[data-testid="workspace-changes-panel"]', { timeout: 10_000 });
       assert.ok(await ui.exists('[data-testid="workspace-changes-open-editor"]'), "审核面板显示受控外部打开入口", {
         criterion: "coding.diff-safety",
@@ -261,12 +256,10 @@ export default {
         criterion: "coding.diff-safety",
       });
 
-      await driver.raw.ev(`
-        window.__codingWorkspaceEvalRoot?.unmount?.();
-        document.getElementById('coding-workspace-eval-host')?.remove();
-        delete window.__codingWorkspaceEvalRoot;
-        return true;
-      `);
+      await ui.click('[data-testid="workspace-changes-close"]');
+      await ui.click(menuSelector, { timeout: 10_000 });
+      await ui.click(`[aria-label="打开${projectName}的项目设置"]`, { timeout: 10_000 });
+      await ui.waitFor('[data-testid="worktree-section"]', { timeout: 15_000 });
       await ui.waitUntil(
         `() => !document.querySelector(${JSON.stringify(`[data-testid="worktree-deactivate-${worktreeId}"]`)})?.disabled`,
         { timeout: 15_000, label: "Worktree 停用按钮可用" },
@@ -305,12 +298,6 @@ export default {
       });
       worktreeId = "";
     } finally {
-      await driver.raw.ev(`
-        window.__codingWorkspaceEvalRoot?.unmount?.();
-        document.getElementById('coding-workspace-eval-host')?.remove();
-        delete window.__codingWorkspaceEvalRoot;
-        return true;
-      `).catch(() => {});
       if (pid && worktreeId) {
         await api("POST", `/api/projects/${pid}/worktrees/deactivate`).catch(() => {});
         await api("DELETE", `/api/projects/${pid}/worktrees/${worktreeId}`).catch(() => {});

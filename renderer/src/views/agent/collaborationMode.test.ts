@@ -1,21 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  conversationCollaborationModeStorageKey,
-  loadConversationCollaborationMode,
+  collaborationModeFromDshPlan,
+  effectiveDshPlanMode,
   normalizeCollaborationMode,
-  persistConversationCollaborationMode
 } from './collaborationMode'
-
-function memoryStorage() {
-  const values = new Map<string, string>()
-  return {
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, value) },
-    values
-  }
-}
-
-afterEach(() => vi.unstubAllGlobals())
 
 describe('conversation collaboration mode', () => {
   it('only accepts the current Codex Default and Plan values', () => {
@@ -24,24 +12,17 @@ describe('conversation collaboration mode', () => {
     expect(normalizeCollaborationMode('legacy-plan')).toBe('default')
   })
 
-  it('persists Plan per conversation and lets a new conversation inherit the project choice', () => {
-    const storage = memoryStorage()
-    vi.stubGlobal('localStorage', storage)
-
-    persistConversationCollaborationMode('project-a', 'thread-1', 'plan')
-
-    expect(loadConversationCollaborationMode('project-a', 'thread-1')).toBe('plan')
-    expect(loadConversationCollaborationMode('project-a', null)).toBe('plan')
-    expect(loadConversationCollaborationMode('project-b', null)).toBe('default')
-    expect(storage.values.get(conversationCollaborationModeStorageKey('project-a', 'thread-1'))).toBe('plan')
+  it('reads active and pending states from the DSH Plan projection', () => {
+    expect(effectiveDshPlanMode({ active: true, pending: false })).toBe(true)
+    expect(effectiveDshPlanMode({ active: false, pending: false })).toBe(false)
+    expect(effectiveDshPlanMode({ active: false, pending: true })).toBe(true)
+    expect(effectiveDshPlanMode({ active: true, pending: true })).toBe(false)
+    expect(effectiveDshPlanMode(null)).toBeNull()
   })
 
-  it('falls back to Default when storage is unavailable', () => {
-    vi.stubGlobal('localStorage', {
-      getItem: () => { throw new Error('denied') },
-      setItem: () => { throw new Error('denied') }
-    })
-    expect(loadConversationCollaborationMode('project-a', 'thread-1')).toBe('default')
-    expect(() => persistConversationCollaborationMode('project-a', 'thread-1', 'plan')).not.toThrow()
+  it('does not invent a mode when the DSH projection is missing', () => {
+    expect(collaborationModeFromDshPlan({ active: true })).toBe('plan')
+    expect(collaborationModeFromDshPlan({ active: false })).toBe('default')
+    expect(collaborationModeFromDshPlan(undefined)).toBeNull()
   })
 })

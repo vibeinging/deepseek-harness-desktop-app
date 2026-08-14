@@ -5,6 +5,7 @@ export const agentsRoutes = [
   { m: 'GET', p: '/api/agent/settings/instructions', fn: agents.getAppInstructions, auth: true },
   { m: 'PUT', p: '/api/agent/settings/instructions', fn: agents.updateAppInstructions, auth: true },
   { m: 'GET', p: '/api/agents/runtime', fn: agents.getAgentRuntimeStatus, auth: true },
+  { m: 'GET', p: '/api/agents/runtime/client-surface', fn: agents.getDshClientSurface, auth: true },
   { m: 'POST', p: '/api/agents/runtime/probe', fn: agents.probeAgentRuntime, auth: true },
   { m: 'GET', p: '/api/agents/projects/:pid/runs', fn: agents.listAgentRuns, auth: true },
   { m: 'GET', p: '/api/agents/runs/:runId', fn: agents.getAgentRun, auth: true },

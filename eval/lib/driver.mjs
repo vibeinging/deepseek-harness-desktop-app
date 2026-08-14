@@ -101,8 +101,8 @@ export function makeDriver(session) {
     `).catch(() => {});
   };
 
-  // Drive real frontend subscribeStream and reuse Renderer reducer to collect final blocks.
-  // Keep eval and UI on one turn/item interpretation rule set.
+  // Drive the preload stream transport directly. The production DSH Client is
+  // served as a built bundle, so eval code must not import Vite-only /src URLs.
   const streamBlocks = (url, body, {
     timeoutMs = DEFAULT_STREAM_TIMEOUT_MS,
     autoApprove = false,
@@ -112,10 +112,168 @@ export function makeDriver(session) {
   } = {}) => {
     const safeTimeoutMs = positiveInt(timeoutMs, DEFAULT_STREAM_TIMEOUT_MS);
     return ev(`
-      const { subscribeStream } = await import('/src/utils/api-stream.ts');
-      const { createAPIURL } = await import('/src/utils/url-helper.ts');
-      const { reduceStreamEvent } = await import('/src/views/agent/stream/reducer.ts');
-      const { parseSseJsonLine } = await import('/src/views/agent/stream/streamAdapter.ts');
+      const parseSseJsonLine = (line) => {
+        if (!String(line || '').startsWith('data:')) return null;
+        const value = String(line).slice(5).trim();
+        if (!value || value === '[DONE]') return null;
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed?.jsonrpc === '2.0' && typeof parsed.method === 'string') {
+            const params = parsed.params && typeof parsed.params === 'object' ? parsed.params : {};
+            const meta = params._meta && typeof params._meta === 'object' ? params._meta : {};
+            return {
+              type: parsed.method,
+              thread_id: params.threadId || params.thread?.id || null,
+              turn_id: params.turnId || params.turn?.id || null,
+              item_id: params.itemId || params.item?.id || null,
+              seq: Number(meta.seq || 0),
+              ts: meta.ts,
+              payload: params,
+            };
+          }
+          return parsed;
+        } catch {
+          return null;
+        }
+      };
+      const textValue = (value) => {
+        if (typeof value === 'string') return value;
+        if (value == null) return '';
+        try { return JSON.stringify(value); } catch { return String(value); }
+      };
+      const blockTitle = (status) => {
+        const value = String(status || '').toLowerCase();
+        if (['inprogress', 'in_progress', 'running', 'pendinginit'].includes(value)) return 'running';
+        if (['failed', 'error', 'errored', 'notfound'].includes(value)) return 'error';
+        if (['declined', 'rejected'].includes(value)) return 'rejected';
+        if (['interrupted', 'cancelled', 'canceled', 'stopped'].includes(value)) return 'stopped';
+        return 'done';
+      };
+      const itemBlock = (item) => {
+        if (!item?.id || item.visibility === 'hidden') return null;
+        const metadata = {
+          ...(item.metadata && typeof item.metadata === 'object' ? item.metadata : {}),
+          item_type: item.type,
+          mode: 'replace',
+        };
+        if (item.phase === 'commentary' || item.phase === 'final_answer') metadata.phase = item.phase;
+        if (item.type === 'agentMessage') {
+          return { id: item.id, type: item.format === 'text' ? 'text' : 'markdown', content: String(item.text || ''), title: item.title, metadata };
+        }
+        if (item.type === 'reasoning') {
+          return { id: item.id, type: 'thinking', content: [...(item.summary || []), ...(item.content || [])].filter(Boolean).join('\\n'), title: '思考', metadata };
+        }
+        if (item.type === 'plan') {
+          return { id: item.id, type: 'markdown', content: String(item.text || ''), title: '计划方案', metadata: { ...metadata, item_type: 'planDocument' } };
+        }
+        if (['dynamicToolCall', 'mcpToolCall', 'commandExecution', 'webSearch'].includes(item.type)) {
+          const name = item.type === 'commandExecution' ? 'command' : item.type === 'webSearch' ? 'web_search' : String(item.tool || 'tool');
+          const args = item.arguments ?? item.command ?? item.query ?? '';
+          const contentItemResult = (Array.isArray(item.contentItems) ? item.contentItems : [])
+            .map((entry) => entry?.type === 'inputText' ? String(entry.text || '') : '')
+            .filter(Boolean)
+            .join('\\n');
+          const result = item.result ?? item.aggregatedOutput ?? item.results ?? item.error ?? contentItemResult;
+          return {
+            id: item.id,
+            type: 'tool',
+            content: [name, textValue(args)].filter(Boolean).join(' '),
+            title: blockTitle(item.status),
+            metadata: { ...metadata, tool_call_id: item.id, tool_name: name, resultText: textValue(result) },
+          };
+        }
+        if (item.type === 'approval') {
+          return { id: item.id, type: 'confirm', content: String(item.summary || ''), title: item.status || item.tool || 'confirm', metadata };
+        }
+        if (item.type === 'userInput') {
+          return { id: item.id, type: 'user_input', content: textValue(item), title: item.status || 'requested', metadata };
+        }
+        if (item.type === 'artifact') {
+          return { id: item.id, type: 'file', content: textValue({ name: item.name, path: item.path, kind: item.kind, artifact_id: item.artifact_id }), title: item.name, metadata };
+        }
+        if (item.type === 'error') {
+          return { id: item.id, type: 'error', content: String(item.content || item.text || item.error || ''), title: item.title || '错误', metadata };
+        }
+        const content = item.content ?? item.text ?? item.result ?? item.summary ?? '';
+        return { id: item.id, type: item.type || 'text', content: textValue(content), title: item.title || blockTitle(item.status), metadata };
+      };
+      const reduceStreamEvent = (event) => {
+        const payload = event?.payload || {};
+        const type = String(event?.type || '').replace(/^dsh\\\//, '');
+        if (type === 'item/agentMessage/delta') {
+          if (payload.visibility === 'hidden') return null;
+          return { block: {
+            id: String(event.item_id || ''),
+            type: payload.format === 'text' ? 'text' : 'markdown',
+            content: String(payload.delta || ''),
+            title: payload.title,
+            metadata: { ...(payload.metadata || {}), item_type: 'agentMessage', mode: payload.mode || 'append', ...(payload.phase ? { phase: payload.phase } : {}) },
+          } };
+        }
+        if (type === 'item/reasoning/summaryTextDelta' || type === 'item/reasoning/textDelta') {
+          return { block: { id: String(event.item_id || ''), type: 'thinking', content: String(payload.delta || ''), title: '思考', metadata: { item_type: 'reasoning', mode: payload.mode || 'append' } } };
+        }
+        if (type === 'item/plan/delta') {
+          return { block: { id: String(event.item_id || 'plan'), type: 'markdown', content: String(payload.delta || ''), title: '计划方案', metadata: { item_type: 'planDocument', mode: 'append' } } };
+        }
+        if (type === 'turn/plan/updated') {
+          return { block: { id: String(event.item_id || 'plan'), type: 'plan', content: textValue(payload.plan || []), title: '已更新计划', metadata: { item_type: 'plan', mode: 'replace' } } };
+        }
+        if (type === 'item/toolCall/outputDelta' || type === 'item/commandExecution/outputDelta') {
+          return { block: { id: 'result:' + String(event.item_id || ''), type: 'tool_result', content: String(payload.delta || ''), title: payload.name || '工具', metadata: { item_type: 'toolResult', tool_call_id: String(event.item_id || ''), mode: payload.mode || 'append' } } };
+        }
+        if (type === 'error') {
+          return { block: { id: String(event.item_id || 'error:' + (event.turn_id || 'turn')), type: 'error', content: String(payload.error?.message || payload.message || '任务执行失败'), title: '错误', metadata: { item_type: 'error', mode: 'replace' } } };
+        }
+        if (type === 'item/started' || type === 'item/completed') return { block: itemBlock(payload.item || {}) };
+        return null;
+      };
+      const subscribeStream = (req, onLine) => new Promise((resolve, reject) => {
+        const electronAPI = window.electronAPI;
+        if (!electronAPI?.streamStart) {
+          reject(new Error('当前页面没有可用的 Electron 流式传输'));
+          return;
+        }
+        let buffer = '';
+        let settled = false;
+        let dispose = null;
+        const finish = (fn) => {
+          if (settled) return;
+          settled = true;
+          req.signal?.removeEventListener('abort', onAbort);
+          fn();
+        };
+        const feed = (chunk) => {
+          buffer += String(chunk || '');
+          const lines = buffer.split('\\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) onLine(line);
+        };
+        const onAbort = () => {
+          dispose?.();
+          finish(() => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })));
+        };
+        dispose = electronAPI.streamStart({
+          url: req.url,
+          method: req.method || 'GET',
+          headers: req.headers || {},
+          body: req.body ?? null,
+        }, (message) => {
+          if (message?.type === 'head' && (message.status < 200 || message.status >= 300)) {
+            dispose?.();
+            finish(() => reject(Object.assign(new Error('请求失败 (' + message.status + ')'), { status: message.status })));
+          } else if (message?.type === 'data') {
+            feed(message.chunk);
+          } else if (message?.type === 'end') {
+            if (buffer) onLine(buffer);
+            finish(resolve);
+          } else if (message?.type === 'error') {
+            finish(() => reject(new Error(message.error || 'stream error')));
+          }
+        });
+        if (req.signal?.aborted) onAbort();
+        else req.signal?.addEventListener('abort', onAbort, { once: true });
+      });
       const blocks = new Map(); const events = []; let raw = 0;
       const approvalRequests = [];
       const approvalErrorsDuringStream = [];
@@ -134,7 +292,7 @@ export function makeDriver(session) {
       const interruptThreadId = ${JSON.stringify(interruptThreadId || '')};
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
-      const req = { url: createAPIURL(${JSON.stringify(url)}), method: 'POST',
+      const req = { url: ${JSON.stringify(url)}, method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept-Language': 'zh-CN' },
         body: JSON.stringify(${JSON.stringify(body)}),
         signal: controller.signal };

@@ -1,94 +1,174 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createServer } from 'node:http'
 import { mkdtempSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
 import { openSession } from './lib/cdp.mjs'
+import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+import { encodeDshModelRoute } from '../server/src/engine/dsh_runtime/model_route.js'
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'plan-status-ui-smoke-'))
-const dbPath = path.join(evalHome, '.dsh', 'local.db')
+const stamp = Date.now()
+const providerId = 'plan-status-eval'
+const modelId = 'plan-status-model'
+const credentialRef = 'PLAN_STATUS_EVAL_API_KEY'
+const requests = []
+
 process.env.DSH_EVAL_ISOLATED = '1'
 process.env.DSH_EVAL_HOME = evalHome
 process.env.DSH_USER_DATA_DIR = path.join(evalHome, 'electron-user-data')
 
-function sqlText(value) {
-  return `'${String(value).replaceAll("'", "''")}'`
+function chatChunk(response, payload) {
+  response.write(`data: ${JSON.stringify(payload)}\n\n`)
+}
+
+function toolName(body, suffix) {
+  return (body.tools || [])
+    .map((tool) => String(tool?.function?.name || ''))
+    .find((name) => name === suffix || name.endsWith(`__${suffix}`)) || ''
+}
+
+function streamToolCall(response, name) {
+  chatChunk(response, {
+    id: 'chatcmpl_plan_status_tool',
+    model: modelId,
+    choices: [{
+      index: 0,
+      delta: {
+        role: 'assistant',
+        tool_calls: [{
+          index: 0,
+          id: 'call_plan_status',
+          type: 'function',
+          function: {
+            name,
+            arguments: JSON.stringify({
+              todos: [
+                { content: '检查数据结构', status: 'completed' },
+                { content: '查询目标记录', status: 'in_progress' },
+                { content: '核对结果', status: 'pending' },
+              ],
+            }),
+          },
+        }],
+      },
+      finish_reason: null,
+    }],
+  })
+  chatChunk(response, {
+    id: 'chatcmpl_plan_status_tool',
+    model: modelId,
+    choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }],
+  })
+  response.end('data: [DONE]\n\n')
+}
+
+function streamAnswer(response) {
+  chatChunk(response, {
+    id: 'chatcmpl_plan_status_answer',
+    model: modelId,
+    choices: [{ index: 0, delta: { role: 'assistant', content: '当前检查尚未完成。' }, finish_reason: null }],
+  })
+  chatChunk(response, {
+    id: 'chatcmpl_plan_status_answer',
+    model: modelId,
+    choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
+    usage: { prompt_tokens: 20, completion_tokens: 4, total_tokens: 24 },
+  })
+  response.end('data: [DONE]\n\n')
+}
+
+async function startFakeModel() {
+  const server = createServer(async (request, response) => {
+    if (request.method !== 'POST' || request.url !== '/v1/chat/completions') {
+      response.writeHead(404, { 'content-type': 'application/json' })
+      response.end(JSON.stringify({ error: { message: 'not found' } }))
+      return
+    }
+    const chunks = []
+    for await (const chunk of request) chunks.push(chunk)
+    const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')
+    requests.push(body)
+    response.writeHead(200, {
+      'content-type': 'text/event-stream',
+      'cache-control': 'no-cache',
+      connection: 'keep-alive',
+    })
+    const toolMessages = (body.messages || []).filter((message) => message?.role === 'tool')
+    if (!toolMessages.length) {
+      const name = toolName(body, 'todo_write')
+      assert.ok(name, `todo_write is unavailable: ${JSON.stringify(body.tools || [])}`)
+      streamToolCall(response, name)
+      return
+    }
+    streamAnswer(response)
+  })
+  await new Promise((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', resolve)
+  })
+  return {
+    baseUrl: `http://127.0.0.1:${server.address().port}/v1`,
+    close: () => new Promise((resolve) => server.close(resolve)),
+  }
+}
+
+async function apiJson(session, request) {
+  return session.evalJs(`
+    const response = await window.electronAPI.apiRequest(${JSON.stringify(request)});
+    return response.json;
+  `, { timeoutMs: 20_000 })
 }
 
 let session = null
+let fakeModel = null
+let providerSaved = false
 try {
+  fakeModel = await startFakeModel()
   session = await openSession({ port: 9361 })
   const ui = makeUiDriver(session)
-  await session.evalJs(`
-    localStorage.setItem('dsh:onboarding:completed:v1', 'true');
-    return true;
-  `)
+  const driver = makeDriver(session)
+  await driver.login()
+  await session.evalJs(`localStorage.setItem('dsh:onboarding:completed:v1', 'true'); return true;`)
 
-  const prepared = await session.evalJs(`
-    const projectResponse = await window.electronAPI.apiRequest({
-      method: 'POST',
-      url: '/api/projects',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: '计划浮窗测试' })
-    });
-    const projectId = projectResponse.json?.data?.id || projectResponse.json?.data?.project_id;
-    const sessionResponse = await window.electronAPI.apiRequest({
-      method: 'POST',
-      url: '/api/projects/' + encodeURIComponent(projectId) + '/sessions',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: '计划位置检查',
-        source_type: 'agent',
-        source_id: projectId,
-        action_type: 'agentic_chat'
-      })
-    });
-    return { projectId, sessionId: sessionResponse.json?.data?.id };
-  `, { timeoutMs: 20_000 })
-  assert.equal(typeof prepared.projectId, 'string', JSON.stringify(prepared))
-  assert.equal(typeof prepared.sessionId, 'string', JSON.stringify(prepared))
+  const projectId = await driver.ensureProjectRecord(`计划浮窗测试 ${stamp}`)
+  const snapshot = await driver.raw.api('GET', '/api/dsh/models')
+  const namespace = snapshot.json?.data?.namespaces?.find((item) => item.ns === 'llm-pi-ai')
+  assert.equal(typeof namespace?.revision, 'number', JSON.stringify(snapshot.json))
+  const credential = await driver.raw.api('POST', '/api/dsh/models/credentials', {
+    ref: credentialRef,
+    value: 'plan-status-key',
+  })
+  assert.equal(credential.status, 200, JSON.stringify(credential.json))
+  const configured = await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+    ns: 'llm-pi-ai',
+    expected_revision: namespace.revision,
+    ops: [{
+      op: 'set',
+      path: ['providers', providerId],
+      value: {
+        displayName: '计划浮窗假模型',
+        apiKeyEnv: credentialRef,
+        api: 'openai-completions',
+        baseURL: fakeModel.baseUrl,
+        models: [{ id: modelId, name: '计划浮窗假模型' }],
+      },
+    }],
+  })
+  assert.equal(configured.status, 200, JSON.stringify(configured.json))
+  providerSaved = true
 
-  const userMessageId = randomUUID()
-  const assistantMessageId = randomUUID()
-  const userItems = [{ id: 'user-text', type: 'text', content: '检查计划应该显示在哪里' }]
-  const assistantItems = [
-    {
-      id: 'commentary-1',
-      type: 'markdown',
-      content: '我会按计划检查数据。',
-      metadata: { item_type: 'agentMessage', phase: 'commentary' }
-    },
-    {
-      id: 'plan-1',
-      type: 'plan',
-      content: JSON.stringify([
-        { step: '检查数据结构', status: 'completed' },
-        { step: '查询目标记录', status: 'in_progress' },
-        { step: '核对结果', status: 'pending' }
-      ]),
-      metadata: { item_type: 'plan', msg_category: 'status' }
-    },
-    {
-      id: 'answer-1',
-      type: 'markdown',
-      content: '当前检查尚未完成。',
-      metadata: { item_type: 'agentMessage', phase: 'final_answer' }
-    }
-  ]
-  execFileSync('sqlite3', [dbPath, [
-    `INSERT INTO session_messages (id,session_id,role,content_items,sequence_number,created_at,updated_at) VALUES (${sqlText(userMessageId)},${sqlText(prepared.sessionId)},'user',${sqlText(JSON.stringify(userItems))},1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`,
-    `INSERT INTO session_messages (id,session_id,role,content_items,message_metadata,sequence_number,created_at,updated_at) VALUES (${sqlText(assistantMessageId)},${sqlText(prepared.sessionId)},'assistant',${sqlText(JSON.stringify(assistantItems))},${sqlText(JSON.stringify({ turn_status: 'completed' }))},2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`,
-    `UPDATE sessions SET message_count=2,updated_at=CURRENT_TIMESTAMP WHERE id=${sqlText(prepared.sessionId)};`
-  ].join('\n')])
-
-  await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
-  const conversationSelector = `[data-agent-conv-id="${prepared.sessionId}"]`
-  await ui.waitFor(conversationSelector, { timeout: 30_000 })
-  await ui.click(conversationSelector)
-  await ui.waitFor('[data-plan-float]', { timeout: 15_000 })
+  const turn = await driver.askAgent(projectId, '检查计划应该显示在哪里', {
+    title: `计划位置检查 ${stamp}`,
+    model: encodeDshModelRoute(providerId, modelId),
+  })
+  assert.equal(requests.length, 2)
+  await driver.raw.activateProject(projectId)
+  await ui.waitFor(`[data-agent-conv-id="${turn.sid}"]`, { timeout: 30_000 })
+  await ui.click(`[data-agent-conv-id="${turn.sid}"]`)
+  await ui.waitFor('[data-plan-float]', { timeout: 20_000 })
 
   await ui.click('[data-agent-process-toggle]')
   const placement = await session.evalJs(`
@@ -112,8 +192,25 @@ try {
     'true'
   )
 
-  console.log('[plan-status-ui-smoke] PASS 计划详情仅在独立浮窗展示，消息区保留紧凑摘要')
+  console.log('[plan-status-ui-smoke] PASS DSH todo_write 轨迹恢复计划，独立浮窗展示，消息区保留紧凑摘要')
 } finally {
+  if (session && providerSaved) {
+    await apiJson(session, {
+      method: 'POST',
+      url: '/api/dsh/models/settings/mutate',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ns: 'llm-pi-ai',
+        ops: [{ op: 'unset', path: ['providers', providerId] }],
+      }),
+    }).catch(() => null)
+  }
+  if (session) await apiJson(session, {
+    method: 'DELETE',
+    url: `/api/dsh/models/credentials/${encodeURIComponent(credentialRef)}`,
+    headers: {}, body: null,
+  }).catch(() => null)
   try { await session?.close() } catch { /* ignore */ }
+  try { await fakeModel?.close() } catch { /* ignore */ }
   try { rmSync(evalHome, { recursive: true, force: true }) } catch { /* ignore */ }
 }

@@ -1616,8 +1616,41 @@ export interface DshPermissionSelect {
   options: DshPermissionOption[]
 }
 
+export interface DshTrajectoryEvent {
+  event: {
+    type: string
+    seq: number
+    time: number
+    data?: Record<string, unknown>
+    sourceEventSeqs?: number[]
+    surfaceOp?: unknown
+  }
+  view?: {
+    for: 'call' | 'result'
+    view: Record<string, unknown>
+  }
+}
+
+export interface DshSessionTrajectory {
+  appSessionId: string
+  dshSessionId: string
+  source: 'session.history'
+  lastSeq: number
+  events: DshTrajectoryEvent[]
+  projections: {
+    asOfSeq: number
+    values: Record<string, unknown>
+  } | null
+}
+
 export const getDshSessionProtocolState = (projectId: string, threadId: string) => request({
   url: `/api/agent/projects/${pe(projectId)}/threads/${pe(threadId)}/dsh-state`,
+  method: 'get',
+  ignoreMsg: true
+})
+
+export const getDshSessionTrajectory = (projectId: string, threadId: string) => request({
+  url: `/api/agent/projects/${pe(projectId)}/threads/${pe(threadId)}/dsh-trajectory`,
   method: 'get',
   ignoreMsg: true
 })
@@ -1636,6 +1669,17 @@ export const setDshSessionPermission = (projectId: string, threadId: string, pre
   url: `/api/agent/projects/${pe(projectId)}/threads/${pe(threadId)}/dsh-permission`,
   method: 'post',
   data: { preset },
+  ignoreMsg: true
+})
+
+export const setDshSessionPlanMode = (
+  projectId: string,
+  threadId: string,
+  mode: 'default' | 'plan'
+) => request({
+  url: `/api/agent/projects/${pe(projectId)}/threads/${pe(threadId)}/dsh-plan`,
+  method: 'post',
+  data: { mode },
   ignoreMsg: true
 })
 

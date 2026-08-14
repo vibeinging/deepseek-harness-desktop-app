@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 
 import { openSession } from './lib/cdp.mjs'
+import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+
+const requireFromServer = createRequire(new URL('../server/package.json', import.meta.url))
+const BetterSqlite3 = requireFromServer('better-sqlite3')
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'local-site-ui-smoke-'))
 const exportPath = path.join(evalHome, 'exports', 'site-export.html')
@@ -12,6 +18,7 @@ const conversationTitle = `Site 验收对话 ${Date.now()}`
 const siteTitle = `交互页面 ${Date.now()}`
 const initialHtml = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#f7f3fb}button{position:absolute;left:24px;top:24px;width:160px;height:48px;border:0;border-radius:10px;color:white;background:#6750a4;font:16px system-ui}</style></head><body><button id="counter" type="button">计数 0</button><script>document.querySelector('#counter').addEventListener('click',(event)=>{const value=Number(event.currentTarget.dataset.count||0)+1;event.currentTarget.dataset.count=String(value);event.currentTarget.textContent='计数 '+value})</script></body></html>`
 const editedHtml = initialHtml.replace('计数 0', '版本二').replace("String(value);event.currentTarget.textContent='计数 '+value", "String(value);event.currentTarget.textContent='版本二 '+value")
+const readmeScreenshot = String(process.env.DSH_README_SCREENSHOT || '').trim()
 
 mkdirSync(path.dirname(exportPath), { recursive: true })
 
@@ -20,11 +27,34 @@ process.env.DSH_EVAL_HOME = evalHome
 process.env.DSH_USER_DATA_DIR = path.join(evalHome, 'electron-user-data')
 process.env.DSH_EVAL_SITE_EXPORT_PATH = exportPath
 
+function seedVisibleConversation(databasePath, sessionId) {
+  const db = new BetterSqlite3(databasePath)
+  try {
+    db.prepare(`
+      INSERT INTO session_messages
+        (id, session_id, role, content_items, sequence_number, created_at, updated_at)
+      VALUES (?, ?, 'user', ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).run(randomUUID(), sessionId, JSON.stringify([{ type: 'text', text: 'Site 验收' }]))
+    db.prepare(`UPDATE sessions SET message_count=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(sessionId)
+  } finally {
+    db.close()
+  }
+}
+
 async function apiJson(session, request) {
   return session.evalJs(`
     const response = await window.electronAPI.apiRequest(${JSON.stringify(request)});
     return response.json;
   `, { timeoutMs: 20_000 })
+}
+
+async function captureReadmeScreenshot(session) {
+  if (!readmeScreenshot) return
+  const shot = await session.cdp('Page.captureScreenshot', {
+    format: 'png',
+    captureBeyondViewport: true
+  })
+  writeFileSync(path.resolve(readmeScreenshot), Buffer.from(shot.data, 'base64'))
 }
 
 async function hasVisible(session, selector) {
@@ -123,7 +153,10 @@ async function expandWorkspace(session, ui) {
   )`, { timeout: 10_000, label: '右侧栏初始化' })
   const collapsed = await session.evalJs(`return document.querySelector('[data-edge-toggle="workspace"]')?.getAttribute('data-collapsed')`)
   if (collapsed === 'true') {
-    await ui.click('[data-edge-toggle="workspace"]')
+    // The right-edge toggle can move under the pointer while the restored shell
+    // finishes its opening animation. Invoke the already-resolved button handler,
+    // then keep the Site workflow itself on the normal UI driver.
+    await session.evalJs(`document.querySelector('[data-edge-toggle="workspace"]')?.click(); return true;`)
     await ui.waitUntil(`async () => document.querySelector('[data-edge-toggle="workspace"]')?.getAttribute('data-collapsed') === 'false'`, {
       timeout: 10_000,
       label: '右侧栏展开'
@@ -155,7 +188,7 @@ async function openConversation(session, ui, sessionId) {
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(`[data-agent-conv-id="${sessionId}"]`, { timeout: 30_000 })
   await ui.click(`[data-agent-conv-id="${sessionId}"]`)
-  await ui.waitUntil(`async () => document.querySelector('[data-empty-conversation="existing"]') !== null`, {
+  await ui.waitUntil(`async () => document.querySelector('[data-conversation-state="idle"]') !== null`, {
     timeout: 10_000,
     label: '目标对话已进入中间栏'
   })
@@ -173,6 +206,8 @@ let session = null
 try {
   session = await openSession({ port: 9367 })
   let ui = makeUiDriver(session)
+  const driver = makeDriver(session)
+  await driver.login()
   await session.evalJs(`localStorage.setItem('dsh:onboarding:completed:v1', 'true'); return true;`)
   const prepared = await apiJson(session, {
     method: 'POST',
@@ -187,6 +222,7 @@ try {
   })
   const sessionId = prepared?.data?.id
   assert.equal(typeof sessionId, 'string', JSON.stringify(prepared))
+  seedVisibleConversation(path.join(evalHome, '.dsh', 'local.db'), sessionId)
 
   await openConversation(session, ui, sessionId)
   try {
@@ -211,7 +247,8 @@ try {
     console.error('[local-site-ui-smoke] Site 列表未出现', JSON.stringify(state))
     throw error
   }
-  await ui.click('[aria-label="新建 Site"]')
+  await waitForStableHitTarget(session, ui, '[aria-label="新建 Site"]', '新建 Site 按钮位置稳定且可点击')
+  await session.evalJs(`document.querySelector('[aria-label="新建 Site"]')?.click(); return true;`)
   await ui.waitFor('[data-site-create]', { timeout: 5_000 })
   await fillExact(session, ui, '[data-site-create-field="title"]', siteTitle, 'Site 标题')
   await fillExact(session, ui, '[data-site-create-field="content"]', initialHtml, 'Site HTML')
@@ -363,6 +400,8 @@ try {
     console.error('[local-site-ui-smoke] 重启恢复状态', JSON.stringify({ apiState, domState }))
     throw error
   }
+
+  await captureReadmeScreenshot(session)
 
   console.log('[local-site-ui-smoke] PASS', JSON.stringify({ sessionId, siteId, versions: 3, exportPath }))
 } finally {

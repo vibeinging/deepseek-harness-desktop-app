@@ -18,6 +18,16 @@ const TRUSTED_DSH_PLUGINS = Object.freeze([{
   envPath: "DSH_PRODUCT_BRIDGE_ROOT",
   appPackage: "packages/dsh-product-bridge",
   browser: false,
+}, {
+  name: "@deepseek-ai/dsh-theme-pack",
+  envPath: "DSH_THEME_PACK_ROOT",
+  appPackage: "packages/dsh-theme-pack",
+  browser: false,
+}, {
+  name: "@deepseek-ai/dsh-work-shell",
+  envPath: "DSH_WORK_SHELL_ROOT",
+  appPackage: "packages/dsh-work-shell",
+  browser: true,
 }]);
 
 const RETIRED_DSH_PLUGINS = Object.freeze([
@@ -66,7 +76,7 @@ function readTrustedPlugin(candidate, { name: expectedName, browser }) {
     throw new Error(`${expectedName} 没有声明 Web dsh.client`);
   }
   const patch = resolvePackageFile(root, manifest?.dsh?.bundle?.patch, `${expectedName} dsh.bundle.patch`);
-  const entry = browser ? null : resolvePackageFile(root, manifest?.main, `${expectedName} main`);
+  const entry = resolvePackageFile(root, manifest?.main, `${expectedName} main`);
   const client = browser
     ? resolvePackageFile(root, defaultExport(manifest?.exports?.["./client"]), `${expectedName} exports[\"./client\"]`)
     : null;
@@ -153,6 +163,17 @@ function sameBundles(left, right) {
   return left.length === right.length && left.every((name, index) => name === right[index]);
 }
 
+function readInstalledPlugin(api, packageName, installAnchor, profileDir) {
+  const root = realpathSync(api.resolveBundleDir(
+    "dsh-work",
+    packageName,
+    installAnchor,
+    profileDir,
+  ));
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  return Object.freeze({ name: packageName, root, manifest });
+}
+
 async function loadProfileApi(appBootPath, profileApi) {
   if (profileApi) return profileApi;
   if (!appBootPath) throw new Error("缺少 DSH app-boot 入口，无法更新 Profile");
@@ -163,10 +184,12 @@ async function loadProfileApi(appBootPath, profileApi) {
  * Mount the app-reviewed DSH bundles through the official Profile manifest.
  * The flat resolver links expose package roots; `dsh.profile.bundles` owns
  * composition order. Missing optional packages are removed from the fixed
- * allowlist slice without changing user-managed bundle entries.
+ * allowlist slice. User-installed browser bundles remain installed but are
+ * removed from the active graph until the desktop renderer isolates them.
  */
 export async function prepareTrustedProfilePlugins({
   appBootPath,
+  installAnchor,
   profileApi,
   profileName = WEB_PROFILE,
   appRoot = APP_ROOT,
@@ -191,8 +214,21 @@ export async function prepareTrustedProfilePlugins({
     ...TRUSTED_DSH_PLUGINS.map((plugin) => plugin.name),
     ...RETIRED_DSH_PLUGINS,
   ]);
+  const reviewedNames = new Set([...template, ...managedNames]);
+  const inspectionAnchor = installAnchor || env.DSH_RUNTIME_INSTALL_ANCHOR || appBootPath;
+  if (!inspectionAnchor || typeof api.resolveBundleDir !== "function") {
+    throw new Error("DSH Profile API 无法检查社区 Client Bundle 隔离");
+  }
+  const userNames = [...new Set([
+    ...currentBundles,
+    ...Object.keys(dependencies),
+  ])].filter((name) => !reviewedNames.has(name));
+  const quarantined = userNames
+    .map((name) => readInstalledPlugin(api, name, inspectionAnchor, profileDir))
+    .filter((plugin) => plugin.manifest?.dsh?.client !== undefined);
+  const quarantinedNames = new Set(quarantined.map((plugin) => plugin.name));
   const bundles = [
-    ...currentBundles.filter((name) => !managedNames.has(name)),
+    ...currentBundles.filter((name) => !managedNames.has(name) && !quarantinedNames.has(name)),
     ...plugins.map((plugin) => plugin.name),
   ];
   const changed = !sameBundles(currentBundles, bundles)
@@ -210,5 +246,5 @@ export async function prepareTrustedProfilePlugins({
       },
     });
   }
-  return Object.freeze({ profileName, profileDir, plugins, bundles, changed });
+  return Object.freeze({ profileName, profileDir, plugins, bundles, quarantined, changed });
 }

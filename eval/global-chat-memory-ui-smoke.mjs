@@ -7,6 +7,7 @@ import path from 'node:path'
 import { openSession } from './lib/cdp.mjs'
 import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+import { encodeDshModelRoute } from '../server/src/engine/dsh_runtime/model_route.js'
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'global-chat-memory-ui-smoke-'))
 const sourceTitle = `海王星发布记录 ${Date.now()}`
@@ -17,6 +18,10 @@ const savedMemory = `回答偏好-${Date.now()}：先给结论，再给证据。
 const editedMemory = `${savedMemory} 不要铺垫。`
 const scratchMemory = `待删除记忆-${Date.now()}`
 const requests = []
+const providerId = 'global-memory-eval'
+const modelId = 'global-memory-model'
+const credentialRef = 'GLOBAL_MEMORY_EVAL_API_KEY'
+const modelRoute = encodeDshModelRoute(providerId, modelId)
 
 process.env.DSH_EVAL_ISOLATED = '1'
 process.env.DSH_EVAL_HOME = evalHome
@@ -105,7 +110,7 @@ const clientCapabilities = {
 
 let session = null
 let fakeModel = null
-let modelId = ''
+let providerSaved = false
 let sourceSessionId = ''
 let currentSessionId = ''
 try {
@@ -119,23 +124,38 @@ try {
     return true;
   `)
 
-  const model = await driver.raw.api('POST', '/api/llm_model/create', {
-    model_name: 'global-memory-model',
-    display_name: '全局记忆假模型',
-    category: 'PRIMARY',
-    api_base: fakeModel.baseUrl,
-    api_key: 'global-memory-key',
-    api_format: 'chat_completions',
-    supports_streaming: true,
+  const snapshot = await driver.raw.api('GET', '/api/dsh/models')
+  const namespace = snapshot.json?.data?.namespaces?.find((item) => item.ns === 'llm-pi-ai')
+  assert.equal(typeof namespace?.revision, 'number', JSON.stringify(snapshot.json))
+  const credential = await driver.raw.api('POST', '/api/dsh/models/credentials', {
+    ref: credentialRef,
+    value: 'global-memory-key',
   })
-  assert.equal(model.status, 200, JSON.stringify(model.json))
-  modelId = model.json?.data?.id || ''
+  assert.equal(credential.status, 200, JSON.stringify(credential.json))
+  const configured = await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+    ns: 'llm-pi-ai',
+    expected_revision: namespace.revision,
+    ops: [{
+      op: 'set',
+      path: ['providers', providerId],
+      value: {
+        displayName: '全局记忆假模型',
+        apiKeyEnv: credentialRef,
+        api: 'openai-completions',
+        baseURL: fakeModel.baseUrl,
+        models: [{ id: modelId, name: '全局记忆假模型' }],
+      },
+    }],
+  })
+  assert.equal(configured.status, 200, JSON.stringify(configured.json))
+  providerSaved = true
 
   sourceSessionId = await createChatSession(session, sourceTitle)
   const sourceTurn = await driver.raw.streamBlocks(
     `/api/agent/projects/__chat__/threads/${sourceSessionId}/turns`,
     {
       input: [{ type: 'text', text: sourceQuestion }],
+      model: modelRoute,
       approvalMode: 'ask',
       clientCapabilities,
     },
@@ -225,6 +245,7 @@ try {
     `/api/agent/projects/__chat__/threads/${currentSessionId}/turns`,
     {
       input: [{ type: 'text', text: currentQuestion }],
+      model: modelRoute,
       approvalMode: 'ask',
       clientCapabilities,
     },
@@ -235,7 +256,14 @@ try {
   assert.match(currentRequestText, /chat_history_sources/)
   assert.match(currentRequestText, /不要铺垫/)
   assert.match(currentRequestText, /周四/)
-  assert.equal(currentTurn.blocks.some((block) => block.type === 'global_memory'), true)
+  const trajectory = await apiJson(session, {
+    method: 'GET',
+    url: `/api/agent/projects/__chat__/threads/${currentSessionId}/dsh-trajectory`,
+    headers: {}, body: null,
+  })
+  const memoryEvent = (trajectory?.data?.events || [])
+    .find((entry) => entry?.event?.data?.source?.plugin === 'dsh-work-memory')
+  assert.equal(memoryEvent?.event?.data?.source?.dshWorkMemory?.type, 'global_memory')
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(`[data-agent-conv-id="${currentSessionId}"]`, { timeout: 30_000 })
@@ -286,12 +314,17 @@ try {
     `/api/agent/projects/__chat__/threads/${temporarySessionId}/turns`,
     {
       input: [{ type: 'text', text: currentQuestion }],
+      model: modelRoute,
       approvalMode: 'ask',
       clientCapabilities,
     },
   )
-  assert.equal(requests.length, 3)
-  const temporaryRequestText = JSON.stringify(requests[2])
+  assert.equal(requests.length >= 3, true)
+  const temporaryRequest = [...requests].reverse()
+    .find((request) => JSON.stringify(request).includes(currentQuestion)
+      && !JSON.stringify(request).includes('saved_memories'))
+  assert.ok(temporaryRequest, '临时对话模型请求必须存在')
+  const temporaryRequestText = JSON.stringify(temporaryRequest)
   assert.doesNotMatch(temporaryRequestText, /saved_memories|chat_history_sources|不要铺垫/)
   assert.equal(temporaryTurn.blocks.some((block) => block.type === 'global_memory'), false)
 
@@ -309,14 +342,22 @@ try {
 
   console.log('[global-chat-memory-ui-smoke] PASS 设置 CRUD + 来源排除/恢复 + 真实 Turn 注入 + 来源卡片 + 临时隔离 + 重启持久化')
 } finally {
-  if (session && modelId) {
+  if (session && providerSaved) {
     await apiJson(session, {
       method: 'POST',
-      url: '/api/llm_model/delete',
+      url: '/api/dsh/models/settings/mutate',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model_id: modelId }),
+      body: JSON.stringify({
+        ns: 'llm-pi-ai',
+        ops: [{ op: 'unset', path: ['providers', providerId] }],
+      }),
     }).catch(() => null)
   }
+  if (session) await apiJson(session, {
+    method: 'DELETE',
+    url: `/api/dsh/models/credentials/${encodeURIComponent(credentialRef)}`,
+    headers: {}, body: null,
+  }).catch(() => null)
   try { await session?.close() } catch { /* ignore */ }
   try { await fakeModel?.close() } catch { /* ignore */ }
   try { rmSync(evalHome, { recursive: true, force: true }) } catch { /* ignore */ }

@@ -89,18 +89,38 @@ function objectFromText(value) {
   }
 }
 
-/** Project a successful App Office write tool result into the existing workspace-event surface. */
+/** Project a successful App product write tool result into the existing workspace-event surface. */
 export function workspaceEventFromToolResult(event, callItem = null) {
   const toolName = String(callItem?.tool || "");
+  const resultBlock = event?.data?.message?.content?.find?.((block) => block?.type === "tool-result");
+  if (resultBlock?.isError || event?.data?.error) return null;
+  const value = objectFromText(textFromBlocks(resultBlock?.content || event?.data?.message?.content));
+  if (value?.success !== true) return null;
+  if (["canvas_create", "canvas_edit", "canvas_suggest"].includes(toolName)) {
+    const canvas = value.canvas;
+    const canvasId = String(canvas?.id || "").trim();
+    if (!canvasId) return null;
+    const eventName = toolName === "canvas_suggest"
+      ? "canvas_suggestion_created"
+      : canvas.kind === "site"
+        ? (toolName === "canvas_create" ? "site_opened" : "site_updated")
+        : (toolName === "canvas_create" ? "canvas_opened" : "canvas_updated");
+    return {
+      type: "workspace_event",
+      event: eventName,
+      project_id: canvas.project_id || value.project_id || null,
+      session_id: canvas.session_id || null,
+      canvas_id: canvasId,
+      canvas,
+      open: true,
+    };
+  }
   const eventName = toolName === "artifact_office_create"
     ? "artifact_published"
     : toolName === "artifact_office_edit"
       ? "artifact_edited"
       : null;
   if (!eventName) return null;
-  const resultBlock = event?.data?.message?.content?.find?.((block) => block?.type === "tool-result");
-  if (resultBlock?.isError || event?.data?.error) return null;
-  const value = objectFromText(textFromBlocks(resultBlock?.content || event?.data?.message?.content));
   const artifact = value?.success === true ? value.artifact : null;
   const artifactId = String(artifact?.id || "").trim();
   if (!artifactId) return null;
@@ -115,11 +135,79 @@ export function workspaceEventFromToolResult(event, callItem = null) {
   };
 }
 
+/** Project a validated ui_render result into the conversation's structured-UI item. */
+export function generativeUiItemFromToolResult(event, callItem = null) {
+  if (String(callItem?.tool || "") !== "ui_render") return null;
+  const resultBlock = event?.data?.message?.content?.find?.((block) => block?.type === "tool-result");
+  if (resultBlock?.isError || event?.data?.error) return null;
+  const value = objectFromText(textFromBlocks(resultBlock?.content || event?.data?.message?.content));
+  const document = value?.success === true ? value.generative_ui : null;
+  if (!document || typeof document !== "object" || Array.isArray(document)) return null;
+  const itemId = `${toolResultItemId(event?.data)}:generative-ui`;
+  return {
+    id: itemId,
+    type: "generativeUi",
+    content: document,
+    title: typeof document.title === "string" ? document.title : undefined,
+    metadata: {
+      item_type: "generativeUi",
+      content_type: "generative_ui",
+      result_role: "deliverable",
+      surface_id: document.surface_id,
+      revision: document.revision,
+      document_hash: value.document_hash || null,
+      generative_ui: {
+        document,
+        document_hash: value.document_hash || null,
+      },
+    },
+  };
+}
+
+/** Project one DSH web-search result view into the desktop's source-card vocabulary. */
+export function webSourcesItemFromToolResult(event, view = null) {
+  const resultView = view?.for === "result" ? view.view : null;
+  if (resultView?.card !== "web" || resultView?.kind !== "search" || !Array.isArray(resultView.sources)) return null;
+  const sources = resultView.sources.flatMap((source, index) => {
+    const url = String(source?.url || "").trim();
+    if (!/^https?:\/\//i.test(url)) return [];
+    return [{
+      source_id: `S${index + 1}`,
+      url,
+      title: String(source?.title || url).trim(),
+      excerpt: String(source?.snippet || "").trim(),
+      published_at: String(source?.publishedAt || "").trim(),
+    }];
+  });
+  if (!sources.length) return null;
+  return {
+    id: `${toolResultItemId(event?.data)}:web-sources`,
+    type: "web_sources",
+    content: JSON.stringify({ sources }),
+    status: "completed",
+  };
+}
+
 /** Normalize a DSH todo into the renderer's plan-step shape. */
 export function planStepFromTodo(todo) {
   return {
     step: String(todo?.content || ""),
     status: String(todo?.status || "pending"),
+  };
+}
+
+/** Project one product-memory recall from its logged DSH user/message source. */
+export function dshWorkMemoryItem(sessionId, event) {
+  const source = event?.data?.source;
+  const memory = source?.kind === "plugin" && source?.plugin === "dsh-work-memory"
+    ? source.dshWorkMemory
+    : null;
+  if (!memory || !["global_memory", "project_memory"].includes(memory.type)) return null;
+  return {
+    id: `dsh:${sessionId}:memory:${event?.seq ?? "context"}`,
+    type: memory.type,
+    content: JSON.stringify(memory.content || {}),
+    status: "completed",
   };
 }
 
@@ -143,6 +231,17 @@ export class DshEventAdapter {
         turn: { id: this.turnId, status: "inProgress", startedAt: Number(event.time || Date.now()) / 1000 },
       });
       return { kind: "turn-start", turnId: this.turnId };
+    }
+    if (event.type === "user/message") {
+      const item = dshWorkMemoryItem(threadId, event);
+      if (item) {
+        await this.emit("item/completed", {
+          threadId,
+          turnId: this.turnId,
+          item,
+        });
+      }
+      return null;
     }
     if (event.type === "assistant/chunk") {
       const chunk = event.data?.chunk || {};
@@ -199,6 +298,22 @@ export class DshEventAdapter {
         turnId: this.turnId,
         item,
       });
+      const webSources = webSourcesItemFromToolResult(event, view);
+      if (webSources) {
+        await this.emit("item/completed", {
+          threadId,
+          turnId: this.turnId,
+          item: webSources,
+        });
+      }
+      const generativeUi = generativeUiItemFromToolResult(event, callItem);
+      if (generativeUi) {
+        await this.emit("item/completed", {
+          threadId,
+          turnId: this.turnId,
+          item: generativeUi,
+        });
+      }
       const workspaceEvent = workspaceEventFromToolResult(event, callItem);
       if (workspaceEvent) {
         await this.emit("item/completed", {

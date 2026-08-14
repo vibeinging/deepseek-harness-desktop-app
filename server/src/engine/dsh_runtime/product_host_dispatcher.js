@@ -24,6 +24,29 @@ import {
   editProjectOfficeArtifact,
   inspectProjectOfficeArtifact,
 } from "../agents/office_artifact_service.js";
+import {
+  createCanvas,
+  createCanvasSuggestion,
+  editCanvas,
+  getCanvas,
+} from "../agents/canvas_store.js";
+import {
+  hashGenerativeUiDocument,
+  parseGenerativeUiDocument,
+} from "../agents/generative_ui_schema.js";
+import {
+  loadGlobalChatMemory,
+  summarizeGlobalChatMemory,
+} from "../agents/global_chat_memory.js";
+import {
+  loadProjectChatMemory,
+  summarizeProjectMemorySources,
+} from "../agents/project_chat_memory.js";
+import {
+  buildAppInstructionsMarkdown,
+  readAppInstructions,
+} from "../../app/agents/app_settings.js";
+import { buildProjectInstructionsMarkdown } from "../agents/workspace_context.js";
 
 const MAX_ITEMS = 200;
 
@@ -38,6 +61,12 @@ export const services = {
   createProjectOfficeArtifact,
   editProjectOfficeArtifact,
   inspectProjectOfficeArtifact,
+  createCanvas,
+  createCanvasSuggestion,
+  editCanvas,
+  getCanvas,
+  loadGlobalChatMemory,
+  loadProjectChatMemory,
 };
 
 /**
@@ -58,6 +87,7 @@ export function overrideServices(overrides) {
 const HANDLERS = Object.freeze({
   projectList: handleProjectList,
   conversationList: handleConversationList,
+  conversationMemory: handleConversationMemory,
   capabilitySnapshot: handleCapabilitySnapshot,
   skillList: handleSkillList,
   skillGet: handleRemovedPluginCapability,
@@ -66,6 +96,11 @@ const HANDLERS = Object.freeze({
   artifactOfficeInspect: handleArtifactOfficeInspect,
   artifactOfficeCreate: handleArtifactOfficeCreate,
   artifactOfficeEdit: handleArtifactOfficeEdit,
+  canvasInspect: handleCanvasInspect,
+  canvasCreate: handleCanvasCreate,
+  canvasEdit: handleCanvasEdit,
+  canvasSuggest: handleCanvasSuggest,
+  uiRender: handleUiRender,
 });
 
 function handleCapabilitySnapshot() {
@@ -318,6 +353,90 @@ async function handleConversationList({ db, resolveUserId, resolveProjectId, pay
   };
 }
 
+async function handleConversationMemory({
+  db,
+  resolveUserId,
+  resolveProjectId,
+  resolveAppSessionId,
+  payload,
+}) {
+  const userId = String(resolveUserId?.() || "").trim();
+  const projectId = String(resolveProjectId?.() || "").trim();
+  const appSessionId = String(resolveAppSessionId?.() || "").trim();
+  const query = String(payload?.query || "").trim().slice(0, 8_000);
+  if (!(userId && projectId && appSessionId && query)) return { text: "", presentation: null };
+  const session = await db.queryOne(
+    "SELECT action_type,session_config FROM sessions WHERE id=$1 AND project_id=$2 AND created_by=$3 AND deleted_at IS NULL LIMIT 1",
+    [appSessionId, projectId, userId],
+  ).catch(() => null);
+  if (!session) throw productRejected("conversationMemory 找不到绑定的 dsh-work Session");
+  let sessionConfig = {};
+  try {
+    sessionConfig = typeof session.session_config === "string"
+      ? JSON.parse(session.session_config)
+      : (session.session_config || {});
+  } catch {
+    sessionConfig = {};
+  }
+  const temporary = session.action_type === "temporary_chat" || sessionConfig.temporary === true;
+  const appInstructions = await readAppInstructions(db, userId);
+  const projectRow = projectId === "__chat__"
+    ? null
+    : await db.queryOne(
+      "SELECT instructions FROM projects WHERE id=$1 AND deleted_at IS NULL LIMIT 1",
+      [projectId],
+    ).catch(() => null);
+  const projectInstructions = String(projectRow?.instructions || "").trim();
+  const instructionText = [
+    buildAppInstructionsMarkdown(appInstructions),
+    buildProjectInstructionsMarkdown(projectInstructions),
+    temporary
+      ? "## Temporary conversation\n\n当前是临时对话。这里的内容不会进入普通对话历史，也不能作为其他对话的记忆来源。"
+      : "",
+  ].filter(Boolean).join("\n\n");
+  const instructions = {
+    text: instructionText,
+    scopes: {
+      application: Boolean(appInstructions),
+      project: Boolean(projectInstructions),
+      temporary,
+    },
+  };
+  if (projectId === "__chat__") {
+    const memory = await services.loadGlobalChatMemory({
+      db,
+      projectId,
+      userId,
+      currentSessionId: appSessionId,
+      query,
+      temporary,
+    });
+    const summary = summarizeGlobalChatMemory(memory);
+    return {
+      text: memory.text || "",
+      instructions,
+      presentation: memory.text
+        ? { type: "global_memory", content: summary }
+        : null,
+    };
+  }
+  if (temporary) return { text: "", instructions, presentation: null };
+  const memory = await services.loadProjectChatMemory({
+    db,
+    projectId,
+    userId,
+    currentSessionId: appSessionId,
+    query,
+  });
+  return {
+    text: memory.text || "",
+    instructions,
+    presentation: memory.text
+      ? { type: "project_memory", content: { sources: summarizeProjectMemorySources(memory.sources) } }
+      : null,
+  };
+}
+
 function productRejected(message) {
   const error = new Error(message);
   error.code = "product-rejected";
@@ -344,6 +463,27 @@ function boundOfficeRequest({ db, resolveUserId, resolveProjectId, resolveAppSes
 
 function officeSource(appSessionId) {
   return { sessionId: appSessionId };
+}
+
+function boundCanvasRequest({ db, resolveUserId, resolveProjectId, resolveAppSessionId }) {
+  const projectId = String(resolveProjectId?.() || "").trim();
+  const appSessionId = String(resolveAppSessionId?.() || "").trim();
+  if (!projectId || !appSessionId) throw productRejected("Canvas 工具需要活动项目和 dsh-work Session 绑定");
+  return {
+    projectId,
+    appSessionId,
+    userId: resolveUserId(),
+    ctx: {
+      query: db.query,
+      queryOne: db.queryOne,
+      transaction: db.transaction,
+      userId: resolveUserId(),
+    },
+  };
+}
+
+function canvasSource() {
+  return { type: "tool" };
 }
 
 function officeDocumentForModel(document) {
@@ -405,4 +545,88 @@ async function handleArtifactOfficeEdit(deps) {
     source: officeSource(appSessionId),
   });
   return { success: true, ...result };
+}
+
+async function handleCanvasInspect(deps) {
+  const { projectId, appSessionId, userId, ctx } = boundCanvasRequest(deps);
+  const canvasId = String(deps.payload?.canvas_id || "").trim();
+  if (!canvasId) throw productRejected("canvasInspect 需要 canvas_id");
+  const canvas = await services.getCanvas(ctx, { userId, sessionId: appSessionId, canvasId });
+  if (String(canvas?.project_id || "") !== projectId) throw productRejected("Canvas 不属于当前 DSH Session 绑定的项目");
+  return { success: true, project_id: projectId, canvas };
+}
+
+async function handleCanvasCreate(deps) {
+  const { projectId, appSessionId, userId, ctx } = boundCanvasRequest(deps);
+  const result = await services.createCanvas(ctx, {
+    userId,
+    sessionId: appSessionId,
+    title: deps.payload?.title,
+    kind: deps.payload?.kind,
+    language: deps.payload?.language,
+    content: typeof deps.payload?.content === "string" ? deps.payload.content : "",
+    changeSummary: deps.payload?.change_summary,
+    source: canvasSource(),
+    metadata: { created_by: "canvas_create" },
+  });
+  if (String(result?.canvas?.project_id || "") !== projectId) throw productRejected("创建的 Canvas 不属于当前 DSH Session 绑定的项目");
+  return { success: true, project_id: projectId, ...result };
+}
+
+async function handleCanvasEdit(deps) {
+  const { projectId, appSessionId, userId, ctx } = boundCanvasRequest(deps);
+  const canvasId = String(deps.payload?.canvas_id || "").trim();
+  const baseVersionId = String(deps.payload?.base_version_id || "").trim();
+  if (!canvasId || !baseVersionId) throw productRejected("canvasEdit 需要 canvas_id 和 base_version_id");
+  const result = await services.editCanvas(ctx, {
+    userId,
+    sessionId: appSessionId,
+    canvasId,
+    baseVersionId,
+    ...(typeof deps.payload?.content === "string"
+      ? { content: deps.payload.content }
+      : { operations: deps.payload?.operations }),
+    changeSummary: deps.payload?.change_summary,
+    source: canvasSource(),
+    metadata: { edited_by: "canvas_edit" },
+  });
+  if (String(result?.canvas?.project_id || "") !== projectId) throw productRejected("Canvas 不属于当前 DSH Session 绑定的项目");
+  return { success: true, project_id: projectId, ...result };
+}
+
+async function handleCanvasSuggest(deps) {
+  const { projectId, appSessionId, userId, ctx } = boundCanvasRequest(deps);
+  const canvasId = String(deps.payload?.canvas_id || "").trim();
+  const baseVersionId = String(deps.payload?.base_version_id || "").trim();
+  if (!canvasId || !baseVersionId) throw productRejected("canvasSuggest 需要 canvas_id 和 base_version_id");
+  const suggestion = await services.createCanvasSuggestion(ctx, {
+    userId,
+    sessionId: appSessionId,
+    canvasId,
+    baseVersionId,
+    start: deps.payload?.start,
+    end: deps.payload?.end,
+    selectedText: deps.payload?.selected_text,
+    replacementText: deps.payload?.replacement_text,
+    instruction: deps.payload?.instruction,
+    source: canvasSource(),
+  });
+  const canvas = await services.getCanvas(ctx, { userId, sessionId: appSessionId, canvasId });
+  if (String(canvas?.project_id || "") !== projectId) throw productRejected("Canvas 不属于当前 DSH Session 绑定的项目");
+  return { success: true, project_id: projectId, suggestion, canvas };
+}
+
+function handleUiRender({ resolveProjectId, resolveAppSessionId, payload }) {
+  const projectId = String(resolveProjectId?.() || "").trim();
+  const appSessionId = String(resolveAppSessionId?.() || "").trim();
+  if (!projectId || !appSessionId) throw productRejected("uiRender 需要活动项目和 dsh-work Session 绑定");
+  const { document, stats } = parseGenerativeUiDocument(payload, { allowedLocalRoots: [] });
+  return {
+    success: true,
+    project_id: projectId,
+    session_id: appSessionId,
+    generative_ui: document,
+    generative_ui_stats: stats,
+    document_hash: hashGenerativeUiDocument(document),
+  };
 }

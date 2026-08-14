@@ -9,7 +9,7 @@ import {
 } from '../../server/src/engine/agents/workspace_context.js';
 import { normalizeProjectSourceFolders } from '../../server/src/app/projects/source_folders.js';
 import { isProjectSourceFolderAvailable } from '../../server/src/engine/agents/project_source_folders.js';
-import { workspaceAccessRoots, workspaceCwd } from '../../server/src/engine/agents/workspace_paths.js';
+import { resolveWorkspace, workspaceAccessRoots, workspaceCwd } from '../../server/src/engine/agents/workspace_paths.js';
 
 function withTempDir(fn) {
   const dir = mkdtempSync(join(tmpdir(), 'dsh-workspace-context-'));
@@ -95,6 +95,20 @@ test('Agent uses only the explicit write target as cwd', () => {
       sourceFolders: [],
       runtimeRoot: runtime,
     }), runtime);
+  });
+});
+
+test('an existing DSH binding keeps its fixed absolute cwd across App conversation branches', () => {
+  withTempDir((dir) => {
+    const source = join(dir, 'source');
+    const fixed = join(dir, 'fixed');
+    mkdirSync(source);
+    const workspace = resolveWorkspace('project-1', 'branched-session', {
+      sourceFolders: [{ path: source, available: true, access_mode: 'write' }],
+      fixedCwd: fixed,
+    });
+    assert.equal(workspace.cwd, fixed);
+    assert.equal(realpathSync(workspace.cwd), realpathSync(fixed));
   });
 });
 

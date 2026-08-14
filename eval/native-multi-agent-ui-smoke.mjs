@@ -7,14 +7,19 @@ import path from 'node:path'
 import { openSession } from './lib/cdp.mjs'
 import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+import { encodeDshModelRoute } from '../server/src/engine/dsh_runtime/model_route.js'
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'native-multi-agent-ui-smoke-'))
 const stamp = Date.now()
-const conversationTitle = `原生协作验收 ${stamp}`
-const parentPrompt = `创建一个原生子任务并等待完成-${stamp}`
-const childPrompt = `返回子任务完成口令 child-ui-${stamp}`
+const conversationTitle = `DSH 协作验收 ${stamp}`
+const parentPrompt = `委派一个子任务并等待它完成-${stamp}`
+const childPrompt = `只返回子任务完成口令 child-ui-${stamp}`
 const childAnswer = `child-ui-done-${stamp}`
 const parentAnswer = `parent-ui-done-${stamp}`
+const providerId = 'native-multi-agent-ui-eval'
+const modelId = 'native-multi-agent-ui-model'
+const credentialRef = 'NATIVE_MULTI_AGENT_UI_API_KEY'
+const modelRoute = encodeDshModelRoute(providerId, modelId)
 
 process.env.DSH_EVAL_ISOLATED = '1'
 process.env.DSH_EVAL_HOME = evalHome
@@ -43,7 +48,7 @@ function toolName(body, suffix) {
 function sendToolCall(response, { id, name, arguments: args }) {
   chatChunk(response, {
     id: `chatcmpl_${id}`,
-    model: 'native-multi-agent-ui-model',
+    model: modelId,
     choices: [{
       index: 0,
       delta: {
@@ -60,26 +65,22 @@ function sendToolCall(response, { id, name, arguments: args }) {
   })
   chatChunk(response, {
     id: `chatcmpl_${id}`,
-    model: 'native-multi-agent-ui-model',
+    model: modelId,
     choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }],
   })
   response.end('data: [DONE]\n\n')
 }
 
-function sendText(response, id, text) {
+function sendText(response, id, value) {
   chatChunk(response, {
     id: `chatcmpl_${id}`,
-    model: 'native-multi-agent-ui-model',
-    choices: [{ index: 0, delta: { role: 'assistant', content: text }, finish_reason: null }],
+    model: modelId,
+    choices: [{ index: 0, delta: { role: 'assistant', content: value }, finish_reason: null }],
   })
   chatChunk(response, {
     id: `chatcmpl_${id}`,
-    model: 'native-multi-agent-ui-model',
-    choices: [{
-      index: 0,
-      delta: {},
-      finish_reason: 'stop',
-    }],
+    model: modelId,
+    choices: [{ index: 0, delta: {}, finish_reason: 'stop' }],
     usage: { prompt_tokens: 20, completion_tokens: 4, total_tokens: 24 },
   })
   response.end('data: [DONE]\n\n')
@@ -88,7 +89,6 @@ function sendText(response, id, text) {
 async function startFakeModel() {
   const requests = []
   const handlerErrors = []
-  let childThreadId = ''
   const server = createServer(async (request, response) => {
     try {
       if (request.method !== 'POST' || request.url !== '/v1/chat/completions') {
@@ -106,48 +106,33 @@ async function startFakeModel() {
         connection: 'keep-alive',
       })
 
-      const lastUser = messageText(lastUserMessage(body)?.content)
       const serializedMessages = JSON.stringify(body.messages || [])
-      if (lastUser.includes(childPrompt)) {
+      if (serializedMessages.includes(childPrompt) && !serializedMessages.includes(parentPrompt)) {
         sendText(response, 'child_ui_done', childAnswer)
         return
       }
 
       assert.ok(serializedMessages.includes(parentPrompt), `unexpected model request: ${serializedMessages}`)
-      if (!serializedMessages.includes('call_spawn_ui_child')) {
-        const spawnAgent = toolName(body, 'spawn_agent')
-        assert.ok(spawnAgent, `spawn_agent is unavailable: ${JSON.stringify(body.tools || [])}`)
+      if (!serializedMessages.includes('call_dsh_subagent')) {
+        const subagent = toolName(body, 'subagent')
+        assert.ok(subagent, `DSH subagent tool is unavailable: ${JSON.stringify(body.tools || [])}`)
         sendToolCall(response, {
-          id: 'call_spawn_ui_child',
-          name: spawnAgent,
-          arguments: { message: childPrompt, fork_context: true },
+          id: 'call_dsh_subagent',
+          name: subagent,
+          arguments: {
+            description: '桌面协作验收',
+            prompt: childPrompt,
+            run_in_background: false,
+          },
         })
         return
       }
 
-      if (!serializedMessages.includes('call_wait_ui_child')) {
-        const spawnOutput = (body.messages || []).find((message) => (
-          message?.role === 'tool' && message?.tool_call_id === 'call_spawn_ui_child'
-        ))
-        const spawnContent = String(spawnOutput?.content || '')
-        assert.doesNotMatch(spawnContent, /collab spawn failed/i, spawnContent)
-        childThreadId = JSON.parse(spawnContent)?.agent_id || ''
-        assert.ok(childThreadId, `spawn_agent did not return agent_id: ${spawnContent}`)
-        const waitAgent = toolName(body, 'wait_agent')
-        assert.ok(waitAgent, `wait_agent is unavailable: ${JSON.stringify(body.tools || [])}`)
-        sendToolCall(response, {
-          id: 'call_wait_ui_child',
-          name: waitAgent,
-          arguments: { targets: [childThreadId], timeout_ms: 10_000 },
-        })
-        return
-      }
-
-      const waitOutput = (body.messages || []).find((message) => (
-        message?.role === 'tool' && message?.tool_call_id === 'call_wait_ui_child'
+      const toolOutput = (body.messages || []).find((message) => (
+        message?.role === 'tool' && message?.tool_call_id === 'call_dsh_subagent'
       ))
-      assert.match(String(waitOutput?.content || ''), new RegExp(childAnswer))
-      sendText(response, 'parent_ui_done', parentAnswer)
+      const toolContent = String(toolOutput?.content || '')
+      sendText(response, 'parent_ui_done', toolContent.includes(childAnswer) ? parentAnswer : `parent-ui-child-error:${toolContent}`)
     } catch (error) {
       handlerErrors.push(error)
       if (!response.headersSent) response.writeHead(500, { 'content-type': 'text/plain' })
@@ -162,7 +147,6 @@ async function startFakeModel() {
     baseUrl: `http://127.0.0.1:${server.address().port}/v1`,
     requests,
     handlerErrors,
-    childThreadId: () => childThreadId,
     close: async () => {
       server.closeAllConnections?.()
       await new Promise((resolve) => server.close(resolve))
@@ -172,123 +156,106 @@ async function startFakeModel() {
 
 let session = null
 let fakeModel = null
+let modelProviderSaved = false
 try {
   fakeModel = await startFakeModel()
   session = await openSession({ port: 9368 })
   const driver = makeDriver(session)
   const ui = makeUiDriver(session)
   await driver.login()
-  await session.evalJs(`
-    localStorage.setItem('dsh:onboarding:completed:v1', 'true')
-    return true
-  `)
+  await session.evalJs(`localStorage.setItem('dsh:onboarding:completed:v1', 'true'); return true;`)
 
-  const model = await driver.raw.api('POST', '/api/llm_model/create', {
-    model_name: 'native-multi-agent-ui-model',
-    display_name: '原生协作桌面假模型',
-    category: 'PRIMARY',
-    api_base: fakeModel.baseUrl,
-    api_key: 'native-multi-agent-ui-key',
-    api_format: 'chat_completions',
-    supports_streaming: true,
+  const snapshot = await driver.raw.api('GET', '/api/dsh/models')
+  const llmNamespace = snapshot.json?.data?.namespaces?.find((item) => item.ns === 'llm-pi-ai')
+  assert.equal(typeof llmNamespace?.revision, 'number', JSON.stringify(snapshot.json))
+  const credential = await driver.raw.api('POST', '/api/dsh/models/credentials', {
+    ref: credentialRef,
+    value: 'native-multi-agent-ui-key',
   })
-  assert.equal(model.status, 200, JSON.stringify(model.json))
+  assert.equal(credential.status, 200, JSON.stringify(credential.json))
+  const configuredModel = await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+    ns: 'llm-pi-ai',
+    expected_revision: llmNamespace.revision,
+    ops: [{
+      op: 'set',
+      path: ['providers', providerId],
+      value: {
+        displayName: 'DSH 协作桌面假模型',
+        apiKeyEnv: credentialRef,
+        api: 'openai-completions',
+        baseURL: fakeModel.baseUrl,
+        models: [{ id: modelId, name: 'DSH 协作桌面假模型' }],
+      },
+    }],
+  })
+  assert.equal(configuredModel.status, 200, JSON.stringify(configuredModel.json))
+  modelProviderSaved = true
 
   const result = await driver.askAgent('__chat__', parentPrompt, {
     title: conversationTitle,
-    timeoutMs: 30_000,
+    model: modelRoute,
+    timeoutMs: 45_000,
   })
   assert.deepEqual(fakeModel.handlerErrors, [])
-  assert.equal(fakeModel.requests.length, 4)
-  const childThreadId = fakeModel.childThreadId()
-  assert.ok(childThreadId)
-  assert.ok(result.blocks.some((block) => {
-    if (block.type !== 'delegated_subtask') return false
-    try {
-      const payload = JSON.parse(block.content)
-      return payload.source === 'app-server' && payload.child_thread_ids?.includes(childThreadId)
-    } catch {
-      return false
-    }
-  }), JSON.stringify(result.blocks))
-  assert.ok(result.blocks.some((block) => String(block.content || '').includes(parentAnswer)))
+  assert.equal(fakeModel.requests.length, 3, JSON.stringify(fakeModel.requests.map((request) => ({
+    messages: (request.messages || []).map((message) => ({ role: message.role, text: messageText(message.content).slice(0, 200) })),
+  }))))
+  const childRequest = fakeModel.requests.find((request) => (
+    JSON.stringify(request.messages || []).includes(childPrompt)
+    && !JSON.stringify(request.messages || []).includes(parentPrompt)
+  ))
+  assert.equal(childRequest?.model, modelId)
+  assert.ok(result.blocks.some((block) => (
+    block.type === 'tool' && block.metadata?.tool_name === 'subagent'
+    && String(block.metadata?.resultText || '').includes(childAnswer)
+  )), JSON.stringify(result.blocks))
+  assert.ok(result.blocks.some((block) => String(block.content || '').includes(parentAnswer)), JSON.stringify(result.blocks))
 
-  const runs = await driver.raw.api('GET', `/api/agents/projects/__chat__/runs?session_id=${encodeURIComponent(result.sid)}`)
-  assert.equal(runs.status, 200, JSON.stringify(runs.json))
-  const runId = runs.json?.data?.items?.[0]?.id || ''
-  assert.ok(runId)
-  const detail = await driver.raw.api('GET', `/api/agents/runs/${runId}`)
-  assert.equal(detail.status, 200, JSON.stringify(detail.json))
-  const subagent = (detail.json?.data?.subagents || []).find((item) => item.thread_id === childThreadId)
-  assert.equal(subagent?.status, 'completed')
-  assert.equal(subagent?.message, childAnswer)
-  const childDetail = await driver.raw.api('GET', `/api/agents/runs/${runId}/subagents/${childThreadId}`)
-  assert.equal(childDetail.status, 200, JSON.stringify(childDetail.json))
-  assert.match(JSON.stringify(childDetail.json?.data?.thread || {}), new RegExp(childAnswer))
+  const trajectory = await driver.raw.api('GET', `/api/agent/projects/__chat__/threads/${result.sid}/dsh-trajectory`)
+  assert.equal(trajectory.status, 200, JSON.stringify(trajectory.json))
+  assert.equal(trajectory.json?.data?.source, 'session.history')
+  const events = trajectory.json?.data?.events || []
+  assert.ok(events.some((entry) => entry?.event?.type === 'tool/call' && entry.event.data?.name === 'subagent'))
+  assert.ok(events.some((entry) => (
+    entry?.event?.type === 'tool/result'
+    && JSON.stringify(entry.event.data || '').includes(childAnswer)
+  )), JSON.stringify(events))
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(`[data-agent-conv-id="${result.sid}"]`, { timeout: 30_000 })
   await ui.click(`[data-agent-conv-id="${result.sid}"]`)
-  try {
-    await ui.waitUntil(`async () => document.body.innerText.includes(${JSON.stringify(parentAnswer)})`, {
-      timeout: 15_000,
-      label: '对话显示原生协作最终回答',
-    })
-    const processSelector = await session.evalJs(`
-      const button = [...document.querySelectorAll('[data-message-role="assistant"] button')]
-        .find((item) => item.textContent?.includes('已处理') && item.getAttribute('aria-expanded') === 'false')
-      if (!button) return null
-      button.setAttribute('data-native-collaboration-process', 'true')
-      return '[data-native-collaboration-process="true"]'
-    `)
-    assert.equal(typeof processSelector, 'string')
-    await ui.click(processSelector)
-    await ui.waitFor('[data-native-collaboration="true"]', { timeout: 10_000 })
-  } catch (error) {
-    const messages = await driver.raw.api('GET', `/api/projects/__chat__/sessions/${result.sid}/messages`).catch(() => null)
-    const page = await session.evalJs(`return {
-      text: document.body.innerText.slice(0, 8000),
-      collaboration: [...document.querySelectorAll('[data-native-collaboration]')].map((item) => item.outerHTML),
-      sessionId: document.querySelector('[data-agent-session-id]')?.getAttribute('data-agent-session-id') || null,
-    }`).catch(() => null)
-    console.error('[native-multi-agent-ui-smoke] replay diagnostics', JSON.stringify({ messages: messages?.json, page }))
-    throw error
-  }
-
+  await ui.waitUntil(`async () => document.body.innerText.includes(${JSON.stringify(parentAnswer)})`, {
+    timeout: 15_000,
+    label: '对话显示 DSH 协作最终回答',
+  })
+  await ui.fill('[data-testid="agent-message-input"]', '/runs')
+  await ui.waitFor('[data-slash-menu]', { timeout: 10_000 })
   await session.evalJs(`
-    const { eventBus, EVENT_TYPES } = await import('/src/utils/eventBus.ts')
-    eventBus.emit(EVENT_TYPES.OPEN_AGENT_REVIEW, { view: 'runs', runId: ${JSON.stringify(runId)} })
-    return true
+    const command = [...document.querySelectorAll('[data-slash-menu] button')]
+      .find((button) => button.innerText.includes('/runs'));
+    if (!command) throw new Error('找不到 /runs 命令');
+    command.click();
+    return true;
   `)
-  await ui.waitFor('[data-run-center]', { timeout: 15_000 })
-  await ui.waitFor(`[data-run-id="${runId}"]`, { timeout: 15_000 })
-  await ui.waitFor(`[data-subagent-thread-id="${childThreadId}"][data-subagent-status="completed"]`, { timeout: 15_000 })
+  await ui.waitFor('[data-dsh-trajectory][data-dsh-trajectory-source="session.history"]', { timeout: 15_000 })
+  await ui.waitFor('[data-dsh-trajectory-event][data-dsh-event-type="tool/call"]', { timeout: 15_000 })
+  await ui.waitFor('[data-dsh-trajectory-event][data-dsh-event-type="tool/result"]', { timeout: 15_000 })
+  assert.equal(await session.evalJs(`return document.querySelector('[data-dsh-trajectory]')?.innerText.includes('subagent') || false`), true)
 
-  const inspectClicked = await session.evalJs(`
-    const card = document.querySelector('[data-subagent-thread-id="${childThreadId}"]')
-    const button = [...(card?.querySelectorAll('button') || [])].find((item) => item.textContent?.trim() === '查看')
-    if (!button) return false
-    button.click()
-    return true
-  `)
-  assert.equal(inspectClicked, true)
-  try {
-    await ui.waitUntil(`async () => {
-      const detail = document.querySelector('[data-native-subagent-detail]')
-      return Boolean(detail && detail.textContent?.includes(${JSON.stringify(childAnswer)}))
-    }`, { timeout: 10_000, label: '运行中心可回查子任务结果' })
-  } catch (error) {
-    const page = await session.evalJs(`return {
-      text: document.body.innerText.slice(-8000),
-      detail: document.querySelector('[data-native-subagent-detail]')?.outerHTML || null,
-    }`).catch(() => null)
-    console.error('[native-multi-agent-ui-smoke] subagent detail diagnostics', JSON.stringify({ child: childDetail.json, page }))
-    throw error
-  }
-
-  console.log('[native-multi-agent-ui-smoke] PASS 原生创建/等待/父子 Thread/对话状态/运行中心回查')
+  console.log('[native-multi-agent-ui-smoke] PASS DSH 子任务委派/等待/父级回答/session.history 轨迹')
 } finally {
+  if (session && modelProviderSaved) {
+    const driver = makeDriver(session)
+    await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+      ns: 'llm-pi-ai',
+      ops: [{ op: 'unset', path: ['providers', providerId] }],
+    }).catch(() => null)
+  }
+  if (session) {
+    const driver = makeDriver(session)
+    await driver.raw.api('DELETE', `/api/dsh/models/credentials/${encodeURIComponent(credentialRef)}`).catch(() => null)
+  }
   try { await session?.close() } catch { /* ignore */ }
   try { await fakeModel?.close() } catch { /* ignore */ }
-  rmSync(evalHome, { recursive: true, force: true })
+  if (process.env.DSH_EVAL_RETAIN !== '1') rmSync(evalHome, { recursive: true, force: true })
 }

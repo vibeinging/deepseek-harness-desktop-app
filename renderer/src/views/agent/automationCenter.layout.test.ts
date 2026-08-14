@@ -10,9 +10,11 @@ const workstationSource = readFileSync(
 )
 
 describe('agent automation center layout contract', () => {
-  it('keeps the scheduled-task surface in the primary navigation', () => {
-    expect(workstationSource).toContain("useState<'runs' | 'trace'>('runs')")
+  it('keeps the dormant scheduled-task surface out of the DSH trajectory workbench', () => {
+    expect(workstationSource).toContain('data-dsh-trajectory')
+    expect(workstationSource).toContain('getDshSessionTrajectory')
     expect(workstationSource).not.toContain('data-workstation-view="automations"')
+    expect(workstationSource).not.toContain('<AutomationCenter')
     expect(centerSource).toContain('data-automation-center')
     expect(centerSource).toContain('data-scheduled-tasks-page')
     expect(centerSource).toContain('data-automation-create-open')
@@ -24,8 +26,8 @@ describe('agent automation center layout contract', () => {
 
   it('offers templates and the Codex-hosted local automation boundary', () => {
     expect(centerSource).toContain("id: 'daily-brief'")
-    expect(centerSource).toContain("id: 'metric-anomaly'")
-    expect(centerSource).toContain("id: 'data-readiness'")
+    expect(centerSource).toContain("id: 'project-risk'")
+    expect(centerSource).toContain("id: 'workspace-readiness'")
     expect(centerSource).toContain("{ value: 'once', label: '运行一次' }")
     expect(centerSource).toContain("{ value: 'rrule', label: '自定义重复规则' }")
     expect(centerSource).toContain("{ value: 'event', label: '本地事件触发' }")

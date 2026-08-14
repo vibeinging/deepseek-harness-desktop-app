@@ -1,13 +1,7 @@
-import { useMemo, type ReactNode } from 'react'
-import {
-  SlotCore,
-  type HostObservable,
-  type LiveSlotNode,
-  type PropsRenderSlots,
-  type SessionMaybeProvideInfo,
-  type SlotRendererHost
-} from '@deepseek-ai/dsh-client-ui-slots'
-import { createSlotRenderer } from '@deepseek-ai/dsh-client-web-react'
+import { useEffect, type ReactNode } from 'react'
+import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import { useDshClientHost } from '@/dsh-client/DshClientHost'
 import {
   WORKBENCH_SLOT,
   type WorkbenchContribution
@@ -15,24 +9,13 @@ import {
 import type { WorkbenchTab } from './workbenchTabs'
 import styles from './agent.module.scss'
 
-interface WorkbenchRootOwner {
-  opened: readonly WorkbenchTab[]
-  active: WorkbenchTab | null
-  renderContribution: (tool: WorkbenchContribution) => ReactNode
-}
-
-interface WorkbenchToolOwner {
+export interface WorkbenchToolOwner {
   active: WorkbenchTab | null
   renderContribution: (tool: WorkbenchContribution) => ReactNode
 }
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface SlotMap {
-    root: {
-      kind: 'single'
-      scope: 'root'
-      owner: WorkbenchRootOwner
-    }
     'agent.workbench.tool': {
       kind: 'list'
       scope: 'root'
@@ -41,104 +24,107 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 }
 
-type WorkbenchRootProps = WorkbenchRootOwner & PropsRenderSlots<typeof WORKBENCH_SLOT>
-
-export interface WorkbenchSlotRuntime {
-  render(owner: WorkbenchRootOwner): ReactNode
-  snapshot(): LiveSlotNode[]
-}
-
-interface WorkbenchSlotPanelsProps extends WorkbenchRootOwner {
+interface WorkbenchSlotPanelsProps extends WorkbenchToolOwner {
   tools: readonly WorkbenchContribution[]
+  opened: readonly WorkbenchTab[]
 }
 
-const renderer = createSlotRenderer()
+type WorkbenchSlotRegistrar = Pick<ClientContext['slots'], 'register'>
+type WorkbenchPanelProps = PropsRuntime<typeof WORKBENCH_SLOT>
+type WorkbenchPanelComponent = (props: WorkbenchPanelProps) => ReactNode
 
-function constantObservable<T>(value: T): HostObservable<T> {
-  return {
-    getSnapshot: () => value,
-    subscribe: () => () => undefined
-  }
-}
-
-const emptySessionInfo: SessionMaybeProvideInfo = {
-  sessionId: undefined,
-  hooks: {},
-  props: {}
-}
-
-function WorkbenchRoot({ opened, active, renderContribution, renderSlot }: WorkbenchRootProps) {
+function WorkbenchToolPanelView({
+  tool,
+  active,
+  renderContribution
+}: WorkbenchToolOwner & { tool: WorkbenchContribution }) {
   return (
-    <div className={styles.workbenchTabPanels} data-workbench-slot-runtime="dsh">
-      {opened.map((tab) => renderSlot(WORKBENCH_SLOT, {
-        active,
-        renderContribution
-      }, { only: tab }))}
+    <div
+      id={`workbench-panel-${tool.id}`}
+      className={styles.workbenchTabPanel}
+      role="tabpanel"
+      aria-labelledby={`workbench-tab-${tool.id}`}
+      data-workbench-panel={tool.id}
+      data-workbench-component={tool.component}
+      data-workbench-source-bundle={tool.packageName}
+      hidden={active !== tool.id}
+    >
+      {renderContribution(tool)}
     </div>
   )
 }
 
-/** Assemble the Profile roster into the official DSH Slot registry and React renderer. */
-export function createWorkbenchSlotRuntime(
-  tools: readonly WorkbenchContribution[]
-): WorkbenchSlotRuntime {
-  const core = new SlotCore()
-  core.register({
-    name: 'root',
-    registrant: 'dsh-work',
-    children: {
-      [WORKBENCH_SLOT]: { kind: 'list', scope: 'root' }
-    }
-  }, WorkbenchRoot)
-
-  for (const tool of tools) {
-    core.register({
-      name: WORKBENCH_SLOT,
-      id: tool.id,
-      order: tool.order,
-      label: tool.label,
-      registrant: tool.packageName
-    }, ({ active, renderContribution }: WorkbenchToolOwner) => (
-      <div
-        id={`workbench-panel-${tool.id}`}
-        className={styles.workbenchTabPanel}
-        role="tabpanel"
-        aria-labelledby={`workbench-tab-${tool.id}`}
-        data-workbench-panel={tool.id}
-        data-workbench-component={tool.component}
-        data-workbench-source-bundle={tool.packageName}
-        hidden={active !== tool.id}
-      >
-        {renderContribution(tool)}
-      </div>
-    ))
-  }
-
-  const host: SlotRendererHost = {
-    subscribe: (key, notify) => core.subscribe(key, notify),
-    getVersion: (key) => core.getVersion(key),
-    entriesOf: (key) => core.entries(key),
-    entriesOfSlot: (key) => core.entriesOfSlot(key),
-    reportEntryError: (key, entry, error, info) => core.reportEntryError(key, entry, error, info),
-    specOf: (key) => core.specDynamic(key),
-    isLive: (entry) => core.isLive(entry),
-    storeOf: () => undefined,
-    sessions: {
-      list: constantObservable([]),
-      provideInfo: constantObservable(emptySessionInfo)
-    },
-    workspaces: {
-      list: constantObservable([])
-    }
-  }
-
-  return {
-    render: (owner) => renderer.renderRoot(host, owner),
-    snapshot: () => core.snapshot('root')
+function createWorkbenchPanel(tool: WorkbenchContribution): WorkbenchPanelComponent {
+  return function WorkbenchToolPanel(props) {
+    return <WorkbenchToolPanelView tool={tool} {...props} />
   }
 }
 
-export function WorkbenchSlotPanels({ tools, ...owner }: WorkbenchSlotPanelsProps) {
-  const runtime = useMemo(() => createWorkbenchSlotRuntime(tools), [tools])
-  return runtime.render(owner)
+/** Register one Profile product roster into the active DSH Client Slot fiber. */
+export function registerWorkbenchContributions(
+  slots: WorkbenchSlotRegistrar,
+  tools: readonly WorkbenchContribution[]
+): () => void {
+  const disposers: Array<() => void> = []
+  try {
+    for (const tool of tools) {
+      disposers.push(slots.register({
+        name: WORKBENCH_SLOT,
+        id: tool.id,
+        order: tool.order,
+        label: tool.label
+      }, createWorkbenchPanel(tool)))
+    }
+  } catch (error) {
+    for (const dispose of disposers.reverse()) dispose()
+    throw error
+  }
+  return () => {
+    for (const dispose of disposers.reverse()) dispose()
+  }
+}
+
+function StandaloneWorkbenchPanels({
+  tools,
+  opened,
+  active,
+  renderContribution
+}: WorkbenchSlotPanelsProps) {
+  return (
+    <div className={styles.workbenchTabPanels} data-workbench-slot-runtime="standalone">
+      {opened.map((tab) => {
+        const tool = tools.find((candidate) => candidate.id === tab)
+        if (!tool) return null
+        return (
+          <WorkbenchToolPanelView
+            key={tab}
+            tool={tool}
+            active={active}
+            renderContribution={renderContribution}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+/** Render workbench contributions through the root-authorized DSH renderSlot face. */
+export function WorkbenchSlotPanels({ tools, opened, ...owner }: WorkbenchSlotPanelsProps) {
+  const host = useDshClientHost()
+
+  useEffect(() => {
+    if (!host) return
+    return registerWorkbenchContributions(host.slots, tools)
+  }, [host, tools])
+
+  if (!host) {
+    return <StandaloneWorkbenchPanels tools={tools} opened={opened} {...owner} />
+  }
+
+  const renderSlot: PropsRenderSlots<typeof WORKBENCH_SLOT>['renderSlot'] = host.renderSlot
+  return (
+    <div className={styles.workbenchTabPanels} data-workbench-slot-runtime="dsh-client">
+      {opened.map((tab) => renderSlot(WORKBENCH_SLOT, owner, { only: tab }))}
+    </div>
+  )
 }

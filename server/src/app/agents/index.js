@@ -19,7 +19,7 @@ export { cleanupRunRetentionDiagnostic, prepareRunRetentionDiagnostic } from "./
 export { diagnoseRunWriteback } from "./run_writeback_diagnostics.js";
 export { diagnoseQueryExecutionEvidence, replaceQueryEvidenceDiagnosticRows } from "./query_evidence_diagnostics.js";
 export { getRunEvidenceBundle, listRunEvidenceBundles, rerunRunEvidenceBundle } from "./evidence_bundles.js";
-export { getAgentRuntimeStatus, probeAgentRuntime } from "./agent_runtime.js";
+export { getAgentRuntimeStatus, getDshClientSurface, probeAgentRuntime } from "./agent_runtime.js";
 export { getAppInstructions, updateAppInstructions } from "./app_settings.js";
 
 const MAX_PROJECT_RULES_LENGTH = 60_000;

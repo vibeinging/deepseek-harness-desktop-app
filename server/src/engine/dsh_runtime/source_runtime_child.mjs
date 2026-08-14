@@ -30,7 +30,10 @@ async function main() {
   const { runProfile } = await import(pathToFileURL(profileBootPath).href);
   const clientPatch = fileURLToPath(new URL("./desktop_web.patch.yml", import.meta.url));
   loadEnv("dsh-work", environmentDir);
-  await prepareTrustedProfilePlugins({ appBootPath });
+  await prepareTrustedProfilePlugins({
+    appBootPath,
+    installAnchor: process.env.DSH_RUNTIME_INSTALL_ANCHOR,
+  });
   await runProfile({
     profile: "web",
     patchFiles: [clientPatch],

@@ -476,10 +476,7 @@ export default function BrowserWorkspace({ active = true, onUsePage }: BrowserWo
           <input
             autoFocus
             value={findText}
-            onChange={(event) => {
-              setFindText(event.target.value)
-              void run(() => api.browserWorkspaceFind?.(activeTab?.id || '', event.target.value, true) as Promise<BrowserWorkspaceState>)
-            }}
+            onChange={(event) => setFindText(event.target.value)}
             placeholder="在页面中查找"
             aria-label="在页面中查找"
           />

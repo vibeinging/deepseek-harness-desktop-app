@@ -132,6 +132,8 @@ test('temporary chat uses an ephemeral runtime and skips durable message project
   assert.match(workspaceAgent, /temporary \? getTemporaryDshRuntimeLease\(sessionId\) : null/);
   assert.match(temporaryRuntime, /DSH_RUNTIME_SESSION_ROOT/);
   assert.match(temporaryRuntime, /DSH_RUNTIME_STORAGE_ROOT/);
+  assert.match(temporaryRuntime, /DSH_DESKTOP_WEB_PORT:\s*["']0["']/);
+  assert.match(desktopPatch, /DSH_DESKTOP_WEB_PORT/);
   assert.match(desktopPatch, /process\.env\.DSH_RUNTIME_SESSION_ROOT \|\| dshHomePath\('sessions'\)/);
   assert.match(desktopPatch, /process\.env\.DSH_RUNTIME_STORAGE_ROOT \|\| dshHomePath\('storages'\)/);
   assert.match(

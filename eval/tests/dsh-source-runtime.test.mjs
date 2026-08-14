@@ -107,7 +107,10 @@ test("every DSH unary request uses the official loopback Web ApiProxy", async ()
       }), { status: 200, headers: { "content-type": "application/json" } });
     },
   });
-  client.waitForClientSurface = async () => "http://127.0.0.1:3080/";
+  client.waitForClientSurface = async () => {
+    client.clientSurface = "http://127.0.0.1:3080/";
+    return client.clientSurface;
+  };
 
   const result = await client.request("workspace.create", { path: "/repo" }, { rpcId: "rpc-1" });
 
@@ -121,6 +124,47 @@ test("every DSH unary request uses the official loopback Web ApiProxy", async ()
   assert.equal(result.workspace.workspaceId, "workspace-1");
 });
 
+test("DSH command requests use the official Typert Remote envelope", async () => {
+  const requests = [];
+  const client = new DshRuntimeClient({
+    fetch: async (url, init) => {
+      requests.push({ url: String(url), init });
+      const request = JSON.parse(init.body);
+      return new Response(JSON.stringify({
+        type: "server-response",
+        rpcId: request.rpcId,
+        result: {
+          ok: true,
+          value: { commandId: "permission", result: { kind: "success" } },
+        },
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    },
+  });
+  client.waitForClientSurface = async () => {
+    client.clientSurface = "http://127.0.0.1:3080/";
+    return client.clientSurface;
+  };
+
+  const result = await client.requestRemote("commands/execute", {
+    agentId: "session-1",
+    line: "/permission read-only",
+  }, { rpcId: "rpc-command-1" });
+
+  assert.equal(requests[0].url, "http://127.0.0.1:3080/api/commands/execute");
+  assert.deepEqual(JSON.parse(requests[0].init.body), {
+    type: "client-request",
+    rpcId: "rpc-command-1",
+    method: "commands/execute",
+    payload: {
+      args: {
+        agentId: "session-1",
+        line: "/permission read-only",
+      },
+    },
+  });
+  assert.deepEqual(result, { commandId: "permission", result: { kind: "success" } });
+});
+
 test("DSH interaction responses use the official /api/respond envelope", async () => {
   const requests = [];
   const client = new DshRuntimeClient({
@@ -132,7 +176,10 @@ test("DSH interaction responses use the official /api/respond envelope", async (
       });
     },
   });
-  client.waitForClientSurface = async () => "http://127.0.0.1:3080/";
+  client.waitForClientSurface = async () => {
+    client.clientSurface = "http://127.0.0.1:3080/";
+    return client.clientSurface;
+  };
 
   assert.deepEqual(await client.respond("approval-1", { outcome: "rejected" }), { accepted: true });
   assert.equal(requests[0].url, "http://127.0.0.1:3080/api/respond");
@@ -167,6 +214,7 @@ class FakeWebSocket extends EventTarget {
 
 test("DSH runtime opens current mux and host WebSockets before reporting ready", async () => {
   FakeWebSocket.sockets = [];
+  const apiMethods = [];
   const child = new EventEmitter();
   child.connected = true;
   child.send = (message, callback) => {
@@ -189,9 +237,24 @@ test("DSH runtime opens current mux and host WebSockets before reporting ready",
       return child;
     },
     WebSocket: FakeWebSocket,
+    fetch: async (_url, init) => {
+      const request = JSON.parse(init.body);
+      apiMethods.push(request.method);
+      const value = request.method === "settings.describe"
+        ? { namespaces: [{ ns: "ui-theme", revision: 0, value: { preference: "system" } }] }
+        : { value: { preference: "dark" } };
+      return new Response(JSON.stringify({
+        rpcId: request.rpcId,
+        result: { ok: true, value },
+      }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
   });
 
   await client.start();
+  assert.deepEqual(apiMethods, ["settings.describe", "settings.mutate"]);
   assert.deepEqual(FakeWebSocket.sockets.map((socket) => socket.url).sort(), [
     "ws://127.0.0.1:3080/api/events.host",
     "ws://127.0.0.1:3080/api/events.mux",
@@ -305,6 +368,99 @@ test("DSH event adapter projects successful Office writes into workspace events"
   assert.equal(event.params.item.data.event, "artifact_edited");
   assert.equal(event.params.item.data.project_id, "project-1");
   assert.equal(event.params.item.data.session_id, "app-session-1");
+});
+
+test("DSH event adapter projects a successful Canvas Site edit into the Site workspace", async () => {
+  const notifications = [];
+  const adapter = new DshEventAdapter({
+    sessionId: "s-canvas",
+    emit: async (method, params) => { notifications.push({ method, params }); },
+  });
+  await adapter.handle({ type: "turn/start", seq: 1, data: { turn: 1 } });
+  await adapter.handle({
+    type: "tool/call",
+    seq: 2,
+    data: {
+      callId: "canvas-call",
+      name: "canvas_edit",
+      arguments: '{"canvas_id":"canvas-1","base_version_id":"v1","content":"<html></html>"}',
+    },
+  });
+  await adapter.handle({
+    type: "tool/result",
+    seq: 3,
+    data: {
+      message: {
+        source: { callId: "canvas-call" },
+        content: [{
+          type: "tool-result",
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              project_id: "project-1",
+              canvas: {
+                id: "canvas-1",
+                kind: "site",
+                project_id: "project-1",
+                session_id: "app-session-1",
+                current_version: { id: "v2" },
+              },
+            }),
+          }],
+        }],
+      },
+    },
+  });
+  const event = notifications.find((entry) => entry.params?.item?.type === "workspaceEvent");
+  assert.equal(event.method, "item/completed");
+  assert.equal(event.params.item.data.event, "site_updated");
+  assert.equal(event.params.item.data.canvas_id, "canvas-1");
+  assert.equal(event.params.item.data.session_id, "app-session-1");
+});
+
+test("DSH event adapter projects validated ui_render results into structured UI", async () => {
+  const notifications = [];
+  const adapter = new DshEventAdapter({
+    sessionId: "s-ui",
+    emit: async (method, params) => { notifications.push({ method, params }); },
+  });
+  await adapter.handle({ type: "turn/start", seq: 1, data: { turn: 1 } });
+  await adapter.handle({
+    type: "tool/call",
+    seq: 2,
+    data: { callId: "ui-call", name: "ui_render", arguments: '{"surface_id":"status"}' },
+  });
+  await adapter.handle({
+    type: "tool/result",
+    seq: 3,
+    data: {
+      message: {
+        source: { callId: "ui-call" },
+        content: [{
+          type: "tool-result",
+          content: [{
+            type: "text",
+            text: JSON.stringify({
+              success: true,
+              document_hash: `sha256:${"a".repeat(64)}`,
+              generative_ui: {
+                schema_version: 1,
+                surface_id: "status",
+                revision: 1,
+                summary: "Ready",
+                root: { id: "ready", type: "text", text: "Ready" },
+              },
+            }),
+          }],
+        }],
+      },
+    },
+  });
+  const item = notifications.find((entry) => entry.params?.item?.type === "generativeUi");
+  assert.equal(item.method, "item/completed");
+  assert.equal(item.params.item.metadata.surface_id, "status");
+  assert.equal(item.params.item.content.root.text, "Ready");
 });
 
 class FakeDshClient extends EventEmitter {
@@ -700,7 +856,7 @@ test("real current DSH Web Profile serves client slots and its text prompt wire"
       join(DSH_SOURCE_ROOT, "apps", "cli", "package.json"),
       runtimeHome,
     );
-    assert.equal(profile.layers.at(-1).packageName, "@deepseek-ai/dsh-product-bridge");
+    assert.equal(profile.layers.at(-1).packageName, "@deepseek-ai/dsh-work-shell");
     const profileRows = profileApi.composeEntries([
       profile.layers.flatMap((layer) => layer.patches),
       profile.patches,
@@ -708,6 +864,8 @@ test("real current DSH Web Profile serves client slots and its text prompt wire"
     for (const id of ["product-bridge"]) {
       assert.equal(profileRows.filter((row) => row.id === id).length, 1, `${id} must mount once through Profile`);
     }
+    assert.equal(profileRows.find((row) => row.id === "web-runtime")?.name, "@deepseek-ai/dsh-web-app");
+    assert.equal(profileRows.find((row) => row.id === "dsh-work-shell")?.name, "@deepseek-ai/dsh-work-shell");
     assert.equal(profileRows.some((row) => row.id === "product-client"), false);
     assert.equal(profileRows.some((row) => row.id === "turn-navigator"), false);
     const surface = await client.waitForClientSurface();
@@ -778,13 +936,21 @@ test("real app-pinned DSH npm package boots through its public CLI entry", {
     await client.start();
     assert.equal((await ready).version, DSH_NPM_VERSION);
     const manifest = JSON.parse(readFileSync(join(runtimeHome, "profiles", "web", "package.json"), "utf8"));
-    assert.equal(manifest.dsh.profile.bundles.at(-1), "@deepseek-ai/dsh-product-bridge");
+    assert.equal(manifest.dsh.profile.bundles.at(-1), "@deepseek-ai/dsh-work-shell");
+    assert.equal(manifest.dsh.profile.bundles.includes("@deepseek-ai/dsh-product-bridge"), true);
+    assert.equal(manifest.dsh.profile.bundles.includes("@deepseek-ai/dsh-theme-pack"), true);
     assert.equal(manifest.dsh.profile.bundles.includes("@deepseek-ai/dsh-product-client"), false);
     assert.equal(manifest.dsh.profile.bundles.includes("@deepseek-ai/dsh-turn-navigator"), false);
     const described = await client.request("host.describe", {});
     assert.equal(typeof described.version, "string");
+    const settings = await client.request("settings.describe", {});
+    const themeSettings = settings.namespaces.find((namespace) => namespace.ns === "ui-theme");
+    assert.equal(themeSettings.value.preference, "dark");
+    assert.equal(themeSettings.user.preference, "dark");
     const surface = await client.waitForClientSurface();
     const html = await fetch(surface).then((response) => response.text());
+    assert.match(html, /\/plugins\/@deepseek-ai\/dsh-work-shell\/client\.js\?rev=/);
+    assert.match(html, /const preference = "dark"/);
     assert.doesNotMatch(html, /\/plugins\/@deepseek-ai\/dsh-product-client\/client\.js\?rev=/);
     assert.doesNotMatch(html, /\/plugins\/@deepseek-ai\/dsh-turn-navigator\/client\.js\?rev=/);
     await client.request("session.create", { sessionId, cwd: runtimeHome });

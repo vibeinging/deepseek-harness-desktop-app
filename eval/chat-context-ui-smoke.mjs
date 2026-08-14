@@ -7,6 +7,7 @@ import path from 'node:path'
 import { openSession } from './lib/cdp.mjs'
 import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+import { encodeDshModelRoute } from '../server/src/engine/dsh_runtime/model_route.js'
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'chat-context-ui-smoke-'))
 const stamp = Date.now()
@@ -20,6 +21,10 @@ const temporaryQuestion = `临时验收-${stamp}`
 const movedDraft = `移动中的未发送草稿-${stamp}`
 const restartDraft = `重启后继续的草稿-${stamp}`
 const requests = []
+const providerId = 'chat-context-eval'
+const modelId = 'chat-context-model'
+const credentialRef = 'CHAT_CONTEXT_EVAL_API_KEY'
+const modelRoute = encodeDshModelRoute(providerId, modelId)
 
 process.env.DSH_EVAL_ISOLATED = '1'
 process.env.DSH_EVAL_VERBOSE = '1'
@@ -99,8 +104,8 @@ async function waitForApiStatus(driver, request, expectedStatus, timeoutMs = 10_
 async function openProjectSettings(session, ui, name) {
   await session.evalJs(`
     const name = ${JSON.stringify(name)};
-    const rows = [...document.querySelectorAll('[title]')];
-    const row = rows.find((item) => item.getAttribute('title') === name && item.querySelector('[aria-label^="查看项目"]'));
+    const row = [...document.querySelectorAll('[data-agent-workspace-id]')]
+      .find((candidate) => candidate.getAttribute('title') === name);
     if (!row) throw new Error('找不到项目行: ' + name);
     const rect = row.getBoundingClientRect();
     row.dispatchEvent(new MouseEvent('contextmenu', {
@@ -112,7 +117,7 @@ async function openProjectSettings(session, ui, name) {
     }));
     return true;
   `)
-  await ui.clickText('项目设置', { selector: 'button', exact: true, timeout: 10_000 })
+  await ui.click(`[role="menuitem"][aria-label="打开${name}的项目设置"]`, { timeout: 10_000 })
   await ui.waitForText('基本信息', { selector: 'button', exact: true, timeout: 15_000 })
 }
 
@@ -132,10 +137,14 @@ async function openConversationMenu(session, conversationId) {
   `)
 }
 
+function draftStorageKey(projectId, conversationId) {
+  const scope = `${String(projectId || '__chat__')}:${String(conversationId || '__new__')}`
+  return `dsh-conversation-draft:v1:${encodeURIComponent(scope)}`
+}
+
 async function draftState(session, projectId, conversationId) {
   return session.evalJs(`
-    const { conversationDraftStorageKey } = await import('/src/views/agent/conversationDraft.ts');
-    const source = localStorage.getItem(conversationDraftStorageKey(${JSON.stringify(projectId)}, ${JSON.stringify(conversationId)}));
+    const source = localStorage.getItem(${JSON.stringify(draftStorageKey(projectId, conversationId))});
     return source ? JSON.parse(source) : null;
   `)
 }
@@ -177,9 +186,9 @@ async function submitComposer(session, ui) {
 let session = null
 let fakeModel = null
 let projectId = ''
-let globalModelId = ''
-let projectModelId = ''
+let providerSaved = false
 let sourceSessionId = ''
+let projectSessionId = ''
 try {
   fakeModel = await startFakeModel()
   session = await openSession({ port: 9365 })
@@ -192,28 +201,31 @@ try {
   `)
 
   projectId = await driver.ensureProjectRecord(projectName)
-  const globalModel = await driver.raw.api('POST', '/api/llm_model/create', {
-    model_name: 'chat-context-model',
-    display_name: '上下文全局假模型',
-    category: 'PRIMARY',
-    api_base: fakeModel.baseUrl,
-    api_key: 'context-global-key',
-    api_format: 'chat_completions',
-    supports_streaming: true,
+  const snapshot = await driver.raw.api('GET', '/api/dsh/models')
+  const namespace = snapshot.json?.data?.namespaces?.find((item) => item.ns === 'llm-pi-ai')
+  assert.equal(typeof namespace?.revision, 'number', JSON.stringify(snapshot.json))
+  const credential = await driver.raw.api('POST', '/api/dsh/models/credentials', {
+    ref: credentialRef,
+    value: 'context-key',
   })
-  assert.equal(globalModel.status, 200, JSON.stringify(globalModel.json))
-  globalModelId = globalModel.json?.data?.id || ''
-  const projectModel = await driver.raw.api('POST', `/api/projects/${projectId}/models`, {
-    model_name: 'chat-context-model',
-    display_name: '上下文项目假模型',
-    category: 'PRIMARY',
-    api_base: fakeModel.baseUrl,
-    api_key: 'context-project-key',
-    api_format: 'chat_completions',
-    supports_streaming: true,
+  assert.equal(credential.status, 200, JSON.stringify(credential.json))
+  const configured = await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+    ns: 'llm-pi-ai',
+    expected_revision: namespace.revision,
+    ops: [{
+      op: 'set',
+      path: ['providers', providerId],
+      value: {
+        displayName: '上下文假模型',
+        apiKeyEnv: credentialRef,
+        api: 'openai-completions',
+        baseURL: fakeModel.baseUrl,
+        models: [{ id: modelId, name: '上下文假模型' }],
+      },
+    }],
   })
-  assert.equal(projectModel.status, 200, JSON.stringify(projectModel.json))
-  projectModelId = projectModel.json?.data?.id || ''
+  assert.equal(configured.status, 200, JSON.stringify(configured.json))
+  providerSaved = true
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor('[title="设置"]', { timeout: 30_000 })
@@ -253,7 +265,7 @@ try {
   })
   await ui.clickText('返回项目', { selector: 'button', exact: true })
 
-  const source = await driver.askAgent('__chat__', sourceQuestion, { title: conversationTitle })
+  const source = await driver.askAgent('__chat__', sourceQuestion, { title: conversationTitle, model: modelRoute })
   sourceSessionId = source.sid
   assert.equal(requests.length, 1)
   const sourcePayload = requestText(requests[0])
@@ -263,8 +275,9 @@ try {
   const sourceConfig = typeof sourceDetail.json?.data?.session_config === 'string'
     ? JSON.parse(sourceDetail.json.data.session_config)
     : sourceDetail.json?.data?.session_config || {}
-  const sourceThreadId = sourceConfig.agent_runtime_thread_id
-  assert.equal(typeof sourceThreadId, 'string')
+  const sourceDshSessionId = sourceConfig.dsh_runtime_session_id
+  assert.equal(typeof sourceDshSessionId, 'string')
+  assert.equal(sourceConfig.runtime_backend, 'dsh')
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(`[data-agent-conv-id="${sourceSessionId}"]`, { timeout: 30_000 })
@@ -274,110 +287,87 @@ try {
   await ui.click('[data-search-mode="auto"]')
   await ui.waitFor('[data-search-mode="required"]', { timeout: 5_000 })
   await ui.waitUntil(`async () => {
-    const { conversationDraftStorageKey } = await import('/src/views/agent/conversationDraft.ts');
-    const raw = localStorage.getItem(conversationDraftStorageKey('__chat__', ${JSON.stringify(sourceSessionId)}));
+    const raw = localStorage.getItem(${JSON.stringify(draftStorageKey('__chat__', sourceSessionId))});
     return raw && JSON.parse(raw).input === ${JSON.stringify(movedDraft)};
-  }`, { timeout: 5_000, label: '移动前草稿已保存' })
+  }`, { timeout: 5_000, label: '普通聊天草稿已保存' })
 
   await openConversationMenu(session, sourceSessionId)
-  await ui.clickText('移到项目…', { selector: 'button', exact: true, timeout: 10_000 })
-  await ui.waitFor('[data-conversation-move]', { timeout: 10_000 })
-  await ui.click(`[data-target-project-id="${projectId}"]`)
-  await ui.click('[data-testid="conversation-move-submit"]')
-  await ui.waitUntil(`async () => {
-    const row = document.querySelector('[data-agent-conv-id="${sourceSessionId}"]');
-    const input = document.querySelector('[data-testid="agent-message-input"]');
-    return row?.getAttribute('data-agent-ws-id') === ${JSON.stringify(projectId)}
-      && input?.value === ${JSON.stringify(movedDraft)}
-      && Boolean(document.querySelector('[data-search-mode="required"]'));
-  }`, { timeout: 15_000, label: '移动后对话与草稿切换到目标项目' })
-  assert.equal(await draftState(session, '__chat__', sourceSessionId), null)
-  assert.equal((await draftState(session, projectId, sourceSessionId))?.input, movedDraft)
+  const moveUnavailable = await session.evalJs(`
+    const item = document.querySelector('[role="menuitem"][aria-label="移动对话（DSH 暂不支持）"]');
+    return Boolean(item?.disabled);
+  `)
+  assert.equal(moveUnavailable, true)
+  await ui.press('Escape')
+  assert.equal((await draftState(session, '__chat__', sourceSessionId))?.input, movedDraft)
 
-  await session.evalJs(`document.querySelector('[data-search-mode="required"]')?.click(); return true;`)
-  await ui.waitFor('[data-search-mode="off"]', { timeout: 5_000 })
-  await session.evalJs(`document.querySelector('[data-search-mode="off"]')?.click(); return true;`)
-  await ui.waitFor('[data-search-mode="auto"]', { timeout: 5_000 })
-  await fillComposer(session, ui, continueQuestion)
-  await submitComposer(session, ui)
-  try {
-    await ui.waitUntil(`async () => document.body.innerText.includes(${JSON.stringify(`移动后仍记得木星-${stamp}`)})`, {
-      timeout: 45_000,
-      label: '移动后的 UI 连续回答',
-    })
-  } catch (error) {
-    const detail = await driver.raw.api('GET', `/api/projects/${projectId}/sessions/${sourceSessionId}`).catch(() => null)
-    const messages = await driver.raw.api('GET', `/api/projects/${projectId}/sessions/${sourceSessionId}/messages`).catch(() => null)
-    const page = await session.evalJs(`return {
-      text: document.body.innerText.slice(0, 5000),
-      input: document.querySelector('[data-testid="agent-message-input"]')?.value || '',
-      running: Boolean(document.querySelector('[data-running="true"]')),
-      sessionId: document.querySelector('[data-agent-session-id]')?.getAttribute('data-agent-session-id') || null,
-    }`).catch(() => null)
-    console.error('[chat-context-ui-smoke] moved turn diagnostics', JSON.stringify({
-      requestCount: requests.length,
-      requestModels: requests.map((request) => request.model),
-      detail: detail?.json,
-      messages: messages?.json,
-      page,
-    }))
-    throw error
-  }
-  assert.equal(requests.length, 2)
-  const movedPayload = requestText(requests[1])
-  if (!movedPayload.includes(projectInstructions)) {
-    const runtimeStatus = await driver.raw.api('GET', '/api/agents/runtime').catch(() => null)
-    console.error('[chat-context-ui-smoke] missing target instructions', JSON.stringify({
-      runtimeStatus: runtimeStatus?.json,
-      systems: (requests[1]?.messages || [])
-        .filter((message) => message?.role === 'system')
-        .map((message) => ({
-          length: String(message.content || '').length,
-          hasGlobal: String(message.content || '').includes(globalInstructions),
-          hasProject: String(message.content || '').includes(projectInstructions),
-          tail: String(message.content || '').slice(-1600),
-        })),
-    }))
-  }
-  assert.match(movedPayload, new RegExp(sourceQuestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
-  assert.match(movedPayload, new RegExp(continueQuestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
-  assert.match(movedPayload, new RegExp(globalInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
-  assert.match(movedPayload, new RegExp(projectInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
-  const movedDetail = await driver.raw.api('GET', `/api/projects/${projectId}/sessions/${sourceSessionId}`)
-  const movedConfig = typeof movedDetail.json?.data?.session_config === 'string'
-    ? JSON.parse(movedDetail.json.data.session_config)
-    : movedDetail.json?.data?.session_config || {}
-  assert.equal(typeof movedConfig.agent_runtime_thread_id, 'string')
-  assert.notEqual(movedConfig.agent_runtime_thread_id, sourceThreadId)
-  assert.equal(movedConfig.agent_runtime_native_move, undefined)
-
-  await ui.click('[data-agent-nav="temporary-chat"]')
-  await ui.waitFor('[data-temporary="true"]', { timeout: 10_000 })
-  await fillComposer(session, ui, temporaryQuestion)
-  await submitComposer(session, ui)
-  await ui.waitUntil(`async () => document.body.innerText.includes(${JSON.stringify(`临时回答-${stamp}`)})`, {
-    timeout: 45_000,
-    label: '临时对话完成回答',
+  const temporaryCreated = await driver.raw.api('POST', '/api/projects/__chat__/sessions', {
+    title: `临时验收 ${stamp}`,
+    source_type: 'agent',
+    source_id: '__chat__',
+    action_type: 'temporary_chat',
+    temporary: true,
   })
-  const temporarySessionId = await session.evalJs(`return document.querySelector('[data-temporary="true"]')?.getAttribute('data-agent-session-id') || ''`)
-  assert.equal(typeof temporarySessionId, 'string')
-  assert.equal(temporarySessionId.length > 0, true)
-  const temporaryPayload = requestText(requests[2])
+  const temporarySessionId = temporaryCreated.json?.data?.id || temporaryCreated.json?.data?.session_id
+  assert.equal(typeof temporarySessionId, 'string', JSON.stringify(temporaryCreated.json))
+  await driver.raw.streamBlocks(
+    `/api/agent/projects/__chat__/threads/${temporarySessionId}/turns`,
+    {
+      input: [{ type: 'text', text: temporaryQuestion }],
+      model: modelRoute,
+      approvalMode: 'ask',
+    },
+  )
+  const temporaryPayload = requestText(requests[1])
   assert.match(temporaryPayload, new RegExp(globalInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.doesNotMatch(temporaryPayload, new RegExp(projectInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(temporaryPayload, /当前是临时对话/)
   const chatList = await driver.raw.api('GET', '/api/agent/projects/__chat__/sessions')
   assert.equal((chatList.json?.data?.items || []).some((item) => item.id === temporarySessionId), false)
-  await ui.clickText('退出临时对话', { selector: 'button', exact: true })
-  await ui.waitUntil(`async () => !document.querySelector('[data-temporary="true"]')`, {
-    timeout: 10_000,
-    label: '退出临时对话',
-  })
-  const removedTemporary = await waitForApiStatus(driver, {
+  const removedTemporary = await driver.raw.api(
+    'DELETE',
+    `/api/projects/__chat__/sessions/${temporarySessionId}`,
+  )
+  assert.equal(removedTemporary.status, 200, JSON.stringify(removedTemporary.json))
+  const missingTemporary = await waitForApiStatus(driver, {
     method: 'GET',
     url: `/api/projects/__chat__/sessions/${temporarySessionId}`,
   }, 404)
-  assert.equal(removedTemporary.status, 404)
+  assert.equal(missingTemporary.status, 404)
+
+  const projectConversation = await driver.askAgent(projectId, continueQuestion, {
+    title: `项目指令验收 ${stamp}`,
+    model: modelRoute,
+  })
+  projectSessionId = projectConversation.sid
+  assert.equal(requests.length >= 3, true)
+  const projectRequest = [...requests].reverse().find((request) => {
+    const text = requestText(request)
+    return text.includes(continueQuestion) && text.includes(projectInstructions)
+  })
+  assert.ok(projectRequest, '项目对话必须收到项目指令')
+  const projectPayload = requestText(projectRequest)
+  assert.match(projectPayload, new RegExp(continueQuestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(projectPayload, new RegExp(globalInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(projectPayload, new RegExp(projectInstructions.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  const projectDetail = await driver.raw.api('GET', `/api/projects/${projectId}/sessions/${projectSessionId}`)
+  const projectConfig = typeof projectDetail.json?.data?.session_config === 'string'
+    ? JSON.parse(projectDetail.json.data.session_config)
+    : projectDetail.json?.data?.session_config || {}
+  assert.equal(typeof projectConfig.dsh_runtime_session_id, 'string')
+  assert.notEqual(projectConfig.dsh_runtime_session_id, sourceDshSessionId)
+  assert.equal(projectConfig.runtime_backend, 'dsh')
+  for (const [pid, sid, expectedProject] of [
+    ['__chat__', sourceSessionId, false],
+    [projectId, projectSessionId, true],
+  ]) {
+    const trajectory = await driver.raw.api('GET', `/api/agent/projects/${pid}/threads/${sid}/dsh-trajectory`)
+    const contextEvent = (trajectory.json?.data?.events || [])
+      .find((entry) => entry?.event?.data?.source?.plugin === 'dsh-work-context')
+    assert.equal(contextEvent?.event?.data?.source?.dshWorkInstructions?.application, true)
+    assert.equal(contextEvent?.event?.data?.source?.dshWorkInstructions?.project, expectedProject)
+  }
+
+  await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
 
   await ui.waitFor(`[data-agent-conv-id="${sourceSessionId}"]`, { timeout: 10_000 })
   await ui.click(`[data-agent-conv-id="${sourceSessionId}"]`)
@@ -388,8 +378,7 @@ try {
   await session.evalJs(`document.querySelector('[data-search-mode="required"]')?.click(); return true;`)
   await ui.waitFor('[data-search-mode="off"]', { timeout: 5_000 })
   await ui.waitUntil(`async () => {
-    const { conversationDraftStorageKey } = await import('/src/views/agent/conversationDraft.ts');
-    const raw = localStorage.getItem(conversationDraftStorageKey(${JSON.stringify(projectId)}, ${JSON.stringify(sourceSessionId)}));
+    const raw = localStorage.getItem(${JSON.stringify(draftStorageKey('__chat__', sourceSessionId))});
     return raw && JSON.parse(raw).input === ${JSON.stringify(restartDraft)} && JSON.parse(raw).searchMode === 'off';
   }`, { timeout: 5_000, label: '重启草稿已保存' })
 
@@ -419,28 +408,33 @@ try {
     timeout: 45_000,
     label: '恢复的草稿成功发送',
   })
-  assert.equal(requests.length, 4)
-  assert.match(requestText(requests[3]), new RegExp(restartDraft.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  const restartRequest = [...requests].reverse()
+    .find((request) => requestText(request).includes(restartDraft))
+  assert.ok(restartRequest, '重启后发送的草稿必须进入 DSH 模型请求')
+  assert.match(requestText(restartRequest), new RegExp(restartDraft.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(`[data-agent-conv-id="${sourceSessionId}"]`, { timeout: 30_000 })
   await ui.click(`[data-agent-conv-id="${sourceSessionId}"]`)
   assert.equal(await session.evalJs(`return document.querySelector('[data-testid="agent-message-input"]')?.value || ''`), '')
 
-  console.log('[chat-context-ui-smoke] PASS 全局/项目指令 + 原生移动 + 草稿迁移/重启 + 临时对话清理')
+  console.log('[chat-context-ui-smoke] PASS 全局/项目指令 DSH 轨迹 + DSH 移动限制 + 草稿重启 + 临时对话清理')
 } finally {
-  if (session && projectModelId && projectId) {
-    await apiJson(session, {
-      method: 'DELETE',
-      url: `/api/projects/${projectId}/models/${projectModelId}`,
-      headers: {}, body: null,
-    }).catch(() => null)
-  }
-  if (session && globalModelId) {
+  if (session && providerSaved) {
     await apiJson(session, {
       method: 'POST',
-      url: '/api/llm_model/delete',
+      url: '/api/dsh/models/settings/mutate',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model_id: globalModelId }),
+      body: JSON.stringify({
+        ns: 'llm-pi-ai',
+        ops: [{ op: 'unset', path: ['providers', providerId] }],
+      }),
+    }).catch(() => null)
+  }
+  if (session) {
+    await apiJson(session, {
+      method: 'DELETE',
+      url: `/api/dsh/models/credentials/${encodeURIComponent(credentialRef)}`,
+      headers: {}, body: null,
     }).catch(() => null)
   }
   try { await session?.close() } catch { /* ignore */ }

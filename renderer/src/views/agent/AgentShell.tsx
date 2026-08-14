@@ -113,6 +113,10 @@ import {
   type WorkbenchIcon
 } from './workbenchContributions'
 import { WorkbenchSlotPanels } from './workbenchSlotRuntime'
+import {
+  DSH_WORK_LAYOUT_EVENT,
+  type DshWorkLayoutAction
+} from '@/dsh-client/DshClientHost'
 
 // Project settings page reuses the original project settings view; preload after startup to avoid waiting for full bundle on first open.
 const loadProjectSettings = () => import('@/views/project/settings')
@@ -1553,6 +1557,30 @@ export default function AgentShell({ routeContent = null }: { routeContent?: Rea
     navPeeking,
     navWidth
   ])
+
+  useEffect(() => {
+    const onDshLayout = (event: Event) => {
+      const action = (event as CustomEvent<{ action?: DshWorkLayoutAction }>).detail?.action
+      if (action === 'toggle-sidebar') {
+        setNavPeeking(false)
+        setNavCollapsed((collapsed) => {
+          const next = !collapsed
+          localStorage.setItem(NAV_STORAGE_KEY, next ? '0' : String(Math.round(navWidth)))
+          return next
+        })
+        return
+      }
+      if (action !== 'open-details' && action !== 'close-details') return
+      if (wsCloseTimerRef.current !== null) {
+        window.clearTimeout(wsCloseTimerRef.current)
+        wsCloseTimerRef.current = null
+      }
+      setWsClosing(false)
+      setWsCollapsed(action === 'close-details')
+    }
+    window.addEventListener(DSH_WORK_LAYOUT_EVENT, onDshLayout)
+    return () => window.removeEventListener(DSH_WORK_LAYOUT_EVENT, onDshLayout)
+  }, [navWidth])
 
   if (showSettings) {
     return <AgentSettings onBack={closeSettings} initialActive={settingsInitialActive} />

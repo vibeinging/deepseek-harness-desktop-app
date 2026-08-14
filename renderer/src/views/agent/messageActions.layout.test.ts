@@ -31,20 +31,19 @@ describe('chat message actions contract', () => {
     expect(conversation).toContain('setSessionId(nextSessionId)')
     expect(conversation).toContain('sessionIdRef.current = nextSessionId')
     expect(conversation).toContain("mode === 'retry' && Array.isArray(draft.input)")
-    expect(conversation).toContain('void dispatch(prompt, turnExtra)')
+    expect(conversation).toContain('await dispatch(prompt, turnExtra)')
     expect(api).toContain('/messages/${pe(messageId)}/branch`')
   })
 
-  it('persists the original turn request and uses native Thread fork boundaries only', () => {
+  it('persists the original turn request and forks at the DSH event boundary only', () => {
     const agentChat = read('../../../../server/src/app/chat/agent_chat.js')
     const messageActions = read('../../../../server/src/app/chat/message_actions.js')
-    const kernel = read('../../../../server/src/engine/agent_kernel/kernel.js')
 
     expect(agentChat).toContain('turn_request: {')
     expect(agentChat).toContain('turn_input: turnInput')
-    expect(messageActions).toContain('? { lastTurnId: boundaryTurnId }')
-    expect(messageActions).toContain(': { beforeTurnId: boundaryTurnId }')
-    expect(kernel).toContain('async forkThread(threadId')
+    expect(messageActions).toContain('const atSeq = Number(previousAssistant?.message_metadata?.dsh_last_seq)')
+    expect(messageActions).toContain('client.request("session.fork", { sessionId: binding.dshSessionId, atSeq })')
+    expect(messageActions).toContain('ensureDshWorkspaceSession(client, { cwd: binding.cwd })')
     expect(messageActions).not.toContain('thread/rollback')
     expect(messageActions).not.toContain('thread/resume')
   })

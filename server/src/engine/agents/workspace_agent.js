@@ -1,5 +1,6 @@
 import { dshRuntimeEnabled } from "../dsh_runtime/source_locator.js";
 import { DshWorkspaceRuntime } from "../dsh_runtime/workspace_runtime.js";
+import { loadDshSessionBinding } from "../dsh_runtime/session_binding.js";
 import { getTemporaryDshRuntimeLease } from "../dsh_runtime/temporary_runtime.js";
 import { loadProjectSourceFolders } from "./project_source_folders.js";
 import { resolveActiveWorktree } from "./git_workspace.js";
@@ -30,8 +31,10 @@ export class WorkspaceAgent {
           folder.write_target ? { ...folder, path: activeWorktreePath, worktree: true } : folder
         ))
       : availableSourceFolders;
+    const binding = await loadDshSessionBinding(agentContext?.db, sessionId);
     const { cwd, sourceFolders } = resolveWorkspace(projectId, sessionId, {
       sourceFolders: effectiveSourceFolders,
+      fixedCwd: binding?.cwd,
     });
     const access = workspaceAccessRoots({
       cwd,

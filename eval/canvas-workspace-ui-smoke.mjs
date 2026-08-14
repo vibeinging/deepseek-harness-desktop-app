@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 
 import { openSession } from './lib/cdp.mjs'
+import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+
+const requireFromServer = createRequire(new URL('../server/package.json', import.meta.url))
+const BetterSqlite3 = requireFromServer('better-sqlite3')
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'canvas-workspace-ui-smoke-'))
 const conversationTitle = `Canvas 验收对话 ${Date.now()}`
@@ -18,6 +24,30 @@ const localKeepNeedle = `本地保留稿-${Date.now()}`
 const remoteV6Needle = `远端版本六-${Date.now()}`
 const initialContent = `# 发布说明\n\n状态：${v1Needle}\n\n负责人：测试组`
 const editedContent = `# 发布说明\n\n状态：${v2Needle}\n\n负责人：测试组`
+const readmeScreenshot = String(process.env.DSH_README_SCREENSHOT || '').trim()
+
+async function captureReadmeScreenshot(session) {
+  if (!readmeScreenshot) return
+  const shot = await session.cdp('Page.captureScreenshot', {
+    format: 'png',
+    captureBeyondViewport: true
+  })
+  writeFileSync(path.resolve(readmeScreenshot), Buffer.from(shot.data, 'base64'))
+}
+
+function seedVisibleConversation(databasePath, sessionId) {
+  const db = new BetterSqlite3(databasePath)
+  try {
+    db.prepare(`
+      INSERT INTO session_messages
+        (id, session_id, role, content_items, sequence_number, created_at, updated_at)
+      VALUES (?, ?, 'user', ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).run(randomUUID(), sessionId, JSON.stringify([{ type: 'text', text: 'Canvas 验收' }]))
+    db.prepare(`UPDATE sessions SET message_count=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(sessionId)
+  } finally {
+    db.close()
+  }
+}
 
 process.env.DSH_EVAL_ISOLATED = '1'
 process.env.DSH_EVAL_HOME = evalHome
@@ -131,6 +161,8 @@ let session = null
 try {
   session = await openSession({ port: 9359 })
   const ui = makeUiDriver(session)
+  const driver = makeDriver(session)
+  await driver.login()
   await session.evalJs(`
     localStorage.setItem('dsh:onboarding:completed:v1', 'true');
     return true;
@@ -149,6 +181,7 @@ try {
   })
   const sessionId = prepared?.data?.id
   assert.equal(typeof sessionId, 'string', JSON.stringify(prepared))
+  seedVisibleConversation(path.join(evalHome, '.dsh', 'local.db'), sessionId)
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   const conversationSelector = `[data-agent-conv-id="${sessionId}"]`
@@ -166,6 +199,8 @@ try {
     })
   }
   await openWorkbenchTool(session, ui, 'artifacts')
+  await ui.waitFor('[data-artifact-action="open-canvas"]', { timeout: 15_000 })
+  await ui.click('[data-artifact-action="open-canvas"]')
 
   try {
     await ui.waitFor(`[data-canvas-library="${sessionId}"]`, { timeout: 15_000 })
@@ -241,7 +276,7 @@ try {
     return { start: editor.selectionStart, end: editor.selectionEnd };
   `)
   await ui.waitFor('[data-canvas-selection="0:6"]', { timeout: 5_000 })
-  const redundantActionCount = await session.evalJs(`document.querySelectorAll('[data-canvas-action="ask"]').length`)
+  const redundantActionCount = await session.evalJs(`return document.querySelectorAll('[data-canvas-action="ask"]').length`)
   assert.equal(redundantActionCount, 0, 'Canvas 不应再显示全文或选区改写快捷按钮')
   await ui.click('[data-canvas-action="suggest"]')
   await ui.waitUntil(`async () => {
@@ -452,6 +487,7 @@ try {
       && editor?.innerText.includes('v7')
       && editor?.querySelector('[data-canvas-kind="document"]')?.value.includes(${JSON.stringify(localKeepNeedle)});
   }`, { timeout: 12_000, label: '冲突时本地稿另存为 v7' })
+  await captureReadmeScreenshot(session)
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitFor(conversationSelector, { timeout: 30_000 })

@@ -134,11 +134,28 @@ try {
   await ui.clickText('在页面中查找', { exact: true })
   await ui.fill('[aria-label="在页面中查找"]', '网页')
   await ui.click('[aria-label="下一个匹配项"]')
-  await ui.waitUntil(`async () => {
-    const state = await window.electronAPI.browserWorkspaceGetState();
-    const tab = state.tabs.find((item) => item.id === state.activeTabId);
-    return tab?.findMatches > 0 ? { matches: tab.findMatches, active: tab.findActiveMatch } : false;
-  }`, { timeout: 5_000, label: '整 App 页面内查找' })
+  try {
+    await ui.waitUntil(`async () => {
+      const state = await window.electronAPI.browserWorkspaceGetState();
+      const tab = state.tabs.find((item) => item.id === state.activeTabId);
+      return tab?.findMatches > 0 ? { matches: tab.findMatches, active: tab.findActiveMatch } : false;
+    }`, { timeout: 5_000, label: '整 App 页面内查找' })
+  } catch (error) {
+    const debug = await session.evalJs(`
+      const state = await window.electronAPI.browserWorkspaceGetState();
+      const activeTabId = state.activeTabId;
+      let page = null;
+      try { page = await window.electronAPI.browserWorkspaceCapturePage(activeTabId); } catch (error) { page = { error: error?.message || String(error) }; }
+      return {
+      state,
+      page,
+      findText: document.querySelector('[aria-label="在页面中查找"]')?.value || '',
+      findUi: document.querySelector('[data-browser-find]')?.textContent || '',
+      errorText: document.querySelector('[role="alert"]')?.textContent || '',
+    }`)
+    console.error('[browser-ui-smoke] 查找超时状态', JSON.stringify(debug))
+    throw error
+  }
   await ui.click('[aria-label="关闭页面查找"]')
 
   await ui.click('[data-browser-menu-trigger]')
@@ -192,14 +209,30 @@ try {
   await ui.click('[data-workbench-add]')
   await ui.waitFor('[data-workbench-add-option="files"]', { timeout: 5_000 })
   await ui.click('[data-workbench-add-option="files"]')
-  await ui.waitUntil(`async () => {
-    const browser = document.querySelector('[data-workbench-tab="browser"]');
-    const files = document.querySelector('[data-workbench-tab="files"]');
-    const state = await window.electronAPI.browserWorkspaceGetState();
-    return browser?.getAttribute('data-active') === 'false'
-      && files?.getAttribute('data-active') === 'true'
-      && state.visible === false;
-  }`, { timeout: 10_000, label: '添加文件工具并隐藏原生浏览器' })
+  try {
+    await ui.waitUntil(`async () => {
+      const browser = document.querySelector('[data-workbench-tab="browser"]');
+      const files = document.querySelector('[data-workbench-tab="files"]');
+      const state = await window.electronAPI.browserWorkspaceGetState();
+      return browser?.getAttribute('data-active') !== 'true'
+        && files?.getAttribute('data-active') === 'true'
+        && state.visible === false;
+    }`, { timeout: 10_000, label: '添加文件工具并隐藏原生浏览器' })
+  } catch (error) {
+    const debug = await session.evalJs(`return {
+      state: await window.electronAPI.browserWorkspaceGetState(),
+      tabs: [...document.querySelectorAll('[data-workbench-tab]')].map((item) => ({
+        id: item.getAttribute('data-workbench-tab'),
+        active: item.getAttribute('data-active'),
+      })),
+      panels: [...document.querySelectorAll('[data-workbench-panel]')].map((item) => ({
+        id: item.getAttribute('data-workbench-panel'),
+        hidden: item.hasAttribute('hidden'),
+      })),
+    }`)
+    console.error('[browser-ui-smoke] 文件工具切换超时状态', JSON.stringify(debug))
+    throw error
+  }
 
   await ui.click('[data-workbench-tab="browser"]')
   await ui.waitUntil(`async () => {

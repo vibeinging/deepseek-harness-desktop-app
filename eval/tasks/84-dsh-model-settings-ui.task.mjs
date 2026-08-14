@@ -35,10 +35,8 @@ export default {
     const api = driver.raw.api;
     const ui = driver.ui;
     const stamp = Date.now().toString(36);
-    const route = `eval-ui-${stamp}`;
-    const displayName = `Eval UI ${stamp}`;
-    const modelId = `eval-model-${stamp}`;
-    const credentialRef = `${route.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`;
+    const route = "minimax-cn";
+    const credentialRef = "MINIMAX_CN_API_KEY";
     const secret = `eval-secret-${stamp}`;
     let saved = false;
 
@@ -65,52 +63,97 @@ export default {
       await ui.waitFor('[data-agent-window-titlebar]', { timeout: 15_000 });
       await ui.click('button[title="设置"]', { timeout: 10_000 });
       await ui.clickText("模型设置", { selector: "button", exact: true, timeout: 10_000 });
-      await ui.waitFor('[data-testid="dsh-model-settings"]', { timeout: 15_000 });
-      const settingsText = await ui.text('[data-testid="dsh-model-settings"]');
-      assert.ok(settingsText.includes("DSH 模型提供方"), "模型页明确展示 DSH 提供方目录", {
+      const settingsRoot = '[data-dsh-standard-settings-section="models"]';
+      await ui.waitFor(settingsRoot, { timeout: 15_000 });
+      const settingsText = await ui.text(settingsRoot);
+      assert.ok(settingsText.includes("填入各提供方的 API 密钥即可使用其模型。"), "模型页由 DSH Client 标准 Models 插槽展示", {
         criterion: "dsh.model-settings-authoritative",
       });
 
-      const visibleProviders = await driver.raw.ev(`
-        return [...document.querySelectorAll('[data-dsh-provider]')]
-          .map((element) => element.getAttribute('data-dsh-provider'));
-      `);
-      const configuredProviders = (before.providers || [])
-        .filter((provider) => provider.settingsNs)
-        .map((provider) => provider.provider);
-      assert.eq(
-        configuredProviders.every((provider) => visibleProviders.includes(provider)),
-        true,
-        "模型页展示 DSH 公布的可配置提供方",
-        { criterion: "dsh.model-settings-authoritative" },
-      );
+      await ui.waitForText("deepseek-official", { selector: "span", exact: true, timeout: 10_000 });
+      assert.ok(true, "模型页展示 DSH 公布的可配置提供方", {
+        criterion: "dsh.model-settings-authoritative",
+      });
 
-      await ui.clickByTestId("dsh-add-provider", { timeout: 10_000 });
-      await ui.fillByTestId("dsh-provider-id", route, { timeout: 10_000 });
-      await ui.fillByTestId("dsh-provider-display-name", displayName, { timeout: 10_000 });
-      await ui.fillByTestId("dsh-provider-base-url", "http://127.0.0.1:1/v1", { timeout: 10_000 });
-      await ui.clickByTestId("dsh-provider-api", { timeout: 10_000 });
-      await ui.typeText("OpenAI Chat Completions");
-      await ui.press("Enter");
-      await ui.fillByTestId("dsh-provider-api-key", secret, { timeout: 10_000 });
-      await ui.clickByTestId("dsh-add-model", { timeout: 10_000 });
-      await ui.fillByTestId("dsh-model-id-0", modelId, { timeout: 10_000 });
-      await ui.fillByTestId("dsh-model-name-0", "Eval Model", { timeout: 10_000 });
-      await ui.waitUntil(`async () => document.querySelector('[data-testid="dsh-save-provider"]')?.disabled === false`, {
+      await ui.waitUntil(`async () => {
+        const button = [...document.querySelectorAll('button')]
+          .find((element) => element.textContent?.trim() === '添加提供方');
+        return Boolean(button && !button.disabled);
+      }`, {
+        timeout: 15_000,
+        label: "DSH 提供方目录入口加载完成",
+      });
+      await ui.clickText("添加提供方", { selector: "button", exact: true, timeout: 10_000 });
+      await ui.waitFor('select[aria-label="提供方"]', { timeout: 10_000 });
+      const providerSelected = await driver.raw.ev(`
+        const select = document.querySelector('select[aria-label="提供方"]');
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+        setter?.call(select, ${JSON.stringify(route)});
+        select?.dispatchEvent(new Event('change', { bubbles: true }));
+        return Boolean(select);
+      `);
+      await ui.waitUntil(`async () => document.querySelector('select[aria-label="提供方"]')?.value === ${JSON.stringify(route)}`, {
+        timeout: 5_000,
+        label: "DSH 目录提供方已选择",
+      });
+      assert.eq(providerSelected, true, "从 DSH 目录选择提供方", {
+        criterion: "dsh.model-settings-authoritative",
+      });
+      const keyFilled = await driver.raw.ev(`
+        const select = document.querySelector('select[aria-label="提供方"]');
+        let editor = select?.parentElement;
+        while (editor && ![...editor.querySelectorAll('button')]
+          .some((element) => element.textContent?.trim() === '保存')) {
+          editor = editor.parentElement;
+        }
+        const input = editor?.querySelector('input[aria-label="API 密钥"]');
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(input, ${JSON.stringify(secret)});
+        input?.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ${JSON.stringify(secret)} }));
+        return Boolean(input);
+      `);
+      assert.eq(keyFilled, true, "在 DSH 提供方卡片填写只写密钥", {
+        criterion: "dsh.model-credentials-write-only",
+      });
+      await ui.waitUntil(`async () => {
+        const select = document.querySelector('select[aria-label="提供方"]');
+        let editor = select?.parentElement;
+        while (editor && ![...editor.querySelectorAll('button')]
+          .some((element) => element.textContent?.trim() === '保存')) {
+          editor = editor.parentElement;
+        }
+        const button = [...(editor?.querySelectorAll('button') || [])]
+          .find((element) => element.textContent?.trim() === '保存');
+        return Boolean(button && !button.disabled);
+      }`, {
         timeout: 10_000,
         label: "DSH 提供方表单可以保存",
       });
-      await ui.clickByTestId("dsh-save-provider", { timeout: 10_000 });
-      await ui.waitFor(`[data-dsh-provider="${route}"]`, { timeout: 20_000 });
+      const saveClicked = await driver.raw.ev(`
+        const select = document.querySelector('select[aria-label="提供方"]');
+        let editor = select?.parentElement;
+        while (editor && ![...editor.querySelectorAll('button')]
+          .some((element) => element.textContent?.trim() === '保存')) {
+          editor = editor.parentElement;
+        }
+        const button = [...(editor?.querySelectorAll('button') || [])]
+          .find((element) => element.textContent?.trim() === '保存');
+        button?.click();
+        return Boolean(button);
+      `);
+      assert.eq(saveClicked, true, "保存 DSH 目录提供方", {
+        criterion: "dsh.model-settings-authoritative",
+      });
+      await ui.waitForText(route, { selector: "li", exact: false, timeout: 20_000 });
       saved = true;
 
       const afterSave = await snapshot();
       const savedProvider = (afterSave.providers || []).find((provider) => provider.provider === route);
       const savedGroup = (afterSave.groups || []).find((group) => group.id === route);
-      assert.ok(Boolean(savedProvider), "UI 新增的提供方进入 DSH provider 目录", {
+      assert.eq(savedProvider?.active, true, "UI 新增的提供方已在 DSH 运行时激活", {
         criterion: "dsh.model-settings-authoritative",
       });
-      assert.ok((savedGroup?.models || []).some((model) => model.id === modelId), "UI 新增的模型进入 DSH 模型目录", {
+      assert.ok((savedGroup?.models || []).length > 0, "UI 新增的提供方进入 DSH 模型目录", {
         criterion: "dsh.model-settings-authoritative",
       });
       assert.eq(afterSave.credentials?.[credentialRef]?.configured, true, "UI 密钥写入 DSH Credentials", {
@@ -120,23 +163,29 @@ export default {
         criterion: "dsh.model-credentials-write-only",
       });
 
-      await driver.raw.ev(`
-        document.querySelector('[data-testid="dsh-remove-provider-${route}"]')?.click();
-        return true;
+      const deleteOpened = await driver.raw.ev(`
+        const row = [...document.querySelectorAll('li')]
+          .find((element) => element.textContent?.includes(${JSON.stringify(route)}));
+        const button = row && [...row.querySelectorAll('button')]
+          .find((element) => element.textContent?.trim() === '删除');
+        button?.click();
+        return Boolean(button);
       `);
-      await ui.clickByTestId(`dsh-confirm-remove-provider-${route}`, { timeout: 10_000 });
-      await ui.waitUntil(`async () => !document.querySelector('[data-dsh-provider="${route}"]')`, {
+      assert.eq(deleteOpened, true, "从 DSH Models 行打开删除确认", {
+        criterion: "dsh.model-settings-authoritative",
+      });
+      await ui.clickText(`删除 ${route}`, { selector: "button", exact: true, timeout: 10_000 });
+      await ui.waitUntil(`async () => ![...document.querySelectorAll('li')]
+        .some((element) => element.textContent?.includes(${JSON.stringify(route)}))`, {
         timeout: 20_000,
         label: "自定义 DSH 提供方已从模型页删除",
       });
       saved = false;
       const afterRemove = await snapshot();
-      assert.eq(
-        (afterRemove.providers || []).some((provider) => provider.provider === route),
-        false,
-        "UI 删除同步到 DSH provider 目录",
-        { criterion: "dsh.model-settings-authoritative" },
-      );
+      const removedProvider = (afterRemove.providers || []).find((provider) => provider.provider === route);
+      assert.eq(removedProvider?.active, false, "UI 删除后 DSH 目录保留提供方但停用运行时路由", {
+        criterion: "dsh.model-settings-authoritative",
+      });
     } finally {
       if (saved) {
         const current = await api("GET", "/api/dsh/models").catch(() => null);

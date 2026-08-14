@@ -10,7 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { dshEventsToMessages } from "../../server/src/engine/dsh_runtime/dsh_history_adapter.js";
 import { loadAllDshHistoryPages, mergeProductProjection } from "../../server/src/app/reads/reads_session.js";
-import { assistantItemId, turnIdFrom, toolCallItemId } from "../../server/src/engine/dsh_runtime/event_adapter.js";
+import { DshEventAdapter, assistantItemId, turnIdFrom, toolCallItemId } from "../../server/src/engine/dsh_runtime/event_adapter.js";
 
 const SID = "dsh-session-1";
 
@@ -131,7 +131,7 @@ test("product blocks merge by DSH request and Turn identity instead of role orde
   assert.equal(merged[1].content_items[0].content, "right");
 });
 
-test("a local image projection replaces the matching DSH attachment preview without duplication", () => {
+test("a matching DSH image replaces the local projection so recovery stays content-addressed", () => {
   const digest = "b".repeat(64);
   const authoritative = [{
     id: "dsh-user",
@@ -155,7 +155,59 @@ test("a local image projection replaces the matching DSH attachment preview with
   }];
   const merged = mergeProductProjection(authoritative, product);
   assert.equal(merged[0].content_items.length, 1);
-  assert.equal(merged[0].content_items[0].id, "local-image");
+  assert.equal(merged[0].content_items[0].id, "dsh-image");
+});
+
+test("an accepted DSH answer drops stale local answer and missing-source projections", () => {
+  const authoritative = [{
+    id: "dsh-turn",
+    role: "assistant",
+    content_items: [
+      { id: "dsh-source", type: "web_sources", content: "{}" },
+      { id: "dsh-answer", type: "agentMessage", content: "verified" },
+    ],
+    message_metadata: { turn_id: "dsh-turn" },
+  }];
+  const product = [{
+    id: "local-turn",
+    role: "assistant",
+    content_items: JSON.stringify([
+      { id: "local-answer", type: "markdown", content: "verified", metadata: { item_type: "agentMessage" } },
+      { id: "web-sources-missing:dsh-turn", type: "error", content: "stale" },
+      { id: "workspace", type: "workspace_event", content: "keep" },
+    ]),
+    message_metadata: JSON.stringify({ turn_id: "dsh-turn", answer_status: "accepted" }),
+  }];
+  const merged = mergeProductProjection(authoritative, product);
+  assert.deepEqual(merged[0].content_items.map((item) => item.id), ["workspace", "dsh-source", "dsh-answer"]);
+});
+
+test("an accepted DSH answer keeps canonical metadata when there is no product overlay", () => {
+  const authoritative = [{
+    id: "dsh-turn",
+    role: "assistant",
+    content_items: [{ id: "dsh-answer", type: "agentMessage", content: "verified" }],
+    message_metadata: { turn_id: "dsh-turn", turn_status: "completed" },
+  }];
+  const product = [{
+    id: "local-turn",
+    role: "assistant",
+    content_items: JSON.stringify([
+      { id: "dsh-answer", type: "markdown", content: "verified", metadata: { item_type: "agentMessage" } },
+    ]),
+    message_metadata: JSON.stringify({
+      turn_id: "dsh-turn",
+      answer_status: "accepted",
+      answer_item_id: "dsh-answer",
+      answer_source: "runtime_terminal",
+    }),
+  }];
+
+  const [merged] = mergeProductProjection(authoritative, product);
+  assert.deepEqual(merged.content_items, authoritative[0].content_items);
+  assert.equal(merged.message_metadata.answer_status, "accepted");
+  assert.equal(merged.message_metadata.answer_item_id, "dsh-answer");
+  assert.equal(merged.message_metadata.answer_source, "runtime_terminal");
 });
 
 test("user and steer messages inside one DSH turn do not split the assistant result", () => {
@@ -332,6 +384,47 @@ test("tool/result carries dshView and output text", () => {
   assert.equal(resultItem.contentItems[0].text, "result text");
 });
 
+test("DSH web-search result views restore the same source card used by live chat", async () => {
+  const resultEvent = entry(4, "tool/result", {
+    turn: 1,
+    message: {
+      source: { callId: "call-web" },
+      content: [{ type: "tool-result", content: [{ type: "text", text: "search result" }] }],
+    },
+  }, {
+    for: "result",
+    view: {
+      card: "web",
+      kind: "search",
+      sources: [{ url: "https://example.com/", title: "Example Domain", snippet: "Reserved examples." }],
+      truncated: false,
+    },
+  });
+  const result = dshEventsToMessages({
+    sessionId: SID,
+    entries: [
+      entry(1, "turn/start", { turn: 1 }),
+      entry(2, "tool/call", { turn: 1, callId: "call-web", name: "web_search", arguments: '{"query":"example"}' }),
+      resultEvent,
+      entry(5, "turn/end", { turn: 1, reason: { kind: "completed" } }),
+    ],
+  });
+  const sources = result.messages[0].content_items.find((item) => item.type === "web_sources");
+  assert.deepEqual(JSON.parse(sources.content).sources[0], {
+    source_id: "S1",
+    url: "https://example.com/",
+    title: "Example Domain",
+    excerpt: "Reserved examples.",
+    published_at: "",
+  });
+
+  const emitted = [];
+  const live = new DshEventAdapter({ sessionId: SID, emit: async (type, payload) => emitted.push({ type, payload }) });
+  await live.handle(entry(1, "turn/start", { turn: 1 }).event);
+  await live.handle(resultEvent.event, resultEvent.view);
+  assert.equal(emitted.find((item) => item.payload?.item?.type === "web_sources")?.payload.item.id, sources.id);
+});
+
 test("Office write history retains a hidden workspace event beside the folded tool", () => {
   const value = {
     success: true,
@@ -365,6 +458,89 @@ test("Office write history retains a hidden workspace event beside the folded to
   assert.ok(workspace);
   assert.equal(workspace.metadata.display, false);
   assert.equal(workspace.metadata.workspace_event.event, "artifact_published");
+});
+
+test("Canvas write history retains a hidden workspace event beside the folded tool", () => {
+  const value = {
+    success: true,
+    project_id: "project-1",
+    canvas: {
+      id: "canvas-1",
+      kind: "document",
+      project_id: "project-1",
+      session_id: "app-session-1",
+      current_version: { id: "canvas-v1" },
+    },
+  };
+  const result = dshEventsToMessages({
+    sessionId: SID,
+    entries: [
+      entry(2, "turn/start", { turn: 1 }),
+      entry(3, "tool/call", {
+        turn: 1,
+        callId: "canvas-call",
+        name: "canvas_create",
+        arguments: '{"kind":"document","content":"Draft"}',
+      }),
+      entry(4, "tool/result", {
+        turn: 1,
+        message: {
+          source: { callId: "canvas-call" },
+          content: [{ type: "tool-result", content: [{ type: "text", text: JSON.stringify(value) }] }],
+        },
+      }),
+      entry(5, "turn/end", { turn: 1, reason: { kind: "completed" } }),
+    ],
+  });
+  const workspace = result.messages[0].content_items.find((item) => item.type === "workspace_event");
+  assert.ok(workspace);
+  assert.equal(workspace.metadata.display, false);
+  assert.equal(workspace.metadata.workspace_event.event, "canvas_opened");
+  assert.equal(workspace.metadata.workspace_event.canvas_id, "canvas-1");
+});
+
+test("ui_render history restores the structured UI beside the folded tool", () => {
+  const document = {
+    schema_version: 1,
+    surface_id: "status",
+    revision: 1,
+    summary: "Ready",
+    root: { id: "ready", type: "text", text: "Ready" },
+  };
+  const result = dshEventsToMessages({
+    sessionId: SID,
+    entries: [
+      entry(2, "turn/start", { turn: 1 }),
+      entry(3, "tool/call", {
+        turn: 1,
+        callId: "ui-call",
+        name: "ui_render",
+        arguments: '{"surface_id":"status"}',
+      }),
+      entry(4, "tool/result", {
+        turn: 1,
+        message: {
+          source: { callId: "ui-call" },
+          content: [{
+            type: "tool-result",
+            content: [{
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                document_hash: `sha256:${"b".repeat(64)}`,
+                generative_ui: document,
+              }),
+            }],
+          }],
+        },
+      }),
+      entry(5, "turn/end", { turn: 1, reason: { kind: "completed" } }),
+    ],
+  });
+  const item = result.messages[0].content_items.find((candidate) => candidate.type === "generativeUi");
+  assert.ok(item);
+  assert.equal(item.content.surface_id, "status");
+  assert.equal(item.metadata.generative_ui.document.root.text, "Ready");
 });
 
 // ─── Real-shape regressions (bugs found against live DSH session.history) ──

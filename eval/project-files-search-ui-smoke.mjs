@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 
 import { openSession } from './lib/cdp.mjs'
+import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+
+const requireFromServer = createRequire(new URL('../server/package.json', import.meta.url))
+const BetterSqlite3 = requireFromServer('better-sqlite3')
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'project-files-search-ui-smoke-'))
 const firstRoot = path.join(evalHome, 'source-main')
@@ -13,6 +19,20 @@ const nestedRoot = path.join(firstRoot, 'docs', 'nested')
 const projectName = `项目文件验收 ${Date.now()}`
 const conversationTitle = '项目文件测试对话'
 const bodyNeedle = `project-files-body-${Date.now()}`
+
+function seedVisibleConversation(databasePath, sessionId) {
+  const db = new BetterSqlite3(databasePath)
+  try {
+    db.prepare(`
+      INSERT INTO session_messages
+        (id, session_id, role, content_items, sequence_number, created_at, updated_at)
+      VALUES (?, ?, 'user', ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).run(randomUUID(), sessionId, JSON.stringify([{ type: 'text', text: '项目文件验收' }]))
+    db.prepare(`UPDATE sessions SET message_count=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(sessionId)
+  } finally {
+    db.close()
+  }
+}
 
 async function markVisible(session, selector, marker) {
   return session.evalJs(`
@@ -76,6 +96,8 @@ let session = null
 try {
   session = await openSession({ port: 9355 })
   const ui = makeUiDriver(session)
+  const driver = makeDriver(session)
+  await driver.login()
   await session.evalJs(`
     localStorage.setItem('dsh:onboarding:completed:v1', 'true');
     return true;
@@ -116,6 +138,7 @@ try {
   `, { timeoutMs: 20_000 })
   assert.equal(typeof prepared.projectId, 'string', JSON.stringify(prepared))
   assert.equal(typeof prepared.sessionId, 'string', JSON.stringify(prepared))
+  seedVisibleConversation(path.join(evalHome, '.dsh', 'local.db'), prepared.sessionId)
 
   const initialFolders = await session.evalJs(`
     const response = await window.electronAPI.apiRequest({
@@ -131,12 +154,37 @@ try {
   assert.equal(initialFolders[0].write_target, true)
   const initialIdsByPath = Object.fromEntries(initialFolders.map((folder) => [folder.path, folder.id]))
 
-  await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
+  await ui.goto('/agent')
   await ui.waitUntil(`async () => Boolean(
-    window.electronAPI?.apiRequest
-    && document.body.innerText.includes(${JSON.stringify(projectName)})
-    && document.querySelector('[data-edge-toggle="workspace"]')
-  )`, { timeout: 30_000, label: '项目出现在真实桌面侧栏' })
+    window.electronAPI?.apiRequest && document.querySelector('[data-edge-toggle="workspace"]')
+  )`, { timeout: 30_000, label: '真实桌面已就绪' })
+  const activation = await session.evalJs(`
+    const pid = ${JSON.stringify(prepared.projectId)};
+    const sid = ${JSON.stringify(prepared.sessionId)};
+    const detail = await window.electronAPI.apiRequest({
+      method: 'GET',
+      url: '/api/projects/' + encodeURIComponent(pid),
+      headers: { 'Content-Type': 'application/json' },
+      body: null,
+    });
+    const { useProjectStore } = await import('/src/store/project.ts');
+    const { eventBus, EVENT_TYPES } = await import('/src/utils/eventBus.ts');
+    useProjectStore.getState().setCurrentProject(detail?.json?.data);
+    eventBus.emit(EVENT_TYPES.NEW_session_CREATED, { sessionId: sid, workspaceId: pid, projectId: pid });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const listed = await window.electronAPI.apiRequest({
+      method: 'GET',
+      url: '/api/agent/projects/' + encodeURIComponent(pid) + '/sessions',
+      headers: { 'Content-Type': 'application/json' },
+      body: null,
+    });
+    const data = listed?.json?.data;
+    return {
+      response: listed?.json,
+      ids: (Array.isArray(data) ? data : data?.items || []).map((item) => item.id),
+    };
+  `, { timeoutMs: 20_000 })
+  assert.ok(activation.ids.includes(prepared.sessionId), `权威会话列表缺少文件测试会话: ${JSON.stringify(activation)}`)
 
   const conversationSelector = `[data-agent-conv-id="${prepared.sessionId}"]`
   await ui.waitFor(conversationSelector, { timeout: 20_000 })
@@ -151,14 +199,22 @@ try {
       return document.querySelector('[data-edge-toggle="workspace"]')?.getAttribute('data-collapsed') === 'false';
     }`, { timeout: 10_000, label: '右侧栏已正式展开' })
   }
+  await ui.waitUntil(`async () => {
+    const visible = (element) => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+    };
+    return [...document.querySelectorAll('[data-workbench-tab="files"], [data-workbench-empty-action="files"], [data-workbench-add]')].some(visible);
+  }`, { timeout: 15_000, label: 'DSH Profile 文件工具入口已加载' })
   if (!(await hasVisible(session, '[placeholder="搜索文件名或正文"]'))) {
     let filesEntry = '[data-workbench-tab="files"]'
-    if (!(await hasVisible(session, filesEntry))) {
-      if (await hasVisible(session, '[data-workbench-empty-action="files"]')) {
+    if (!(await ui.exists(filesEntry))) {
+      if (await ui.exists('[data-workbench-empty-action="files"]')) {
         filesEntry = '[data-workbench-empty-action="files"]'
       } else {
         await ui.click('[data-workbench-add]')
-        await ui.waitFor(option, { timeout: 5_000 })
+        await ui.waitFor('[data-workbench-add-option="files"]', { timeout: 5_000 })
         filesEntry = '[data-workbench-add-option="files"]'
       }
     }

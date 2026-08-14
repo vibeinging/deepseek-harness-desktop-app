@@ -11,6 +11,9 @@ describe('Codex collaboration mode UI', () => {
 
     expect(conversation).toContain('<CollaborationModePicker')
     expect(conversation).toContain('collaborationMode: collaborationModeRef.current')
+    expect(conversation).toContain('state?.projections?.plan')
+    expect(conversation).toContain('setDshSessionPlanMode(projectId, currentSessionId, next)')
+    expect(conversation).not.toContain('persistConversationCollaborationMode')
     expect(picker).toContain("value: 'default'")
     expect(picker).toContain("value: 'plan'")
     expect(picker).toContain("label: '直接处理'")

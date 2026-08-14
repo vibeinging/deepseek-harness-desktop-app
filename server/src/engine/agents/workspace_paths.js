@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, statSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import { dataPath } from "../../config/paths.js";
 
 export const CHAT_PROJECT_ID = "__chat__";
@@ -27,7 +28,10 @@ export function workspaceCwd(projectId, sessionId = null, { sourceFolders = [], 
 }
 
 export function resolveWorkspace(projectId, sessionId = null, options = {}) {
-  const cwd = workspaceCwd(projectId, sessionId, options);
+  const fixedCwd = String(options.fixedCwd || "").trim();
+  const cwd = fixedCwd && isAbsolute(fixedCwd)
+    ? fixedCwd
+    : workspaceCwd(projectId, sessionId, options);
   mkdirSync(cwd, { recursive: true });
   const sourceFolders = (options.sourceFolders || []).map(availableFolder).filter(Boolean);
   return {

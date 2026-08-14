@@ -6,24 +6,28 @@ const projectSettings = readFileSync(
   fileURLToPath(new URL('./ModelConfig.tsx', import.meta.url)),
   'utf8'
 )
-const systemModelForm = readFileSync(
-  fileURLToPath(new URL('../../../models/components/ModelForm.tsx', import.meta.url)),
+const systemModels = readFileSync(
+  fileURLToPath(new URL('../../../models/index.tsx', import.meta.url)),
   'utf8'
 )
 
 describe('Agent model settings contract', () => {
   it('keeps project settings DSH-like and excludes ultra', () => {
-    expect(projectSettings).toContain('reasoningEffort')
+    expect(projectSettings).toContain('模型由 DSH Profile 统一管理')
+    expect(projectSettings).toContain('<Models showHeader={false} />')
     expect(projectSettings).not.toContain("'ultra'")
     expect(projectSettings).not.toContain('extraBodyText')
     expect(projectSettings).not.toContain('api_key')
-    expect(projectSettings).toContain('items.find((item) => item?.is_enabled')
+    expect(systemModels).toContain('reasoningEffort')
   })
 
   it('only offers Agent protocols and hides extra body for direct Responses', () => {
-    expect(systemModelForm).toContain("value: 'responses'")
-    expect(systemModelForm).toContain("value: 'chat_completions'")
-    expect(systemModelForm).not.toContain("value: 'ultra'")
-    expect(systemModelForm).toContain("modelForm.api_format === 'chat_completions'")
+    expect(systemModels).toContain("value: 'openai-responses'")
+    expect(systemModels).toContain("value: 'openai-completions'")
+    expect(systemModels).toContain("value: 'anthropic-messages'")
+    expect(systemModels).not.toContain("value: 'ultra'")
+    expect(systemModels).not.toContain('extraBodyText')
+    expect(systemModels).toContain('getDshModelSettingsReq')
+    expect(systemModels).toContain('mutateDshModelSettingsReq')
   })
 })

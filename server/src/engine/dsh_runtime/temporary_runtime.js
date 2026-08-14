@@ -21,6 +21,9 @@ export function getTemporaryDshRuntimeLease(appSessionId) {
   const client = new DshRuntimeClient({
     env: {
       ...process.env,
+      // Temporary conversations may coexist with the persistent runtime. They
+      // do not own the Electron renderer, so each needs an OS-assigned port.
+      DSH_DESKTOP_WEB_PORT: "0",
       DSH_RUNTIME_SESSION_ROOT: join(root, "sessions"),
       DSH_RUNTIME_STORAGE_ROOT: join(root, "storages"),
     },

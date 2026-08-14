@@ -7,6 +7,7 @@ import path from 'node:path'
 import { openSession } from './lib/cdp.mjs'
 import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+import { encodeDshModelRoute } from '../server/src/engine/dsh_runtime/model_route.js'
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'message-actions-ui-smoke-'))
 const projectName = `消息操作验收 ${Date.now()}`
@@ -68,18 +69,27 @@ async function apiJson(session, request) {
 function messageText(row) {
   const items = typeof row?.content_items === 'string' ? JSON.parse(row.content_items) : row?.content_items
   return (Array.isArray(items) ? items : [])
-    .filter((item) => ['text', 'markdown', 'agentMessage'].includes(item?.type))
-    .map((item) => String(item.content || ''))
+    .filter((item) => ['text', 'inputText', 'markdown', 'agentMessage'].includes(item?.type))
+    .map((item) => String(item.content ?? item.text ?? ''))
     .join('\n')
 }
 
 let session = null
 let fakeModel = null
 let projectId = ''
-let modelId = ''
+const providerId = 'message-actions-eval'
+const modelId = 'message-actions-model'
+const credentialRef = 'MESSAGE_ACTIONS_EVAL_API_KEY'
+let providerSaved = false
 try {
   fakeModel = await startFakeModel()
   session = await openSession({ port: 9361 })
+  session.onEvent('Runtime.consoleAPICalled', (event) => {
+    const values = (event?.args || []).map((arg) => arg.value ?? arg.description).filter(Boolean)
+    if (values.some((value) => String(value).includes('message-action-debug'))) {
+      console.error('[renderer-console]', ...values)
+    }
+  })
   const ui = makeUiDriver(session)
   const driver = makeDriver(session)
   await driver.login()
@@ -89,37 +99,74 @@ try {
   `)
 
   projectId = await driver.ensureProjectRecord(projectName)
-  const createdModel = await driver.raw.api('POST', `/api/projects/${projectId}/models`, {
-    model_name: 'message-actions-model',
-    display_name: '消息操作假模型',
-    category: 'PRIMARY',
-    api_base: fakeModel.baseUrl,
-    api_key: 'message-actions-key',
-    api_format: 'chat_completions',
-    supports_streaming: true,
+  const snapshot = await driver.raw.api('GET', '/api/dsh/models')
+  const namespace = snapshot.json?.data?.namespaces?.find((item) => item.ns === 'llm-pi-ai')
+  assert.equal(typeof namespace?.revision, 'number', JSON.stringify(snapshot.json))
+  const credential = await driver.raw.api('POST', '/api/dsh/models/credentials', {
+    ref: credentialRef,
+    value: 'message-actions-key',
   })
-  assert.equal(createdModel.status, 200, JSON.stringify(createdModel.json))
-  modelId = createdModel.json?.data?.id || ''
+  assert.equal(credential.status, 200, JSON.stringify(credential.json))
+  const configured = await driver.raw.api('POST', '/api/dsh/models/settings/mutate', {
+    ns: 'llm-pi-ai',
+    expected_revision: namespace.revision,
+    ops: [{
+      op: 'set',
+      path: ['providers', providerId],
+      value: {
+        displayName: '消息操作假模型',
+        apiKeyEnv: credentialRef,
+        api: 'openai-completions',
+        baseURL: fakeModel.baseUrl,
+        models: [{ id: modelId, name: '消息操作假模型' }],
+      },
+    }],
+  })
+  assert.equal(configured.status, 200, JSON.stringify(configured.json))
+  providerSaved = true
 
-  const original = await driver.askAgent(projectId, originalQuestion, { title: conversationTitle })
+  const original = await driver.askAgent(projectId, originalQuestion, {
+    title: conversationTitle,
+    model: encodeDshModelRoute(providerId, modelId),
+  })
   assert.equal(original.sid.length > 0, true)
   assert.equal(requests.length, 1)
+  const originalHistory = await driver.raw.api('GET', `/api/projects/${projectId}/sessions/${original.sid}/messages`)
+  assert.equal(originalHistory.status, 200, JSON.stringify(originalHistory.json))
+  assert.equal((originalHistory.json?.data?.messages || []).length > 0, true, JSON.stringify(originalHistory.json))
+  const listedSessions = await driver.raw.api('GET', `/api/agent/projects/${projectId}/sessions`)
+  assert.equal(
+    (listedSessions.json?.data?.items || []).some((item) => item.id === original.sid),
+    true,
+    JSON.stringify(listedSessions.json),
+  )
 
   await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
   await ui.waitUntil(`async () => Boolean(document.querySelector('[data-testid="agent-message-input"]'))`, {
     timeout: 30_000,
     label: 'DSH 输入框可用',
   })
-  await ui.clickText(projectName, { exact: true, timeout: 15_000 })
+  await ui.waitFor(`[data-agent-workspace-id="${projectId}"]`, { timeout: 15_000 })
+  if (!(await ui.exists(`[data-agent-conv-id="${original.sid}"]`))) {
+    await ui.click(`[data-agent-workspace-id="${projectId}"]`)
+  }
   await ui.waitFor(`[data-agent-conv-id="${original.sid}"]`, { timeout: 15_000 })
   await ui.click(`[data-agent-conv-id="${original.sid}"]`)
-  await ui.waitUntil(`async () => {
-    const copy = document.querySelector('[data-message-action="copy-assistant"]');
-    const edit = document.querySelector('[data-message-action="edit-user"]');
-    const retry = document.querySelector('[data-message-action="retry-assistant"]');
-    const branch = document.querySelector('[data-message-action="branch-assistant"]');
-    return Boolean(copy && edit && retry && branch && !copy.disabled && !edit.disabled && !retry.disabled && !branch.disabled);
-  }`, { timeout: 15_000, label: '原消息操作全部可用' })
+  await ui.waitUntil(`async () => document.body.innerText.includes('分支回答-1')`, {
+    timeout: 15_000,
+    label: '原回答恢复完成',
+  })
+  const originalActionState = await session.evalJs(`
+    return Object.fromEntries(['copy-assistant', 'edit-user', 'retry-assistant', 'branch-assistant'].map((name) => {
+      const element = document.querySelector('[data-message-action="' + name + '"]');
+      return [name, { exists: Boolean(element), disabled: element?.disabled ?? null, title: element?.getAttribute('title') || '' }];
+    }));
+  `)
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(originalActionState).map(([name, value]) => [name, value.exists && !value.disabled])),
+    { 'copy-assistant': true, 'edit-user': true, 'retry-assistant': true, 'branch-assistant': true },
+    JSON.stringify(originalActionState),
+  )
 
   await ui.click('[data-message-action="copy-assistant"]')
   const copyState = await ui.waitUntil(`async () => {
@@ -233,18 +280,27 @@ try {
     const config = typeof detail.data.session_config === 'string'
       ? JSON.parse(detail.data.session_config)
       : detail.data.session_config
-    assert.equal(typeof config.agent_runtime_thread_id, 'string')
+    assert.equal(typeof config.dsh_runtime_session_id, 'string')
   }
 
   console.log('[message-actions-ui-smoke] PASS 复制 + 编辑分支 + 重试分支 + 完整回答分支 + 原对话不变')
 } finally {
-  if (session && modelId && projectId) {
+  if (session && providerSaved) {
     await apiJson(session, {
-      method: 'DELETE',
-      url: `/api/projects/${encodeURIComponent(projectId)}/models/${encodeURIComponent(modelId)}`,
-      headers: {}, body: null,
+      method: 'POST',
+      url: '/api/dsh/models/settings/mutate',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ns: 'llm-pi-ai',
+        ops: [{ op: 'unset', path: ['providers', providerId] }],
+      }),
     }).catch(() => null)
   }
+  if (session) await apiJson(session, {
+    method: 'DELETE',
+    url: `/api/dsh/models/credentials/${encodeURIComponent(credentialRef)}`,
+    headers: {}, body: null,
+  }).catch(() => null)
   try { await session?.close() } catch { /* ignore */ }
   try { await fakeModel?.close() } catch { /* ignore */ }
   try { rmSync(evalHome, { recursive: true, force: true }) } catch { /* ignore */ }

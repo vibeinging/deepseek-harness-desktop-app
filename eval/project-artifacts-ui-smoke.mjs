@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 
 import { openSession } from './lib/cdp.mjs'
+import { makeDriver } from './lib/driver.mjs'
 import { makeUiDriver } from './lib/ui-driver.mjs'
+
+const requireFromServer = createRequire(new URL('../server/package.json', import.meta.url))
+const BetterSqlite3 = requireFromServer('better-sqlite3')
 
 const evalHome = mkdtempSync(path.join(os.tmpdir(), 'project-artifacts-ui-smoke-'))
 const sourceRoot = path.join(evalHome, 'source')
@@ -13,6 +19,20 @@ const projectName = `项目产物验收 ${Date.now()}`
 const conversationTitle = '项目产物测试对话'
 const v1Needle = `artifact-v1-${Date.now()}`
 const v2Needle = `artifact-v2-${Date.now()}`
+
+function seedVisibleConversation(databasePath, sessionId) {
+  const db = new BetterSqlite3(databasePath)
+  try {
+    db.prepare(`
+      INSERT INTO session_messages
+        (id, session_id, role, content_items, sequence_number, created_at, updated_at)
+      VALUES (?, ?, 'user', ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).run(randomUUID(), sessionId, JSON.stringify([{ type: 'text', text: '项目产物验收' }]))
+    db.prepare(`UPDATE sessions SET message_count=1, updated_at=CURRENT_TIMESTAMP WHERE id=?`).run(sessionId)
+  } finally {
+    db.close()
+  }
+}
 
 mkdirSync(sourceRoot, { recursive: true })
 writeFileSync(reportPath, `# 项目报告\n\n${v1Needle}\n`, 'utf8')
@@ -129,6 +149,8 @@ let session = null
 try {
   session = await openSession({ port: 9357 })
   const ui = makeUiDriver(session)
+  const driver = makeDriver(session)
+  await driver.login()
   await session.evalJs(`
     localStorage.setItem('dsh:onboarding:completed:v1', 'true');
     return true;
@@ -160,8 +182,39 @@ try {
   `, { timeoutMs: 20_000 })
   assert.equal(typeof prepared.projectId, 'string', JSON.stringify(prepared))
   assert.equal(typeof prepared.sessionId, 'string', JSON.stringify(prepared))
+  seedVisibleConversation(path.join(evalHome, '.dsh', 'local.db'), prepared.sessionId)
 
-  await session.cdp('Page.reload', { ignoreCache: true }, { timeoutMs: 10_000 })
+  await ui.goto('/agent')
+  await ui.waitUntil(`async () => Boolean(
+    window.electronAPI?.apiRequest && document.querySelector('[data-edge-toggle="workspace"]')
+  )`, { timeout: 30_000, label: '真实桌面已就绪' })
+  const activation = await session.evalJs(`
+    const pid = ${JSON.stringify(prepared.projectId)};
+    const sid = ${JSON.stringify(prepared.sessionId)};
+    const detail = await window.electronAPI.apiRequest({
+      method: 'GET',
+      url: '/api/projects/' + encodeURIComponent(pid),
+      headers: { 'Content-Type': 'application/json' },
+      body: null,
+    });
+    const { useProjectStore } = await import('/src/store/project.ts');
+    const { eventBus, EVENT_TYPES } = await import('/src/utils/eventBus.ts');
+    useProjectStore.getState().setCurrentProject(detail?.json?.data);
+    eventBus.emit(EVENT_TYPES.NEW_session_CREATED, { sessionId: sid, workspaceId: pid, projectId: pid });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const listed = await window.electronAPI.apiRequest({
+      method: 'GET',
+      url: '/api/agent/projects/' + encodeURIComponent(pid) + '/sessions',
+      headers: { 'Content-Type': 'application/json' },
+      body: null,
+    });
+    const data = listed?.json?.data;
+    return {
+      response: listed?.json,
+      ids: (Array.isArray(data) ? data : data?.items || []).map((item) => item.id),
+    };
+  `, { timeoutMs: 20_000 })
+  assert.ok(activation.ids.includes(prepared.sessionId), `权威会话列表缺少产物测试会话: ${JSON.stringify(activation)}`)
   const conversationSelector = `[data-agent-conv-id="${prepared.sessionId}"]`
   await ui.waitFor(conversationSelector, { timeout: 30_000 })
   await ui.click(conversationSelector)
@@ -208,12 +261,30 @@ try {
   await ui.waitFor('[placeholder="搜索文件名或正文"]', { timeout: 10_000 })
   await ui.click('button[title="artifact-report.md"]')
   await ui.click('[data-file-action="publish-artifact"]')
-  await ui.waitUntil(`async () => {
-    const detail = document.querySelector('[data-artifact-detail=${JSON.stringify(artifactId)}]');
-    return detail?.innerText.includes('2 个版本')
-      && detail?.querySelector('[data-artifact-version="2"][data-active="true"]')
-      && detail?.innerText.includes(${JSON.stringify(v2Needle)});
-  }`, { timeout: 15_000, label: '同一文件形成稳定产物 v2' })
+  try {
+    await ui.waitUntil(`async () => {
+      const detail = document.querySelector('[data-artifact-detail=${JSON.stringify(artifactId)}]');
+      return detail?.innerText.includes('2 个版本')
+        && detail?.querySelector('[data-artifact-version="2"][data-active="true"]')
+        && detail?.innerText.includes(${JSON.stringify(v2Needle)});
+    }`, { timeout: 15_000, label: '同一文件形成稳定产物 v2' })
+  } catch (error) {
+    const state = await session.evalJs(`
+      const list = await window.electronAPI.apiRequest({
+        method: 'GET',
+        url: ${JSON.stringify(`/api/agent/projects/${encodeURIComponent(prepared.projectId)}/artifacts`)},
+        headers: {},
+        body: null,
+      });
+      return {
+        list: list?.json,
+        detail: document.querySelector('[data-artifact-detail]')?.innerText || '',
+        filePreview: document.querySelector('[data-project-file-preview]')?.innerText || '',
+        tail: document.body.innerText.slice(-1200),
+      };
+    `)
+    throw new Error(`${error.message}\n产物 v2 状态: ${JSON.stringify(state)}`)
+  }
 
   await ui.click('[data-artifact-version="1"]')
   await ui.waitUntil(`async () => {
@@ -273,8 +344,7 @@ try {
     await ui.waitUntil(`async () => {
       const input = document.querySelector('[data-testid="agent-message-input"]');
       const attachment = document.querySelector('[data-artifact-id=${JSON.stringify(artifactId)}]');
-      return input?.value.includes(${JSON.stringify(artifactId)})
-        && input?.value.includes(${JSON.stringify(currentVersion.id)})
+      return input?.value === ''
         && attachment?.getAttribute('data-artifact-version-id') === ${JSON.stringify(currentVersion.id)}
         && attachment?.getAttribute('data-artifact-version-number') === '3';
     }`, { timeout: 10_000, label: '精确 v3 引用进入草稿且没有自动发送' })
@@ -323,9 +393,16 @@ try {
   await ui.waitUntil(`async () => {
     const input = document.querySelector('[data-testid="agent-message-input"]');
     const attachment = document.querySelector('[data-artifact-id=${JSON.stringify(artifactId)}]');
-    return input?.value.includes(${JSON.stringify(currentVersion.id)})
+    return input?.value === ''
       && attachment?.getAttribute('data-artifact-version-id') === ${JSON.stringify(currentVersion.id)};
   }`, { timeout: 10_000, label: 'App 重载后仍保留精确产物版本引用' })
+
+  const reloadedWorkspaceCollapsed = await session.evalJs(`
+    return document.querySelector('[data-edge-toggle="workspace"]')?.getAttribute('data-collapsed');
+  `)
+  if (reloadedWorkspaceCollapsed === 'true') await ui.click('[data-edge-toggle="workspace"]')
+  await openWorkbenchTool(session, ui, 'files')
+  await ui.waitFor('[placeholder="搜索文件名或正文"]', { timeout: 10_000 })
 
   await ui.press(process.platform === 'darwin' ? 'Meta+k' : 'Ctrl+k')
   const searchInput = '[placeholder="搜索项目、对话、文件、产物或网页来源…"]'

@@ -2,6 +2,7 @@ import { ApiError } from "../../errors.js";
 import { dshRuntimeEnabled } from "../../engine/dsh_runtime/source_locator.js";
 import {
   dshRuntimeStatus,
+  getDshRuntimeClient,
   probeDshRuntime,
 } from "../../engine/dsh_runtime/client.js";
 import {
@@ -45,5 +46,19 @@ export async function probeAgentRuntime() {
   } catch (error) {
     console.error(`[agent-runtime] probe failed: ${error?.message || String(error)}`);
     throw new ApiError("Agent 运行时连接失败", 503);
+  }
+}
+
+/** Return the one loopback DSH Client surface used by the Electron shell. */
+export async function getDshClientSurface() {
+  if (!dshRuntimeEnabled()) throw new ApiError("DSH 运行时未启用", 503);
+  try {
+    return {
+      data: { url: await getDshRuntimeClient().waitForClientSurface() },
+      message: "获取 DSH Client 地址成功",
+    };
+  } catch (error) {
+    console.error(`[agent-runtime] client surface failed: ${error?.message || String(error)}`);
+    throw new ApiError("DSH Client 界面启动失败", 503);
   }
 }

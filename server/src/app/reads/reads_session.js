@@ -216,29 +216,37 @@ export function mergeProductProjection(authoritativeMessages, productMessages) {
     const local = identity ? localByIdentity.get(`${role}:${identity}`) : null;
     if (!local) return message;
     const items = parseJson(local.content_items, []);
+    const localMetadata = parseJson(local.message_metadata, {});
     const overlay = items.filter((item) => {
       if (!item || typeof item !== "object") return false;
       if (role === "user") return item.type === "attachment";
+      if (item.type === "markdown" && item?.metadata?.item_type === "agentMessage") return false;
+      if (
+        localMetadata.answer_status === "accepted"
+        && item.type === "error"
+        && String(item.id || "").startsWith("web-sources-missing:")
+      ) return false;
       return !CORE_DSH_ITEM_TYPES.has(String(item.type || ""));
     });
-    if (!overlay.length) return message;
-    const overlayImageDigests = new Set(overlay.flatMap((item) => {
-      const sha256 = String(item?.metadata?.sha256 || "").trim();
-      return item?.type === "attachment" && sha256 ? [sha256] : [];
-    }));
-    const authoritativeItems = (Array.isArray(message.content_items) ? message.content_items : []).filter((item) => {
-      if (item?.type !== "attachment") return true;
+    const authoritativeItems = Array.isArray(message.content_items) ? message.content_items : [];
+    const authoritativeImageDigests = new Set(authoritativeItems.flatMap((item) => {
+      if (item?.type !== "attachment") return [];
       const attachmentId = String(item?.metadata?.dsh_attachment_id || "").trim();
       const sha256 = attachmentId.startsWith("sha256:")
         ? attachmentId.slice("sha256:".length)
         : String(item?.metadata?.sha256 || "").trim();
-      return !sha256 || !overlayImageDigests.has(sha256);
+      return sha256 ? [sha256] : [];
+    }));
+    const productOverlay = overlay.filter((item) => {
+      if (item?.type !== "attachment") return true;
+      const sha256 = String(item?.metadata?.sha256 || "").trim();
+      return !sha256 || !authoritativeImageDigests.has(sha256);
     });
     return {
       ...message,
-      content_items: [...overlay, ...authoritativeItems],
+      content_items: [...productOverlay, ...authoritativeItems],
       message_metadata: {
-        ...parseJson(local.message_metadata, {}),
+        ...localMetadata,
         ...(message.message_metadata || {}),
         dsh_product_projection: true,
       },

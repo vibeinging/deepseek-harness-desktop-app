@@ -40,7 +40,17 @@ interface ProfileBundle {
     path?: string
   }
   can_uninstall?: boolean
+  enabled?: boolean
+  blocked_reason?: string | null
   product_plugin?: boolean
+  ui_runtime?: {
+    kind?: 'dsh_client' | 'dsh_work_descriptor' | 'host_only'
+    declares_client?: boolean
+    client_graph?: boolean
+    isolation?: 'trusted' | 'quarantined' | 'not_required'
+    host_supported_slots?: string[]
+    host_unmapped_slots?: string[]
+  }
   capabilities?: string[]
 }
 
@@ -290,10 +300,13 @@ export default function PluginCenter({
                 <strong>{bundle.display_name || bundle.name}</strong>
                 <Badge size="xs" variant="light">{managedLabel(bundle.managed_by)}</Badge>
                 {bundle.product_plugin && <Badge size="xs" color="violet" variant="light">产品扩展</Badge>}
+                {bundle.ui_runtime?.client_graph && <Badge size="xs" color="blue" variant="light">DSH Client</Badge>}
+                {bundle.ui_runtime?.isolation === 'quarantined' && <Badge size="xs" color="yellow" variant="light">已隔离</Badge>}
               </div>
               <p>{bundle.description || 'DSH Profile Bundle'}</p>
+              {bundle.blocked_reason && <p data-profile-bundle-blocked>{bundle.blocked_reason}</p>}
               <div className={styles.itemMeta}>
-                <span>顺序 {Number(bundle.profile_order || 0) + 1}</span>
+                <span>{bundle.enabled === false ? '未加载' : `顺序 ${Number(bundle.profile_order || 0) + 1}`}</span>
                 <span>{bundle.version ? `v${bundle.version}` : '未声明版本'}</span>
                 <span>{sourceLabel(bundle)}</span>
               </div>
@@ -360,13 +373,13 @@ export default function PluginCenter({
                   <span>dsh-work 不会自动放开社区仓库的主机代码执行权限。插件作者应提交已构建产物，或先完成单独安全审查。</span>
                 )}
                 {preflight.status === 'migration_required' && (
-                  <span>需要补齐 dsh.bundle.patch、当前 dshClient 清单和正式 SDK 版本后再安装。</span>
+                  <span>需要补齐 dsh.bundle.patch、当前 dsh.client / ./client 清单和正式 SDK 版本后再安装。</span>
                 )}
                 {preflight.status === 'sdk_unavailable' && (
-                  <span>请先确认私有 npm 权限和插件声明的 SDK 版本；dsh-work 不会绕过 registry 改为链接 DSH 源码。</span>
+                  <span>请确认公开 npm registry 可读取插件声明的 SDK 版本；dsh-work 不会改为链接 DSH 源码。</span>
                 )}
                 {preflight.status === 'ready' && preflight.surface === 'dsh_web' && (
-                  <span>这个 Bundle 只有 DSH Web 客户端界面，不会自动出现在 dsh-work 工作台；仍需提供产品插槽描述。</span>
+                  <span>这个 Bundle 会进入当前主窗口的 DSH Client 图。设置页、全局浮层和侧栏底部加法位置使用标准 Slot；整列侧栏、会话和详情仍需按插件实际贡献检查。</span>
                 )}
               </div>
             </Alert>
@@ -406,7 +419,7 @@ export default function PluginCenter({
             </div>
             <div className={styles.detailGrid}>
               <div><span>包名</span><strong>{detail.name}</strong></div>
-              <div><span>加载顺序</span><strong>{Number(detail.profile_order || 0) + 1}</strong></div>
+              <div><span>加载顺序</span><strong>{detail.enabled === false ? '未加载' : Number(detail.profile_order || 0) + 1}</strong></div>
               <div><span>来源</span><strong>{sourceLabel(detail)}</strong></div>
               <div><span>卸载权限</span><strong>{detail.can_uninstall ? '可以卸载' : '由系统管理'}</strong></div>
             </div>
@@ -414,6 +427,21 @@ export default function PluginCenter({
               <div className={styles.detailSection}>
                 <h3>产品能力</h3>
                 <p>{detail.capabilities.join('、')}</p>
+              </div>
+            )}
+            {(detail.ui_runtime?.declares_client || detail.ui_runtime?.client_graph) && (
+              <div className={styles.detailSection} data-dsh-client-surface-status>
+                <h3>浏览器表层</h3>
+                {detail.ui_runtime.isolation === 'quarantined' ? (
+                  <p>{detail.blocked_reason || '这个社区 Client Bundle 已从主窗口运行图隔离。'}</p>
+                ) : (
+                  <>
+                    <p>已进入当前主窗口的 DSH Client 图。</p>
+                    <p>主窗口已支持：{detail.ui_runtime.host_supported_slots?.join('、') || '无'}</p>
+                    <p>主窗口尚未映射：{detail.ui_runtime.host_unmapped_slots?.join('、') || '无'}</p>
+                    <p>这里说明宿主能力，不代表这个插件实际注册了这些位置。</p>
+                  </>
+                )}
               </div>
             )}
           </div>

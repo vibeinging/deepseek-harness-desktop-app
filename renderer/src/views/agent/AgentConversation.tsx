@@ -37,6 +37,7 @@ import {
   startAgentTurn,
   startAgentReview,
   stopAgentRun,
+  setDshSessionPlanMode,
   setDshSessionPermission,
   updateDshSessionQueueItem,
   watchDshSessionProtocol
@@ -60,8 +61,8 @@ import ComposerActions, { type Attachment } from './ComposerActions'
 import PermissionPicker from './PermissionPicker'
 import CollaborationModePicker from './CollaborationModePicker'
 import {
-  loadConversationCollaborationMode,
-  persistConversationCollaborationMode,
+  collaborationModeFromDshPlan,
+  normalizeCollaborationMode,
   type CollaborationMode
 } from './collaborationMode'
 import {
@@ -137,7 +138,10 @@ import {
 } from './conversation/virtualMessageList'
 import type { FileReferenceOpenTarget } from './conversation/types'
 import { useAppName } from '@/store/brand'
+import { useSkinsStore } from '@/store/skins'
+import { ANIME_PROFILE_SKIN_ID } from '@/theme/skins/builtin'
 import HomeWelcome from './HomeWelcome'
+import { useDshClientHost } from '@/dsh-client/DshClientHost'
 import styles from './agent.module.scss'
 
 export type { DataWorkspaceEvent } from './stream/types'
@@ -536,7 +540,12 @@ function DshWorkAgentConversation({
       plan: wsPlan.current
     })
   const [messages, setMessages] = useState<Msg[]>([])
+  const dshClientHost = useDshClientHost()
   const appName = useAppName()
+  const showAnimeHome = useSkinsStore((state) => {
+    const skin = state.getAppliedSkin()
+    return skin?.id === ANIME_PROFILE_SKIN_ID
+  })
   const [initialDraft] = useState(() => temporary
     ? { input: '', attachments: [], reviewComments: [], searchMode: 'auto' as const }
     : loadConversationDraft(projectId, selectedId))
@@ -546,6 +555,10 @@ function DshWorkAgentConversation({
   const [dropActive, setDropActive] = useState(false)
   const dropDepthRef = useRef(0)
   const taRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    dshClientHost?.conversation.updateDraft(input)
+  }, [dshClientHost, input])
 
   useEffect(() => {
     const selectedSkill = selectedSkills[selectedSkills.length - 1]
@@ -785,23 +798,20 @@ function DshWorkAgentConversation({
   const [permissionSelect, setPermissionSelect] = useState<DshPermissionSelect | null>(null)
   const [permissionChanging, setPermissionChanging] = useState(false)
 
-  // Plan is a Codex collaboration mode. It is separate from the update_plan
-  // progress tool and is fixed for the duration of one running Turn.
-  const [collaborationMode, setCollaborationModeState] = useState<CollaborationMode>(
-    () => loadConversationCollaborationMode(projectId, selectedId)
-  )
+  // DSH's per-session `plan` projection is the durable authority. A blank
+  // conversation keeps only an in-memory choice until its first DSH Session exists.
+  const [collaborationMode, setCollaborationModeState] = useState<CollaborationMode>('default')
+  const [collaborationModeChanging, setCollaborationModeChanging] = useState(false)
   const collaborationModeRef = useRef<CollaborationMode>(collaborationMode)
-  const setCollaborationMode = (mode: CollaborationMode) => {
+  const adoptCollaborationMode = (mode: CollaborationMode) => {
     setCollaborationModeState(mode)
     collaborationModeRef.current = mode
-    persistConversationCollaborationMode(projectId, sessionIdRef.current, mode)
   }
 
-  useEffect(() => {
-    const next = loadConversationCollaborationMode(projectId, selectedId)
-    setCollaborationModeState(next)
-    collaborationModeRef.current = next
-  }, [projectId, selectedId])
+  const applyDshPlanSnapshot = (state: DshSessionProtocolState | null | undefined) => {
+    const next = collaborationModeFromDshPlan(state?.projections?.plan)
+    if (next) adoptCollaborationMode(next)
+  }
 
   // DSH owns the complete per-session queue. The renderer only projects the
   // latest session/queue snapshot received from the backend mux stream.
@@ -827,6 +837,41 @@ function DshWorkAgentConversation({
     })).filter((option) => option.value && option.name)
     setPermissionSelect(currentValue && options.length ? { currentValue, options } : null)
   }
+  const changeCollaborationMode = async (mode: CollaborationMode) => {
+    const next = normalizeCollaborationMode(mode)
+    const currentSessionId = sessionIdRef.current
+    if (!currentSessionId || temporary) {
+      adoptCollaborationMode(next)
+      return
+    }
+    if (collaborationModeChanging) return
+    setCollaborationModeChanging(true)
+    try {
+      const response: any = await setDshSessionPlanMode(projectId, currentSessionId, next)
+      if (sessionIdRef.current === currentSessionId) {
+        const state = response?.data as DshSessionProtocolState
+        applyDshQueueSnapshot(state)
+        applyDshPermissionSnapshot(state)
+        applyDshPlanSnapshot(state)
+      }
+    } catch (error: any) {
+      try {
+        const response: any = await getDshSessionProtocolState(projectId, currentSessionId)
+        if (sessionIdRef.current === currentSessionId) {
+          applyDshPlanSnapshot(response?.data as DshSessionProtocolState)
+        }
+      } catch {
+        // The visible mode stays on the last confirmed DSH projection.
+      }
+      notifications.show({
+        color: 'orange',
+        title: '未能更新 DSH Plan 模式',
+        message: error?.message || '请检查当前 Profile 后重试。'
+      })
+    } finally {
+      setCollaborationModeChanging(false)
+    }
+  }
   const [qEditing, setQEditing] = useState<string | null>(null)
   const [qDraft, setQDraft] = useState('')
 
@@ -834,6 +879,8 @@ function DshWorkAgentConversation({
     setQueueState([])
     setPermissionSelect(null)
     setPermissionChanging(false)
+    adoptCollaborationMode('default')
+    setCollaborationModeChanging(false)
     setQEditing(null)
     setQDraft('')
   }, [projectId, selectedId, temporary])
@@ -1313,10 +1360,13 @@ function DshWorkAgentConversation({
 
   useEffect(() => {
     if (temporary || !selectedId) {
+      dshClientHost?.conversation.syncSession(null)
       applyDshQueueSnapshot(null)
       applyDshPermissionSnapshot(null)
+      applyDshPlanSnapshot(null)
       return
     }
+    dshClientHost?.conversation.syncSession(null)
     const controller = new AbortController()
     let delayMs = 250
     const waitToRetry = () => new Promise<void>((resolve) => {
@@ -1331,8 +1381,11 @@ function DshWorkAgentConversation({
         const response: any = await getDshSessionProtocolState(projectId, selectedId)
         if (!controller.signal.aborted && sessionIdRef.current === selectedId) {
           const state = response?.data as DshSessionProtocolState
+          dshClientHost?.conversation.syncSession(state.dshSessionId)
+          dshClientHost?.conversation.updateDraft(input)
           applyDshQueueSnapshot(state)
           applyDshPermissionSnapshot(state)
+          applyDshPlanSnapshot(state)
         }
         return true
       } catch {
@@ -1354,8 +1407,10 @@ function DshWorkAgentConversation({
             if (!event || controller.signal.aborted || sessionIdRef.current !== selectedId) return
             if (event.type === 'dsh/session-state') {
               const state = event.payload?.state as DshSessionProtocolState
+              dshClientHost?.conversation.syncSession(state.dshSessionId)
               applyDshQueueSnapshot(state)
               applyDshPermissionSnapshot(state)
+              applyDshPlanSnapshot(state)
               return
             }
             // A locally-started Turn already receives the same Runtime items
@@ -1380,7 +1435,7 @@ function DshWorkAgentConversation({
     // The stream is scoped only by the selected app session. Patch helpers use
     // refs for current state so reconnects do not restart on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, selectedId, temporary])
+  }, [dshClientHost, projectId, selectedId, temporary])
 
   const consumeAgentStream = async (req: ReturnType<typeof startAgentTurn>, expectedThreadId: string | null) => {
     let runCompleted = false
@@ -1452,7 +1507,6 @@ function DshWorkAgentConversation({
         sid = res?.data?.id || res?.data?.session?.id || null
         if (sid) {
           newlyCreatedSessionIdRef.current = sid
-          persistConversationCollaborationMode(projectId, sid, collaborationModeRef.current)
           setSessionId(sid)
           sessionIdRef.current = sid
           setBusySessionId(sid)
@@ -1786,21 +1840,23 @@ function DshWorkAgentConversation({
 
       const rawMessages = Array.isArray(data.messages) ? data.messages : []
       const mapped = mergeServerMessages(rawMessages.map(mapServerMessage))
-      persistConversationCollaborationMode(projectId, nextSessionId, collaborationModeRef.current)
       newlyCreatedSessionIdRef.current = nextSessionId
       setSessionId(nextSessionId)
       sessionIdRef.current = nextSessionId
       applyDshQueueSnapshot(null)
       applyDshPermissionSnapshot(null)
+      applyDshPlanSnapshot(null)
       applyPersistedMessages(nextSessionId, mapped)
       setWorkspaceDiff(null)
       setReviewTurnId(null)
       setRevertingItemIds({})
-      onSessionCreated?.(nextSessionId)
-      onAfterComplete?.()
       scrollBottom()
 
-      if (mode === 'branch') return true
+      if (mode === 'branch') {
+        onSessionCreated?.(nextSessionId)
+        onAfterComplete?.()
+        return true
+      }
 
       const draft: any = data.draft && typeof data.draft === 'object' ? data.draft : {}
       const request: any = draft.request && typeof draft.request === 'object' ? draft.request : {}
@@ -1835,9 +1891,10 @@ function DshWorkAgentConversation({
         setSearchMode(request.searchMode as SearchMode)
       }
       if (['default', 'plan'].includes(request.collaborationMode)) {
-        setCollaborationMode(request.collaborationMode as CollaborationMode)
+        adoptCollaborationMode(normalizeCollaborationMode(request.collaborationMode))
       }
-      void dispatch(prompt, turnExtra)
+      await dispatch(prompt, turnExtra)
+      onSessionCreated?.(nextSessionId)
       return true
     } catch (error: any) {
       notifications.show({
@@ -2724,8 +2781,8 @@ function DshWorkAgentConversation({
         />
         <CollaborationModePicker
           value={collaborationMode}
-          disabled={effectiveBusy}
-          onChange={setCollaborationMode}
+          disabled={effectiveBusy || collaborationModeChanging}
+          onChange={(mode) => void changeCollaborationMode(mode)}
         />
         {permissionSelect && (
           <PermissionPicker
@@ -2741,6 +2798,7 @@ function DshWorkAgentConversation({
                   const state = response?.data as DshSessionProtocolState
                   applyDshQueueSnapshot(state)
                   applyDshPermissionSnapshot(state)
+                  applyDshPlanSnapshot(state)
                 }
               } catch (error: any) {
                 notifications.show({
@@ -2787,6 +2845,7 @@ function DshWorkAgentConversation({
           {effectiveBusy ? <IconPlayerStopFilled size={15} /> : <IconArrowUp size={17} stroke={2} />}
         </button>
       </div>
+      <div className={styles.composerPluginDock} data-dsh-conversation-composer-dock />
     </div>
   )
 
@@ -2860,7 +2919,7 @@ function DshWorkAgentConversation({
                     ? '正在读取已保存的消息'
                     : '可以聊天、查看图片、联网搜索，或处理本地文件'
                 : '可以聊天、查看图片、联网搜索，或处理本地文件'}
-            showCharacter={!selectedId && !temporary}
+            showCharacter={showAnimeHome && !selectedId && !temporary}
             composer={(!selectedId || temporary || conversationLoadState === 'idle') ? composer : undefined}
           />
         </div>

@@ -7,11 +7,12 @@ import { resolveHomeGreeting } from './homeGreeting'
 const read = (relative: string) => readFileSync(fileURLToPath(new URL(relative, import.meta.url)), 'utf8')
 
 describe('homepage character', () => {
-  it('appears only on the new-conversation home and stays decorative', () => {
+  it('appears only for the anime theme on the new-conversation home and stays decorative', () => {
     const conversation = read('./AgentConversation.tsx')
     const welcome = read('./HomeWelcome.tsx')
 
-    expect(conversation).toContain('showCharacter={!selectedId && !temporary}')
+    expect(conversation).toContain('skin?.id === ANIME_PROFILE_SKIN_ID')
+    expect(conversation).toContain('showCharacter={showAnimeHome && !selectedId && !temporary}')
     expect(welcome).toContain('aria-hidden="true"')
     expect(welcome).toContain('draggable={false}')
     expect(welcome).toContain("@/assets/dsh-home-character.png")

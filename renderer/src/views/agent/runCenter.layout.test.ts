@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const runCenterSource = readFileSync(fileURLToPath(new URL('./RunCenter.tsx', import.meta.url)), 'utf8')
 const workstationSource = readFileSync(
   fileURLToPath(new URL('../../layout/workstation/Workstation.tsx', import.meta.url)),
   'utf8'
@@ -10,23 +9,18 @@ const workstationSource = readFileSync(
 const shellSource = readFileSync(fileURLToPath(new URL('./AgentShell.tsx', import.meta.url)), 'utf8')
 
 describe('agent run center layout contract', () => {
-  it('keeps run facts in the real workstation', () => {
-    expect(runCenterSource).toContain('data-run-center')
-    expect(runCenterSource).toContain('listAgentRuns')
-    expect(runCenterSource).toContain('getAgentRun')
-    expect(runCenterSource).not.toContain('data-run-action="stop"')
-    expect(runCenterSource).not.toContain('data-run-action="recover"')
-    expect(runCenterSource).not.toContain('data-run-action="archive"')
-    expect(runCenterSource).not.toContain('data-run-action="delete"')
-    expect(runCenterSource).not.toContain('stopAgentRun')
-    expect(runCenterSource).toContain('data-run-subtasks')
-    expect(runCenterSource).toContain('data-subtask-type')
-    expect(runCenterSource).toContain('data-native-subagents')
-    expect(runCenterSource).toContain('getAgentSubagentThread')
-    expect(runCenterSource).toContain('协作子任务')
-    expect(workstationSource).toContain("useState<'runs' | 'trace'>('runs')")
+  it('uses the canonical DSH trajectory as the review source', () => {
+    expect(workstationSource).toContain('data-dsh-trajectory')
+    expect(workstationSource).toContain('data-dsh-trajectory-event')
+    expect(workstationSource).toContain('data-dsh-trajectory-projections')
+    expect(workstationSource).toContain('getDshSessionTrajectory')
+    expect(workstationSource).toContain('session.history')
+    expect(workstationSource).toContain("entry.event.type === 'tool/call'")
+    expect(workstationSource).toContain("entry.event.type === 'assistant/message'")
+    expect(workstationSource).not.toContain('getAgentSessionTraces')
+    expect(workstationSource).not.toContain('getAgentRun')
+    expect(workstationSource).not.toContain('<RunCenter')
     expect(workstationSource).not.toContain('data-workstation-view="automations"')
-    expect(workstationSource).toContain('<RunCenter')
   })
 
   it('opens the workstation for a selected historical session', () => {

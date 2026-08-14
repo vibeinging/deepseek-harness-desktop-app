@@ -8,44 +8,17 @@ export function normalizeCollaborationMode(value: unknown): CollaborationMode {
     : 'default'
 }
 
-export function conversationCollaborationModeStorageKey(projectId: string, conversationId: string | null) {
-  return projectId && conversationId
-    ? `dsh-thread-collaboration-mode:${projectId}:${conversationId}`
-    : ''
+/** Read the effective state of DSH's logged Plan projection. */
+export function effectiveDshPlanMode(value: unknown): boolean | null {
+  if (!value || typeof value !== 'object') return null
+  const projection = value as { active?: unknown; pending?: unknown }
+  const active = projection.active === true
+  return projection.pending === true ? !active : active
 }
 
-function projectCollaborationModeStorageKey(projectId: string) {
-  return projectId ? `dsh-project-collaboration-mode:${projectId}` : ''
-}
-
-export function loadConversationCollaborationMode(
-  projectId: string,
-  conversationId: string | null
-): CollaborationMode {
-  try {
-    const conversationKey = conversationCollaborationModeStorageKey(projectId, conversationId)
-    const projectKey = projectCollaborationModeStorageKey(projectId)
-    return normalizeCollaborationMode(
-      (conversationKey ? localStorage.getItem(conversationKey) : null)
-      || (projectKey ? localStorage.getItem(projectKey) : null)
-    )
-  } catch {
-    return 'default'
-  }
-}
-
-export function persistConversationCollaborationMode(
-  projectId: string,
-  conversationId: string | null,
-  collaborationMode: CollaborationMode
-) {
-  try {
-    const mode = normalizeCollaborationMode(collaborationMode)
-    const projectKey = projectCollaborationModeStorageKey(projectId)
-    const conversationKey = conversationCollaborationModeStorageKey(projectId, conversationId)
-    if (projectKey) localStorage.setItem(projectKey, mode)
-    if (conversationKey) localStorage.setItem(conversationKey, mode)
-  } catch {
-    /* ignore */
-  }
+/** Convert one DSH Plan projection into the composer mode. */
+export function collaborationModeFromDshPlan(value: unknown): CollaborationMode | null {
+  const active = effectiveDshPlanMode(value)
+  if (active === null) return null
+  return active ? 'plan' : 'default'
 }

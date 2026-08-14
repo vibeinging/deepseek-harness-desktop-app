@@ -50,8 +50,8 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   { name: 'compact', label: '/compact', desc: '压缩当前对话上下文', keywords: '压缩 上下文 记忆', icon: IconArchive, requiresSession: true, requiresIdle: true },
   { name: 'model', label: '/model', desc: '选择模型和推理强度', keywords: '模型 推理 强度', icon: IconAdjustmentsHorizontal },
   { name: 'skill', label: '/skill', desc: '筛选当前工作区技能', keywords: '技能 skill', icon: IconBox },
-  { name: 'runs', label: '/runs', desc: '打开当前对话的运行审查', keywords: '运行 审查 工具 错误', icon: IconListCheck, requiresSession: true },
-  { name: 'trace', label: '/trace', desc: '查看调用树、耗时和 Token', keywords: '过程 调用树 耗时 token 错误', icon: IconActivityHeartbeat, requiresSession: true }
+  { name: 'runs', label: '/runs', desc: '打开当前对话的 DSH 轨迹', keywords: '轨迹 运行 审查 工具 错误', icon: IconListCheck, requiresSession: true },
+  { name: 'trace', label: '/trace', desc: '查看 DSH 事件、耗时和 Token', keywords: '过程 事件 轨迹 耗时 token 错误', icon: IconActivityHeartbeat, requiresSession: true }
 ]
 
 export interface SlashCtx {

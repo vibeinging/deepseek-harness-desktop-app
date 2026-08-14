@@ -9,7 +9,7 @@ import {
   prepareTrustedProfilePlugins,
 } from "../../server/src/engine/dsh_runtime/trusted_client_plugins.js";
 
-async function fixture(root, name = "@deepseek-ai/dsh-product-bridge") {
+async function fixture(root, name = "@deepseek-ai/dsh-product-bridge", { client = false } = {}) {
   await mkdir(join(root, "src"), { recursive: true });
   await writeFile(join(root, "src", "index.js"), "export default function apply() {}\n");
   await writeFile(join(root, "cordis.patch.yml"), "- insert: []\n");
@@ -19,6 +19,7 @@ async function fixture(root, name = "@deepseek-ai/dsh-product-bridge") {
     main: "./src/index.js",
     dsh: {
       bundle: { patch: "./cordis.patch.yml" },
+      ...(client ? { client: { platform: "web" } } : {}),
     },
   }, null, 2)}\n`);
 }
@@ -49,6 +50,9 @@ function profileApi() {
     },
     writeProfileManifest(dir, manifest) {
       writeFileSync(join(dir, "package.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    },
+    resolveBundleDir(_name, packageName, _installAnchor, dir) {
+      return join(dir, "node_modules", ...packageName.split("/"));
     },
   };
 }
@@ -118,6 +122,12 @@ test("trusted DSH plugins are composed by the official Profile bundle list", asy
   try {
     await fixture(pluginRoot);
     await mkdir(profileDir, { recursive: true });
+    await fixture(join(profileDir, "node_modules", "@example", "user-bundle"), "@example/user-bundle");
+    await fixture(
+      join(profileDir, "node_modules", "@example", "community-ui"),
+      "@example/community-ui",
+      { client: true },
+    );
     await writeFile(join(profileDir, "package.json"), `${JSON.stringify({
       name: "dsh-profile-web",
       private: true,
@@ -125,6 +135,7 @@ test("trusted DSH plugins are composed by the official Profile bundle list", asy
         "@deepseek-ai/dsh-product-client": "file:/retired-product-client",
         "@deepseek-ai/dsh-turn-navigator": "file:/retired-turn-navigator",
         "@example/user-bundle": "1.0.0",
+        "@example/community-ui": "1.0.0",
       },
       dsh: { profile: { bundles: [
         "@deepseek-ai/dsh-base",
@@ -132,11 +143,13 @@ test("trusted DSH plugins are composed by the official Profile bundle list", asy
         "@deepseek-ai/dsh-product-client",
         "@deepseek-ai/dsh-turn-navigator",
         "@example/user-bundle",
+        "@example/community-ui",
       ] } },
     }, null, 2)}\n`);
 
     const first = await prepareTrustedProfilePlugins({
       profileApi: profileApi(),
+      installAnchor: join(root, "dsh", "package.json"),
       appRoot: join(root, "app"),
       env: { DSH_HOME: dshHome, DSH_PRODUCT_BRIDGE_ROOT: pluginRoot },
       runtimeRoot: join(root, "runtime"),
@@ -149,12 +162,17 @@ test("trusted DSH plugins are composed by the official Profile bundle list", asy
       "@example/user-bundle",
       "@deepseek-ai/dsh-product-bridge",
     ]);
+    assert.deepEqual(first.quarantined.map((plugin) => plugin.name), ["@example/community-ui"]);
     const stored = JSON.parse(await readFile(join(profileDir, "package.json"), "utf8"));
-    assert.deepEqual(stored.dependencies, { "@example/user-bundle": "1.0.0" });
+    assert.deepEqual(stored.dependencies, {
+      "@example/user-bundle": "1.0.0",
+      "@example/community-ui": "1.0.0",
+    });
     assert.deepEqual(stored.dsh.profile.bundles, first.bundles);
 
     const second = await prepareTrustedProfilePlugins({
       profileApi: profileApi(),
+      installAnchor: join(root, "dsh", "package.json"),
       appRoot: join(root, "app"),
       env: { DSH_HOME: dshHome, DSH_PRODUCT_BRIDGE_ROOT: pluginRoot },
       runtimeRoot: join(root, "runtime"),

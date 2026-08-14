@@ -55,12 +55,14 @@ function fixture({ appSessionId, dshSessionId, preset = "workspace-write", proje
           },
         };
       }
-      if (method === "command.execute") {
-        pendingPreset = String(payload.line).replace(/^\/permission\s+/, "");
-        remainingDelayReads = projectionDelayReads;
-        return { matched: true, commandId: "command-1" };
-      }
       throw new Error(`unexpected method ${method}`);
+    },
+    requestRemote: async (endpoint, args) => {
+      calls.push({ endpoint, args });
+      if (endpoint !== "commands/execute") throw new Error(`unexpected endpoint ${endpoint}`);
+      pendingPreset = String(args.line || "").replace(/^\/permission\s+/, "");
+      remainingDelayReads = projectionDelayReads;
+      return { commandId: "permission", result: { kind: "success" } };
     },
   };
   return { calls, client, ctx };
@@ -75,9 +77,12 @@ test("permission changes use the DSH projection and logged command path", async 
   }, { client });
 
   assert.equal(result.data.projections.permissions.currentValue, "danger-full-access");
-  assert.deepEqual(calls.filter((call) => call.method === "command.execute"), [{
-    method: "command.execute",
-    payload: { sessionId: "dsh-permission-1", line: "/permission danger-full-access" },
+  assert.deepEqual(calls.filter((call) => call.endpoint === "commands/execute"), [{
+    endpoint: "commands/execute",
+    args: {
+      agentId: "dsh-permission-1",
+      line: "/permission danger-full-access",
+    },
   }]);
   assert.equal(calls.filter((call) => call.method === "session.history").length, 2);
 });
@@ -108,5 +113,5 @@ test("permission changes reject values absent from the DSH projection", async ()
     }, { client }),
     /不在 DSH 当前允许的范围内/,
   );
-  assert.equal(calls.some((call) => call.method === "command.execute"), false);
+  assert.equal(calls.some((call) => call.endpoint === "commands/execute"), false);
 });

@@ -50,6 +50,7 @@ export default {
       "dsh.authoritative-product-surface",
       "dsh.no-duplicate-web-surface",
       "dsh.permission-authoritative",
+      "dsh.trajectory-authoritative",
       "dsh.image-host-admission",
     ],
     tags: ["pr", "ui", "dsh", "conversation"],
@@ -67,6 +68,11 @@ export default {
       {
         id: "dsh.permission-authoritative",
         description: "权限选择器读取 DSH Session 投影并通过 DSH 命令切换",
+        evidence: ["ui", "api"],
+      },
+      {
+        id: "dsh.trajectory-authoritative",
+        description: "结果与证据直接展示同一个 DSH Session 的 session.history 轨迹",
         evidence: ["ui", "api"],
       },
       {
@@ -121,15 +127,14 @@ export default {
       await ui.goto("/agent");
       await ui.waitFor('[data-testid="agent-message-input"]', { timeout: 15_000 });
       await ui.waitFor('[data-agent-window-titlebar]', { timeout: 15_000 });
-      await driver.raw.activateProject(created.json.data);
+      await ui.waitFor(`[data-agent-workspace-id="${pid}"]`, { timeout: 15_000 });
+      if (!(await ui.exists(`[data-agent-conv-id="${sid}"]`))) {
+        await ui.click(`[data-agent-workspace-id="${pid}"]`, { timeout: 10_000 });
+      }
+      await ui.waitFor(`[data-agent-conv-id="${sid}"]`, { timeout: 15_000 });
+      await ui.click(`[data-agent-conv-id="${sid}"]`, { timeout: 10_000 });
+      await ui.waitFor(`[data-agent-conv-id="${sid}"][aria-current="page"]`, { timeout: 15_000 });
       const activation = await driver.raw.ev(`
-        const { eventBus, EVENT_TYPES } = await import('/src/utils/eventBus.ts');
-        eventBus.emit(EVENT_TYPES.NEW_session_CREATED, {
-          sessionId: ${JSON.stringify(sid)},
-          workspaceId: ${JSON.stringify(pid)},
-          projectId: ${JSON.stringify(pid)},
-        });
-        await new Promise((resolve) => setTimeout(resolve, 500));
         const listed = await window.electronAPI.apiRequest({
           method: 'GET',
           url: '/api/agent/projects/' + encodeURIComponent(${JSON.stringify(pid)}) + '/sessions',
@@ -137,22 +142,18 @@ export default {
           body: null,
         });
         return {
-          eventListeners: eventBus.events?.[EVENT_TYPES.NEW_session_CREATED]?.length || 0,
           selectedSessionId: document.querySelector('[data-agent-conv-id][aria-current="page"]')?.getAttribute('data-agent-conv-id') || '',
           listedSessionIds: (listed?.json?.data?.items || []).map((item) => item.id),
           visibleSessionIds: [...document.querySelectorAll('[data-agent-conv-id]')]
             .map((element) => element.getAttribute('data-agent-conv-id')),
         };
       `);
-      assert.ok(activation.eventListeners > 0, "主窗口已注册会话切换事件", {
+      assert.eq(activation.selectedSessionId, sid, "用户从项目列表打开绑定的 DSH 会话", {
         criterion: "dsh.authoritative-product-surface",
       });
       assert.ok(activation.listedSessionIds.includes(sid), `权威侧栏快照包含绑定会话(${JSON.stringify(activation)})`, {
         criterion: "dsh.authoritative-product-surface",
       });
-      await ui.waitFor(`[data-agent-conv-id="${sid}"]`, { timeout: 15_000 });
-      await ui.click(`[data-agent-conv-id="${sid}"]`, { timeout: 10_000 });
-      await ui.waitFor(`[data-agent-conv-id="${sid}"][aria-current="page"]`, { timeout: 15_000 });
       await ui.waitFor('[data-conversation-state="idle"]', { timeout: 15_000 });
       await ui.waitFor('[data-testid="agent-message-input"]', { timeout: 15_000 });
       if (!(await ui.exists('[data-workbench-empty-action="browser"]'))) {
@@ -242,6 +243,49 @@ export default {
           "UI 权限切换写入同一个 DSH Session 投影",
           { criterion: "dsh.permission-authoritative" },
         );
+
+        const trajectory = await api("GET", `/api/agent/projects/${pid}/threads/${sid}/dsh-trajectory`);
+        assert.status(trajectory, 200, "读取同一个会话的 DSH 轨迹", {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        assert.eq(trajectory.json?.data?.source, "session.history", "轨迹来源是 DSH session.history", {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        const eventTypes = (trajectory.json?.data?.events || []).map((entry) => entry?.event?.type);
+        assert.ok(eventTypes.includes("command/run"), `轨迹包含权限命令执行(${JSON.stringify(eventTypes)})`, {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        assert.ok(eventTypes.includes("permission/preset"), `轨迹包含权限投影事件(${JSON.stringify(eventTypes)})`, {
+          criterion: "dsh.trajectory-authoritative",
+        });
+
+        if (await ui.exists('[data-workbench-empty-action="review"]')) {
+          await ui.click('[data-workbench-empty-action="review"]', { timeout: 10_000 });
+        } else {
+          await ui.click('[data-workbench-tab="review"]', { timeout: 10_000 });
+        }
+        await ui.waitFor('[data-dsh-trajectory][data-dsh-trajectory-source="session.history"]', { timeout: 15_000 });
+        await ui.waitFor('[data-dsh-event-type="command/run"]', { timeout: 15_000 });
+        const trajectoryUi = await driver.raw.ev(`return {
+          roots: document.querySelectorAll('[data-dsh-trajectory]').length,
+          source: document.querySelector('[data-dsh-trajectory]')?.getAttribute('data-dsh-trajectory-source') || '',
+          commandEvents: document.querySelectorAll('[data-dsh-event-type="command/run"]').length,
+          permissionEvents: document.querySelectorAll('[data-dsh-event-type="permission/preset"]').length,
+          oldRunCenter: document.querySelectorAll('[data-run-center]').length,
+        }`);
+        assert.eq(trajectoryUi.roots, 1, "结果与证据只展示一个 DSH 轨迹面板", {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        assert.eq(trajectoryUi.source, "session.history", "结果与证据标明 DSH 轨迹来源", {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        assert.ok(trajectoryUi.commandEvents > 0 && trajectoryUi.permissionEvents > 0, `结果与证据展示真实命令和投影事件(${JSON.stringify(trajectoryUi)})`, {
+          criterion: "dsh.trajectory-authoritative",
+        });
+        assert.eq(trajectoryUi.oldRunCenter, 0, "结果与证据不再混入旧运行中心", {
+          criterion: "dsh.trajectory-authoritative",
+        });
+
         await api("POST", `/api/agent/projects/${pid}/threads/${sid}/dsh-permission`, {
           preset: currentPreset,
         }).catch(() => {});

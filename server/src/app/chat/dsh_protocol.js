@@ -6,6 +6,7 @@ import { ensureDshWorkspaceSession } from "../../engine/dsh_runtime/session_atta
 import { dshPromptContent, normalizeDshPromptError } from "../../engine/dsh_runtime/prompt_content.js";
 import { prepareImageTurnInput } from "./image_inputs.js";
 import { buildAttachmentContextMessage, normalizeMessageAttachments } from "./message_blocks.js";
+import { loadAllDshHistoryPages } from "../reads/reads_session.js";
 import {
   applyDshProjectionBaseline,
   snapshotDshSessionState,
@@ -78,6 +79,31 @@ export async function getDshProtocolState(ctx, input) {
   };
 }
 
+/** Return the owning DSH Session's canonical history entries for the review workbench. */
+export async function getDshTrajectory(ctx, input, { client = getDshRuntimeClient() } = {}) {
+  const { pid, threadId } = input.params || {};
+  const binding = await ownedBinding(ctx, pid, threadId);
+  await client.start();
+  await ensureAttached(client, binding, ctx);
+  const history = await loadAllDshHistoryPages(client, binding);
+  if (history.projections) applyDshProjectionBaseline(binding.dshSessionId, history.projections);
+  const lastSeq = history.entries.reduce((latest, entry) => {
+    const seq = Number(entry?.event?.seq);
+    return Number.isFinite(seq) ? Math.max(latest, seq) : latest;
+  }, -1);
+  return {
+    data: {
+      appSessionId: threadId,
+      dshSessionId: binding.dshSessionId,
+      source: "session.history",
+      lastSeq,
+      events: history.entries,
+      projections: history.projections || null,
+    },
+    message: "获取 DSH 轨迹成功",
+  };
+}
+
 export async function listDshSkills(ctx, input) {
   const { pid, threadId } = input.params || {};
   const binding = await ownedBinding(ctx, pid, threadId);
@@ -105,9 +131,16 @@ function permissionSelectFromState(state) {
   return currentValue && options.length ? { currentValue, options } : null;
 }
 
+function effectivePlanModeFromState(state) {
+  const value = state?.projections?.plan;
+  if (!value || typeof value !== "object") return null;
+  const active = value.active === true;
+  return value.pending === true ? !active : active;
+}
+
 const waitForDshProjection = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-/** Switch one session through DSH's logged permission command. */
+/** Switch one session through DSH's logged command registry. */
 export async function setDshPermission(ctx, input, { client = getDshRuntimeClient() } = {}) {
   const { pid, threadId } = input.params || {};
   const binding = await ownedBinding(ctx, pid, threadId);
@@ -126,11 +159,14 @@ export async function setDshPermission(ctx, input, { client = getDshRuntimeClien
   const option = permission.options.find((candidate) => candidate.value === preset);
   if (!option || preset === "custom") throw new ApiError("这个权限预设不在 DSH 当前允许的范围内", 400);
 
-  const result = await client.request("command.execute", {
-    sessionId: binding.dshSessionId,
+  const execution = await client.requestRemote("commands/execute", {
+    agentId: binding.dshSessionId,
     line: `/permission ${preset}`,
   });
-  if (result?.matched !== true) throw new ApiError("当前 DSH Profile 没有接受权限设置", 409);
+  if (!execution) throw new ApiError("当前 DSH Profile 没有提供权限命令", 409);
+  if (execution.result?.kind !== "success") {
+    throw new ApiError(execution.result?.text || "当前 DSH Profile 没有接受权限设置", 409);
+  }
 
   let confirmed = false;
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -151,6 +187,46 @@ export async function setDshPermission(ctx, input, { client = getDshRuntimeClien
     data: snapshotDshSessionState(threadId),
     message: "DSH 会话权限已更新",
   };
+}
+
+/** Switch one session through DSH's logged Plan command and confirm its projection. */
+export async function setDshPlanMode(ctx, input, { client = getDshRuntimeClient() } = {}) {
+  const { pid, threadId } = input.params || {};
+  const binding = await ownedBinding(ctx, pid, threadId);
+  const mode = input.body?.mode;
+  if (mode !== "default" && mode !== "plan") throw new ApiError("Plan 模式不合法", 400);
+  await client.start();
+  await ensureAttached(client, binding, ctx);
+
+  const refresh = async () => {
+    const history = await client.request("session.history", {
+      sessionId: binding.dshSessionId,
+      maxMessages: 1,
+    });
+    if (history?.projections) applyDshProjectionBaseline(binding.dshSessionId, history.projections);
+    return snapshotDshSessionState(threadId);
+  };
+  const wanted = mode === "plan";
+  const before = await refresh();
+  if (effectivePlanModeFromState(before) === null) {
+    throw new ApiError("当前 DSH Profile 没有提供 Plan 投影", 409);
+  }
+  if (effectivePlanModeFromState(before) !== wanted) {
+    const result = await client.request("command.execute", {
+      sessionId: binding.dshSessionId,
+      line: wanted ? "/plan" : "/plan off",
+    });
+    if (result?.matched !== true) throw new ApiError("当前 DSH Profile 没有接受 Plan 设置", 409);
+  }
+
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const state = await refresh();
+    if (effectivePlanModeFromState(state) === wanted) {
+      return { data: state, message: "DSH Plan 模式已更新" };
+    }
+    await waitForDshProjection(50);
+  }
+  throw new ApiError("DSH 已接受 Plan 命令，但会话状态尚未确认更新，请重试", 409);
 }
 
 export async function promptDshQueue(ctx, input, { client = getDshRuntimeClient() } = {}) {

@@ -7,6 +7,7 @@ import { dshRuntimeEnabled, resolveDshRuntimeDistribution } from "./source_locat
 import { createSessionProductHostDispatcher } from "./product_host_dispatcher.js";
 import { ensureDshWorkspaceSession } from "./session_attachment.js";
 import { prepareTrustedProfilePlugins } from "./trusted_client_plugins.js";
+import { ensureDshProductThemeDefault } from "./theme_default.js";
 
 const CHILD_PATH = fileURLToPath(new URL("./source_runtime_child.mjs", import.meta.url));
 const CLIENT_PATCH_PATH = fileURLToPath(new URL("./desktop_web.patch.yml", import.meta.url));
@@ -121,6 +122,7 @@ export class DshRuntimeClient extends EventEmitter {
       DSH_HOME: dshHome,
       DSH_TELEMETRY_DISABLED: this.env.DSH_TELEMETRY_DISABLED || "1",
       DSH_APP_BOOT_PATH: resolved.appBootPath,
+      DSH_RUNTIME_INSTALL_ANCHOR: resolved.installAnchor,
       ...(resolved.profileBootPath ? { DSH_PROFILE_BOOT_PATH: resolved.profileBootPath } : {}),
     };
     let launchPath = CHILD_PATH;
@@ -128,6 +130,7 @@ export class DshRuntimeClient extends EventEmitter {
     if (resolved.launch === "cli") {
       await prepareTrustedProfilePlugins({
         appBootPath: resolved.appBootPath,
+        installAnchor: resolved.installAnchor,
         env: childEnv,
         runtimeRoot: resolved.root,
         dshHome,
@@ -222,6 +225,9 @@ export class DshRuntimeClient extends EventEmitter {
   async #activateRuntime(message) {
     try {
       await this.#startEventStreams();
+      await ensureDshProductThemeDefault((method, payload) => (
+        this.#requestClientApiOnSurface(method, payload)
+      ));
       this.emit("ready", message);
     } catch (error) {
       this.emit("fatal", error);
@@ -443,7 +449,13 @@ export class DshRuntimeClient extends EventEmitter {
 
   /** Call one unary method on the trusted loopback DSH Web ApiProxy. */
   async requestClientApi(method, payload = {}, { rpcId = randomUUID() } = {}) {
-    const surface = await this.waitForClientSurface();
+    await this.waitForClientSurface();
+    return this.#requestClientApiOnSurface(method, payload, { rpcId });
+  }
+
+  async #requestClientApiOnSurface(method, payload = {}, { rpcId = randomUUID() } = {}) {
+    const surface = this.clientSurface;
+    if (!surface) throw streamFailure("api", "DSH Web 客户端地址尚未就绪", "DSH_CLIENT_SURFACE_MISSING");
     const response = await this.fetch(new URL(`api/${method}`, surface), {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -463,6 +475,39 @@ export class DshRuntimeClient extends EventEmitter {
     if (!message.result.ok) {
       const error = new Error(message.result.error?.message || "DSH Web ApiProxy 请求失败");
       error.code = message.result.error?.code || "DSH_WEB_API_FAILED";
+      error.details = message.result.error?.details || {};
+      throw error;
+    }
+    return message.result.value;
+  }
+
+  /** Call one Typert Remote method on the trusted loopback DSH Web gateway. */
+  async requestRemote(endpoint, args = {}, { rpcId = randomUUID() } = {}) {
+    const surface = await this.waitForClientSurface();
+    const response = await this.fetch(new URL(`api/${endpoint}`, surface), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        type: "client-request",
+        rpcId,
+        method: endpoint,
+        payload: { args },
+      }),
+    });
+    if (!response.ok) {
+      const error = new Error(`DSH Web Remote 请求失败（HTTP ${response.status}）`);
+      error.code = "DSH_WEB_REMOTE_HTTP_ERROR";
+      throw error;
+    }
+    const message = await response.json();
+    if (message?.rpcId !== rpcId || !message?.result || typeof message.result.ok !== "boolean") {
+      const error = new Error("DSH Web Remote 返回了无效响应");
+      error.code = "DSH_WEB_REMOTE_INVALID_RESPONSE";
+      throw error;
+    }
+    if (!message.result.ok) {
+      const error = new Error(message.result.error?.message || "DSH Web Remote 请求失败");
+      error.code = message.result.error?.code || "DSH_WEB_REMOTE_FAILED";
       error.details = message.result.error?.details || {};
       throw error;
     }

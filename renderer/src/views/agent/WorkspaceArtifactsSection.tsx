@@ -297,7 +297,7 @@ export default function WorkspaceArtifactsSection({
   useEffect(() => {
     if (!selectedId) return
     void loadDetail(selectedId)
-  }, [loadDetail, selectedId])
+  }, [loadDetail, refreshNonce, selectedId])
 
   useEffect(() => {
     setEditingOffice(false)
