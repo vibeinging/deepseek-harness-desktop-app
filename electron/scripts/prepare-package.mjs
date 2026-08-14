@@ -193,6 +193,11 @@ export async function preparePackage() {
   await rm(STAGED_SERVER_DIR, { recursive: true, force: true })
   await mkdir(STAGED_SERVER_DIR, { recursive: true })
   for (const name of ['src', 'db', 'vendor', 'plugins', '.agents']) {
+    // plugins 是应用运行时生成的本地插件目录，全新检出/清理后可能尚不存在
+    if (name === 'plugins' && !existsSync(join(SOURCE_SERVER_DIR, name))) {
+      await mkdir(join(STAGED_SERVER_DIR, name), { recursive: true })
+      continue
+    }
     await cp(join(SOURCE_SERVER_DIR, name), join(STAGED_SERVER_DIR, name), {
       recursive: true,
       // Local plugin runtimes contain machine- and architecture-specific native
