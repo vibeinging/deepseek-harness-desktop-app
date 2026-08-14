@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { applySkin, refreshSkinScheme } from './apply'
-import { findBuiltinSkin } from './builtin'
+import { DEFAULT_SKIN_ID, findBuiltinSkin } from './builtin'
 import { deriveMantineColors } from './colors'
 import type { SkinDefinition } from './types'
 
@@ -36,7 +36,7 @@ function customSkin(overrides: Partial<SkinDefinition> = {}): SkinDefinition {
     name: '自定义',
     builtIn: false,
     source: 'user',
-    base: 'lighting',
+    base: DEFAULT_SKIN_ID,
     vars: { '--el-color-primary': primary },
     mantineColors: deriveMantineColors(primary),
     ...overrides
@@ -46,17 +46,17 @@ function customSkin(overrides: Partial<SkinDefinition> = {}): SkinDefinition {
 describe('applySkin', () => {
   beforeEach(() => mockDocument())
 
-  it('内置主题应用清透蓝的完整颜色', () => {
+  it('内置主题应用默认专业蓝的完整颜色', () => {
     const state = mockDocument()
-    applySkin(findBuiltinSkin('lighting'))
+    applySkin(findBuiltinSkin(DEFAULT_SKIN_ID))
     expect(state.classes.has('lighting-theme')).toBe(true)
-    expect(state.styles.get('--el-color-primary')).toBe('#5b8def')
-    expect(state.styles.get('--el-color-primary-rgb')).toBe('91, 141, 239')
-    expect(state.styles.get('--skin-dsh-bg')).toBe('#f8fbff')
-    expect(state.styles.get('--skin-dsh-text')).toBe('#1d2530')
+    expect(state.styles.get('--el-color-primary')).toBe('#3f6fd8')
+    expect(state.styles.get('--el-color-primary-rgb')).toBe('63, 111, 216')
+    expect(state.styles.get('--skin-dsh-bg')).toBe('#f4f7fb')
+    expect(state.styles.get('--skin-dsh-text')).toBe('#172033')
   })
 
-  it('自定义主题继承清透蓝，再叠加安全主色', () => {
+  it('自定义主题继承默认专业蓝，再叠加安全主色', () => {
     const state = mockDocument()
     applySkin(customSkin())
     expect(state.classes.has('lighting-theme')).toBe(true)
@@ -66,7 +66,7 @@ describe('applySkin', () => {
   it('不信任调用方传入的 htmlClass 或非白名单变量', () => {
     const state = mockDocument()
     applySkin({
-      ...findBuiltinSkin('lighting')!,
+      ...findBuiltinSkin(DEFAULT_SKIN_ID)!,
       htmlClass: 'untrusted-global-class',
       vars: {
         '--el-color-primary': 'red; } body { display: none',
@@ -75,7 +75,7 @@ describe('applySkin', () => {
     })
     expect(state.classes.has('lighting-theme')).toBe(true)
     expect(state.classes.has('untrusted-global-class')).toBe(false)
-    expect(state.styles.get('--el-color-primary')).toBe('#5b8def')
+    expect(state.styles.get('--el-color-primary')).toBe('#3f6fd8')
     expect(state.styles.has('--untrusted-token')).toBe(false)
   })
 
@@ -91,8 +91,8 @@ describe('applySkin', () => {
     expect(state.styles.get('--el-color-primary')).toBe('#1e6fff')
     refreshSkinScheme('dark')
     expect(state.styles.get('--el-color-primary')).toBe(darkPrimary)
-    expect(state.styles.get('--skin-dsh-bg')).toBe('#2c3440')
-    expect(state.styles.get('--skin-dsh-text')).toBe('#f3f6fa')
+    expect(state.styles.get('--skin-dsh-bg')).toBe('#202733')
+    expect(state.styles.get('--skin-dsh-text')).toBe('#f0f4fa')
   })
 
   it('应用时清理旧版本的内置主题类', () => {
@@ -101,18 +101,18 @@ describe('applySkin', () => {
     state.classes.add('china-red')
     state.classes.add('base-theme')
     state.classes.add('dark')
-    applySkin(findBuiltinSkin('lighting'))
+    applySkin(findBuiltinSkin(DEFAULT_SKIN_ID))
     expect([...state.classes]).toEqual(['lighting-theme'])
   })
 
-  it('没有自定义主色的主题在暗色模式继承清透蓝暗色变体', () => {
+  it('没有自定义主色的主题在暗色模式继承专业蓝暗色变体', () => {
     const state = mockDocument()
     applySkin(customSkin({
       vars: undefined,
       mantineColors: undefined,
       appearance: { bgImage: 'dawn' }
     }), 'dark')
-    expect(state.styles.get('--el-color-primary')).toBe('#86b2ff')
+    expect(state.styles.get('--el-color-primary')).toBe('#78a2ff')
   })
 
   it('旧 raw CSS 只会触发旧 style 清理，不会再次注入', () => {

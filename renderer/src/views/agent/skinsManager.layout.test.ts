@@ -23,7 +23,7 @@ describe('皮肤管理器交互与主题布局', () => {
     expect(appearance).not.toContain('role="button"')
   })
 
-  it('内置皮肤仅可导出，自定义可编辑/导出/删除，Profile 主题不导出', () => {
+  it('宿主底座不进入产品主题分组，自定义可编辑，Profile 主题不导出', () => {
     expect(manager).toContain("const editable = customThemesEnabled && !skin.builtIn && skin.source !== 'profile'")
     expect(manager).toContain("const exportable = customThemesEnabled && skin.source !== 'profile'")
     expect(manager).toContain("skin.builtIn ? t('agentSkins.manager.exportBuiltin')")
@@ -82,7 +82,7 @@ describe('皮肤管理器交互与主题布局', () => {
 
   it('主题按来源分组，卡片使用真实界面缩略图并把管理操作收进菜单', () => {
     expect(manager).toContain('themeGroups.map((group) =>')
-    expect(manager).toContain("key: 'builtin'")
+    expect(manager).not.toContain("key: 'builtin'")
     expect(manager).toContain("key: 'user'")
     expect(manager).toContain("key: 'profile'")
     expect(manager).toContain('function ThemePreview')
@@ -151,7 +151,7 @@ describe('皮肤管理器交互与主题布局', () => {
     expect(theme).toContain('background: var(--brand-bg-image, none);')
     expect(theme).toContain('opacity: var(--brand-bg-opacity, 0);')
     expect(theme).not.toContain('--brand-bg-image: none;')
-    expect(theme).toContain('--dsh-accent: var(--el-color-primary, #8b8f9c);')
+    expect(theme).toContain('--dsh-accent: var(--el-color-primary, #3f6fd8);')
   })
 
   it('会话区直接消费品牌底图，不再被 center 固定表面盖住', () => {
@@ -162,11 +162,14 @@ describe('皮肤管理器交互与主题布局', () => {
     expect(agentStyles).toContain('var(--dsh-surface-raw) 62%')
   })
 
-  it('主题和明暗模式共同驱动正文、弱文字、表面与 Element 字体', () => {
-    expect(theme).toContain('--dsh-text: var(--skin-dsh-text')
-    expect(theme).toContain('--dsh-surface-raw: var(--skin-dsh-surface')
-    expect(theme).toContain('--el-text-color-primary: var(--skin-dsh-text);')
-    expect(theme).toContain('--el-text-color-regular: var(--skin-dsh-text-soft);')
+  it('DSH 语义 token 驱动正文、表面和控件，Profile 主题保留主色所有权', () => {
+    expect(theme).toContain('--dsh-text: var(--dsw-alias-label-primary, var(--skin-dsh-text')
+    expect(theme).toContain('--dsh-surface-raw: var(--dsw-alias-bg-layer-1, var(--skin-dsh-surface')
+    expect(theme).toContain('--dsh-accent: var(--el-color-primary')
+    expect(theme).toContain('--el-text-color-primary: var(--dsh-text);')
+    expect(theme).toContain('--el-text-color-regular: var(--dsh-text-soft);')
+    expect(theme).toContain('--mantine-color-body: var(--dsh-bg);')
+    expect(theme).toContain(":root[data-mantine-color-scheme='light'] body")
     expect(manager).toContain('builtinAgentPalette(base.id, scheme)')
   })
 

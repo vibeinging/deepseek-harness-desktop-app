@@ -1,14 +1,13 @@
 // 明暗模式解析（供启动时消除浅色闪现）。
-// 明暗模式由 views/agent/index.tsx 拥有（localStorage['dsh-theme']），
-// 但皮肤/外观 store 需要在启动首屏前就拿到正确 scheme，否则会用默认 'light' 应用皮肤，
-// 在暗色 + custom dark 覆盖皮肤下产生一次浅色闪现。
+// 独立 Vite 页面用 localStorage['dsh-theme'] 作为明暗回退。
+// 正式 DSH Client 页面由 ThemeRuntime 提供启动快照，不读取这个值。
 //
 // 本模块把"从 localStorage + 系统偏好解析当前生效 scheme"的逻辑集中，供启动时同步调用。
 
 export type AgentScheme = 'light' | 'dark'
 export type AgentThemeMode = 'light' | 'dark' | 'system'
 
-/** localStorage key（与 views/agent/index.tsx 的 STORAGE_KEY 一致）。 */
+/** 独立页面 localStorage key（与 views/agent/index.tsx 的 STORAGE_KEY 一致）。 */
 const THEME_MODE_KEY = 'dsh-theme'
 
 /** 读取系统 prefers-color-scheme。 */

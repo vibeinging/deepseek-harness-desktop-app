@@ -2,20 +2,25 @@
 // 这些皮肤的 CSS 已在 src/theme/index.scss 中静态编译进全局 bundle，常驻 <head>。
 // 切换内置皮肤靠 html.<htmlClass> 选择器命中（见 apply.ts），无需运行时加载 CSS。
 //
-// 当前产品只提供清透蓝。旧版本的主题类仍会在切换时清理，避免热升级后残留。
+// 宿主只保留一个不出现在主题库中的安全底座。产品主题由 DSH Profile Bundle 提供。
 // 清单同时声明明确主色 + Mantine 色阶，运行时把安全主色直接应用到 html，
 // 保证 Agent / Element / Mantine 三者一致。
 import { deriveMantineColors } from './colors'
 import type { SkinDefinition } from './types'
 
-export const LIGHTING_BLUE = '#5b8def'
+export const LIGHTING_BLUE = '#3f6fd8'
 
 // 每套主题都拥有明确的暗色强调色。明暗模式只选择主题变体，不再通过切换到
 // 某个名为“dark”的主题来获得暗色界面。
-export const LIGHTING_BLUE_DARK = '#86b2ff'
+export const LIGHTING_BLUE_DARK = '#78a2ff'
 
 export const LIGHTING_BLUE_COLORS: string[] = deriveMantineColors(LIGHTING_BLUE)
 export const LIGHTING_BLUE_DARK_COLORS: string[] = deriveMantineColors(LIGHTING_BLUE_DARK)
+
+/** dsh-work 随应用挂入 Web Profile 的主题 Bundle。 */
+export const THEME_PACK_PACKAGE_NAME = '@deepseek-ai/dsh-theme-pack'
+export const DEFAULT_PROFILE_SKIN_ID = 'profile:%40deepseek-ai%2Fdsh-theme-pack:professional-blue'
+export const ANIME_PROFILE_SKIN_ID = 'profile:%40deepseek-ai%2Fdsh-theme-pack:anime-blue'
 
 export interface BuiltinAgentPalette {
   bg: string
@@ -35,8 +40,8 @@ type BuiltinAgentPalettes = Record<'light' | 'dark', BuiltinAgentPalette>
  */
 export const BUILTIN_AGENT_PALETTES: Record<string, BuiltinAgentPalettes> = {
   lighting: {
-    light: { bg: '#f8fbff', surface: '#fdfefe', hover: '#f2f7fc', text: '#1d2530', textSoft: '#465366', muted: '#6e7b8e', faint: '#abb5c2' },
-    dark: { bg: '#2c3440', surface: '#141a22', hover: '#1e2631', text: '#f3f6fa', textSoft: '#d9e1eb', muted: '#b9c4d1', faint: '#8c9aaa' }
+    light: { bg: '#f4f7fb', surface: '#fbfcfe', hover: '#edf1f7', text: '#172033', textSoft: '#3d4a61', muted: '#68758a', faint: '#9da8b8' },
+    dark: { bg: '#202733', surface: '#111720', hover: '#19212c', text: '#f0f4fa', textSoft: '#d4dce8', muted: '#aeb9c8', faint: '#7f8b9c' }
   }
 }
 
@@ -45,8 +50,8 @@ export const BUILTIN_SKIN_IDS = ['lighting'] as const
 export const BUILTIN_SKINS: SkinDefinition[] = [
   {
     id: 'lighting',
-    name: '清透蓝',
-    description: '清爽通透的蓝色调，支持浅色与深色模式。',
+    name: '系统底座',
+    description: '主题插件尚未就绪时使用的安全界面底座。',
     builtIn: true,
     source: 'builtin',
     htmlClass: 'lighting-theme',
@@ -59,7 +64,7 @@ export const BUILTIN_SKINS: SkinDefinition[] = [
   }
 ]
 
-/** 默认皮肤 id（与 src/settings.ts 的 defaultTheme 对齐）。 */
+/** Profile 主题不可用时使用的宿主安全底座 id。 */
 export const DEFAULT_SKIN_ID = 'lighting'
 
 /** 当前与旧版本内置皮肤的 html 类名集合（用于切换和升级时清理）。 */

@@ -33,8 +33,9 @@ describe('mantineColorsForScheme', () => {
       base: 'lighting',
       appearance: { bgImage: 'dawn' }
     }
-    expect(mantineColorsForScheme(appearanceOnly, 'light')).toBe(findBuiltinSkin('lighting')?.mantineColors)
-    expect(mantineColorsForScheme(appearanceOnly, 'dark')?.[6]).toBe('#86b2ff')
-    expect(buildMantineTheme(mantineColorsForScheme(appearanceOnly, 'light')).colors?.brand?.[6]).toBe('#5b8def')
+    const base = findBuiltinSkin('lighting')
+    expect(mantineColorsForScheme(appearanceOnly, 'light')).toBe(base?.mantineColors)
+    expect(mantineColorsForScheme(appearanceOnly, 'dark')).toBe(base?.dark?.mantineColors)
+    expect(buildMantineTheme(mantineColorsForScheme(appearanceOnly, 'light')).colors?.brand?.[6]).toBe(base?.mantineColors?.[6])
   })
 })

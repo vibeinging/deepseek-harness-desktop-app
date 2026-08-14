@@ -246,7 +246,7 @@ function normalizeSkinsSettings(raw) {
   if (activeSkinId && !isPersistableActiveSkinId(activeSkinId)) {
     throw settingsError('SKINS_ACTIVE_ID_INVALID', '当前皮肤 ID 不合法');
   }
-  // 当前只有一套内置主题。旧主题或未知备用值在读取时直接收敛到清透蓝。
+  // Profile 主题消失时只回退到宿主安全底座，不建立另一份产品主题权威。
   const fallbackSkinId = 'lighting';
   return {
     ...common,

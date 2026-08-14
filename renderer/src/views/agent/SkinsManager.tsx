@@ -259,12 +259,6 @@ export default function SkinsManager() {
     : t(`agentSkins.source.${skin.source || 'user'}`, { defaultValue: skin.source || 'user' })
   const themeGroups = [
     {
-      key: 'builtin',
-      title: t('agentSkins.manager.builtinGroup'),
-      description: t('agentSkins.manager.builtinGroupHint'),
-      items: skins.filter((skin) => skin.builtIn)
-    },
-    {
       key: 'user',
       title: t('agentSkins.manager.userGroup'),
       description: t('agentSkins.manager.userGroupHint'),

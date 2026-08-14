@@ -2,7 +2,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import settings from '@/settings'
-import { BUILTIN_SKINS, DEFAULT_SKIN_ID, isBuiltinSkinId } from '@/theme/skins/builtin'
+import {
+  BUILTIN_SKINS,
+  DEFAULT_PROFILE_SKIN_ID,
+  DEFAULT_SKIN_ID,
+  isBuiltinSkinId
+} from '@/theme/skins/builtin'
 import { applySkin } from '@/theme/skins/apply'
 import {
   migrateLegacySkinDefinition,
@@ -332,8 +337,13 @@ export const useSkinsStore = create<SkinsState>()(
         if (!Array.isArray(state.userSkins)) warnings.push('本地主题备份格式损坏，已忽略无效列表')
         const normalized = normalizeUserList(rawSkins, warnings)
         const rawActive = typeof state.activeSkinId === 'string' ? state.activeSkinId.trim() : ''
-        const activeSkinId = rawActive && isPersistableActiveSkinId(rawActive) ? rawActive : DEFAULT_SKIN_ID
-        if (rawActive && activeSkinId !== rawActive) warnings.push('本地当前主题 ID 不合法，已恢复默认主题')
+        const activeSkinId = rawActive === DEFAULT_SKIN_ID
+          ? DEFAULT_PROFILE_SKIN_ID
+          : rawActive && isPersistableActiveSkinId(rawActive)
+            ? rawActive
+            : DEFAULT_PROFILE_SKIN_ID
+        if (rawActive === DEFAULT_SKIN_ID) warnings.push('旧内置主题已迁移到 DSH Profile 正式主题')
+        else if (rawActive && activeSkinId !== rawActive) warnings.push('本地当前主题 ID 不合法，已恢复默认主题')
         const fallbackSkinId = isBuiltinSkinId(state.fallbackSkinId) ? state.fallbackSkinId : DEFAULT_SKIN_ID
         const safeRevision = Number.isSafeInteger(state.revision) && state.revision >= 0 ? state.revision : 0
         const safeUpdatedAt = Number.isFinite(state.updatedAt) && state.updatedAt >= 0 ? state.updatedAt : 0
@@ -375,7 +385,7 @@ export const useSkinsStore = create<SkinsState>()(
       return {
         userSkins: [],
         profileThemes: [],
-        activeSkinId: DEFAULT_SKIN_ID,
+        activeSkinId: DEFAULT_PROFILE_SKIN_ID,
         fallbackSkinId: DEFAULT_SKIN_ID,
         appliedSkinId: DEFAULT_SKIN_ID,
         previewSkin: null,
@@ -389,7 +399,7 @@ export const useSkinsStore = create<SkinsState>()(
 
         listSkins: () => {
           const { userSkins, profileThemes } = get()
-          if (!customThemesEnabled()) return [...BUILTIN_SKINS]
+          if (!customThemesEnabled()) return [...BUILTIN_SKINS, ...profileThemes]
           const safeUserSkins = Array.isArray(userSkins) ? userSkins : []
           const safeProfileThemes = Array.isArray(profileThemes) ? profileThemes : []
           const seen = new Set<string>()
@@ -710,6 +720,9 @@ export const useSkinsStore = create<SkinsState>()(
           }
 
           const disk = result.value
+          const diskActiveSkinId = disk.activeSkinId === DEFAULT_SKIN_ID
+            ? DEFAULT_PROFILE_SKIN_ID
+            : disk.activeSkinId
           const legacy = disk.schema_version !== SETTINGS_SCHEMA_VERSION
           const diskFallbackSkinId = isBuiltinSkinId(disk.fallbackSkinId || '')
             ? disk.fallbackSkinId!
@@ -725,7 +738,7 @@ export const useSkinsStore = create<SkinsState>()(
             set({ persistenceError: message, diskLoadComplete: true })
             throw error
           }
-          if (disk.activeSkinId && !isPersistableActiveSkinId(disk.activeSkinId)) {
+          if (diskActiveSkinId && !isPersistableActiveSkinId(diskActiveSkinId)) {
             const message = '磁盘中的当前主题 ID 不合法，已保留本地备份'
             set({ persistenceError: message, diskLoadComplete: true })
             throw new SkinPersistenceError(message)
@@ -735,7 +748,7 @@ export const useSkinsStore = create<SkinsState>()(
             const mergedSkins = mergeLegacyUserSkins(get().userSkins, diskSkins)
             const available = new Set([...BUILTIN_SKINS, ...mergedSkins].map((skin) => skin.id))
             const localActive = get().activeSkinId
-            const diskActive = disk.activeSkinId
+            const diskActive = diskActiveSkinId
             const activeSkinId = localActive !== DEFAULT_SKIN_ID
               ? localActive
               : (diskActive && (available.has(diskActive) || isPersistableActiveSkinId(diskActive)) ? diskActive : localActive)
@@ -762,7 +775,7 @@ export const useSkinsStore = create<SkinsState>()(
               || JSON.stringify(diskSkins) !== JSON.stringify(disk.userSkins)
             set({
               userSkins: diskSkins,
-              activeSkinId: disk.activeSkinId || DEFAULT_SKIN_ID,
+              activeSkinId: diskActiveSkinId || DEFAULT_PROFILE_SKIN_ID,
               fallbackSkinId: diskFallbackSkinId,
               revision: migrated ? disk.revision + 1 : disk.revision,
               updatedAt: migrated ? Date.now() : disk.updated_at,

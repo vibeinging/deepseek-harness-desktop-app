@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { featureEnabled } from './settings'
+import settings, { featureEnabled } from './settings'
 
 describe('renderer feature parameters', () => {
+  it('uses the Profile-owned professional theme as the product default', () => {
+    expect(settings.defaultTheme).toBe('profile:%40deepseek-ai%2Fdsh-theme-pack:professional-blue')
+    expect(settings.enableCustomThemes).toBe(false)
+  })
+
   it('enables custom themes by default and accepts explicit off values', () => {
     expect(featureEnabled(undefined)).toBe(true)
     expect(featureEnabled('')).toBe(true)

@@ -646,6 +646,15 @@
   gap: 8px;
   padding: 6px 8px;
 }
+.sidebarPluginActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.sidebarPluginActions:empty {
+  display: none;
+}
 .settingsBtn {
   display: flex;
   align-items: center;
@@ -3723,6 +3732,19 @@
   gap: 8px;
   padding-top: 5px;
   border-top: 0;
+}
+.composerPluginDock {
+  --dsh-chat-content-width: 860px;
+  --dsh-composer-side-clearance: 10px;
+
+  width: calc(100% + 20px);
+  margin: 2px -10px -5px;
+}
+.composerPluginDock:empty {
+  display: none;
+}
+.composerPluginDock > [data-dsh-standard-conversation-composer-dock] {
+  width: 100%;
 }
 .spacer {
   flex: 1;

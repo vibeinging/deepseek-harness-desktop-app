@@ -19,7 +19,7 @@ export interface AppSettings {
   defaultLanguage: 'zh' | 'en'
   defaultTheme: string
   defaultSize: 'large' | 'default' | 'small'
-  /** 自定义与 Plugin 主题总开关。未配置环境变量时默认开启。 */
+  /** 旧本地主题编辑开关。产品主题只允许来自 DSH Profile Bundle。 */
   enableCustomThemes: boolean
   plateFormId: number
 }
@@ -45,9 +45,9 @@ export const settings: AppSettings = {
   delWindowHeight: '210px',
   viteBasePath: '/',
   defaultLanguage: 'zh',
-  defaultTheme: 'lighting',
+  defaultTheme: 'profile:%40deepseek-ai%2Fdsh-theme-pack:professional-blue',
   defaultSize: 'default',
-  enableCustomThemes: featureEnabled(import.meta.env.VITE_APP_ENABLE_CUSTOM_THEMES),
+  enableCustomThemes: false,
   plateFormId: 2
 }
 

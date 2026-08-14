@@ -12,7 +12,7 @@ const testStorage = vi.hoisted(() => {
   })
   return values
 })
-import { DEFAULT_SKIN_ID } from '@/theme/skins/builtin'
+import { DEFAULT_PROFILE_SKIN_ID, DEFAULT_SKIN_ID } from '@/theme/skins/builtin'
 import settings from '@/settings'
 import { deriveMantineColors } from '@/theme/skins/colors'
 import { normalizeSkinDefinition, parseSkinFile } from '@/theme/skins/import'
@@ -63,7 +63,7 @@ beforeEach(() => {
   useSkinsStore.setState({
     userSkins: [],
     profileThemes: [],
-    activeSkinId: DEFAULT_SKIN_ID,
+    activeSkinId: DEFAULT_PROFILE_SKIN_ID,
     fallbackSkinId: DEFAULT_SKIN_ID,
     appliedSkinId: DEFAULT_SKIN_ID,
     previewSkin: null,
@@ -147,13 +147,23 @@ describe('active skin transaction', () => {
     expect(useSkinsStore.getState().appliedSkinId).toBe(DEFAULT_SKIN_ID)
   })
 
+  it('migrates the former built-in selection to the Profile-owned formal theme', async () => {
+    useSkinsStore.setState({ activeSkinId: DEFAULT_SKIN_ID, revision: 4, updatedAt: 40 })
+
+    await useSkinsStore.getState().initActiveSkin({ finalizeMissing: false })
+
+    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_PROFILE_SKIN_ID)
+    expect(useSkinsStore.getState().appliedSkinId).toBe(DEFAULT_SKIN_ID)
+    expect(useSkinsStore.getState().profileThemeWarnings.join('\n')).toMatch(/DSH Profile 正式主题/)
+  })
+
   it('previews a custom theme without persisting or replacing the selected theme', async () => {
     const preview = userSkin('preview-ocean')
     const saveSkins = (window as any).electronAPI.saveSkins as ReturnType<typeof vi.fn>
     saveSkins.mockClear()
 
     useSkinsStore.getState().previewUserSkin(preview)
-    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_SKIN_ID)
+    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_PROFILE_SKIN_ID)
     expect(useSkinsStore.getState().appliedSkinId).toBe(preview.id)
     expect(useSkinsStore.getState().previewSkin?.id).toBe(preview.id)
     expect(saveSkins).not.toHaveBeenCalled()
@@ -164,18 +174,21 @@ describe('active skin transaction', () => {
     expect(saveSkins).not.toHaveBeenCalled()
   })
 
-  it('keeps custom data but exposes only built-ins when the feature parameter is disabled', async () => {
+  it('keeps Profile themes visible while local custom themes are disabled', async () => {
     const existing = userSkin('disabled-ocean')
+    const runtimeId = 'profile:%40demo%2Ftheme-pack:ocean'
     useSkinsStore.setState({
       userSkins: [existing],
       activeSkinId: existing.id,
       appliedSkinId: existing.id,
       fallbackSkinId: DEFAULT_SKIN_ID,
+      profileThemes: [profileTheme(runtimeId)],
       diskLoadComplete: true
     })
     settings.enableCustomThemes = false
 
-    expect(useSkinsStore.getState().listSkins().every((skin) => skin.builtIn)).toBe(true)
+    expect(useSkinsStore.getState().listSkins().some((skin) => skin.id === runtimeId)).toBe(true)
+    expect(useSkinsStore.getState().listSkins().some((skin) => skin.id === existing.id)).toBe(false)
     expect(useSkinsStore.getState().userSkins.map((skin) => skin.id)).toEqual([existing.id])
     expect(() => useSkinsStore.getState().previewUserSkin(userSkin('new-preview')))
       .toThrowError(/自定义主题功能已关闭/)
@@ -325,7 +338,7 @@ describe('active skin transaction', () => {
       code: 'EIO',
       message: '磁盘不可写'
     })
-    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_SKIN_ID)
+    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_PROFILE_SKIN_ID)
     expect(useSkinsStore.getState().appliedSkinId).toBe(DEFAULT_SKIN_ID)
     expect(useSkinsStore.getState().persistenceError).toBe('磁盘不可写')
   })
@@ -377,7 +390,7 @@ describe('active skin transaction', () => {
     ])
 
     expect(results.map((result) => result.status)).toEqual(['rejected', 'rejected'])
-    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_SKIN_ID)
+    expect(useSkinsStore.getState().activeSkinId).toBe(DEFAULT_PROFILE_SKIN_ID)
     expect(useSkinsStore.getState().appliedSkinId).toBe(DEFAULT_SKIN_ID)
     expect(useSkinsStore.getState().revision).toBe(0)
   })

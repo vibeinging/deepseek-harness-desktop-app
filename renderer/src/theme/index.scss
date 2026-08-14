@@ -3,5 +3,5 @@
 //  $namespace: "el"
 //);
 
-// dsh-work 只编译清透蓝；额外主题由用户或当前 Profile 以受控 token 提供。
+// 宿主只编译安全底座；可选主题由当前 DSH Profile 以受控 token 提供。
 @use "./lighting";

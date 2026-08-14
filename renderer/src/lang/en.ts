@@ -5672,7 +5672,7 @@ const messages = {
       dismissProfileAria: 'Dismiss Profile theme warnings'
     },
     builtin: {
-      lighting: { name: 'Clear blue', description: 'The only built-in theme, with matching light and dark variants.' }
+      lighting: { name: 'System foundation', description: 'A safe interface foundation used while Profile theme plugins are unavailable.' }
     },
     backgrounds: {
       none: 'None', aurora: 'Aurora', dawn: 'Dawn', 'deep-sea': 'Deep sea', forest: 'Forest',

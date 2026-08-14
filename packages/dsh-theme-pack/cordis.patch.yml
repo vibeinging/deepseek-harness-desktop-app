@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-theme-pack
+      name: '@deepseek-ai/dsh-theme-pack'

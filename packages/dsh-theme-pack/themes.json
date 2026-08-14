@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "themes": [
+    {
+      "id": "professional-blue",
+      "name": "专业蓝",
+      "description": "默认工作主题，以墨蓝层次和钴蓝强调色保持专注与清晰。",
+      "base": "lighting",
+      "vars": {
+        "--el-color-primary": "#405fd2"
+      },
+      "mantineColors": [
+        "#f0f2fb",
+        "#dde2f7",
+        "#c2ccf1",
+        "#a0afe9",
+        "#7d92e0",
+        "#5f79d9",
+        "#405fd2",
+        "#3854b9",
+        "#3148a0",
+        "#293d86"
+      ],
+      "dark": {
+        "vars": {
+          "--el-color-primary": "#7b9cff"
+        },
+        "mantineColors": [
+          "#f4f7ff",
+          "#e7edff",
+          "#d5dfff",
+          "#bdceff",
+          "#a5bcff",
+          "#90acff",
+          "#7b9cff",
+          "#6c89e0",
+          "#5d77c2",
+          "#4f64a3"
+        ]
+      },
+      "appearance": {
+        "bgColor": "#f4f6fc",
+        "panelOpacity": 96,
+        "dark": {
+          "bgColor": "#111827",
+          "panelOpacity": 94
+        }
+      }
+    },
+    {
+      "id": "anime-blue",
+      "name": "二次元蓝",
+      "description": "可选主题，保留看板娘首页与清透蓝色调。",
+      "base": "lighting",
+      "vars": {
+        "--el-color-primary": "#5b8def"
+      },
+      "mantineColors": [
+        "#f2f6fe",
+        "#e1eafc",
+        "#cbdbfa",
+        "#adc6f7",
+        "#8fb1f4",
+        "#759ff2",
+        "#5b8def",
+        "#507cd2",
+        "#456bb6",
+        "#3a5a99"
+      ],
+      "dark": {
+        "vars": {
+          "--el-color-primary": "#86b2ff"
+        },
+        "mantineColors": [
+          "#f5f9ff",
+          "#e9f1ff",
+          "#d8e6ff",
+          "#c3d9ff",
+          "#adcbff",
+          "#99beff",
+          "#86b2ff",
+          "#769de0",
+          "#6687c2",
+          "#5672a3"
+        ]
+      },
+      "appearance": {
+        "bgColor": "#f8fbff",
+        "panelOpacity": 100,
+        "dark": {
+          "bgColor": "#2c3440",
+          "panelOpacity": 100
+        }
+      }
+    }
+  ]
+}

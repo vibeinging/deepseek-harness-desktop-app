@@ -1,82 +1,81 @@
-/* Agent theme — scope limited to .dsh-root, not affecting legacy pages.
-   Dual theme: light (Agent-like neutral shell + retained purple accent) / dark (neutral gray-black), switched by .dsh-root[data-theme].
-   One shared --dsh-* token set is used; dark mode only overrides color tokens so structure in agent.module.scss stays unchanged.
-   Principle: pleasant white/gray/black values, avoid pure #fff / #000. */
+/* Agent theme bridge, limited to .dsh-root and portal hosts.
+   DSH ThemeRuntime owns semantic colors and the resolved light/dark scheme;
+   the active Profile product theme owns the primary color and appearance. */
 
 /* ── Color tokens: light/dark token sets as mixins shared by .dsh-root and portal scopes ── */
 @mixin dsh-color-light {
-  --dsh-bg: var(--skin-dsh-bg, #fbfaf7); /* 当前内置 base 的浅色背景。 */
+  --dsh-bg: var(--dsw-alias-bg-base, var(--skin-dsh-bg, #fbfaf7));
   /* --dsh-surface 可被品牌外观的 --dsh-surface-override 覆盖（面板透明度），无覆盖时回退 SCSS 原值。 */
-  --dsh-surface-raw: var(--skin-dsh-surface, #fffefa); /* Main panels stay near white without using pure white. */
+  --dsh-surface-raw: var(--dsw-alias-bg-layer-1, var(--skin-dsh-surface, #fffefa));
   --dsh-surface: var(--dsh-surface-override, var(--dsh-surface-raw));
-  --dsh-hover: var(--skin-dsh-hover, #f7f6f2);
-  --dsh-nav-hover: rgba(36, 35, 31, 0.028);
-  --dsh-nav-hover-solid: #f8f7f3;
-  --dsh-nav-action-bg: #e7e3db;
-  --dsh-nav-active: #f6f4ef;
-  --dsh-border: rgba(36, 35, 31, 0.082);
-  --dsh-border-soft: rgba(36, 35, 31, 0.048);
+  --dsh-hover: var(--dsw-alias-interactive-bg-hover, var(--skin-dsh-hover, #f7f6f2));
+  --dsh-nav-hover: var(--dsw-alias-interactive-bg-hover, rgba(36, 35, 31, 0.028));
+  --dsh-nav-hover-solid: var(--dsw-alias-interactive-bg-hover-solid, #f8f7f3);
+  --dsh-nav-action-bg: var(--dsw-alias-bg-layer-2, #e7e3db);
+  --dsh-nav-active: var(--dsw-alias-interactive-bg-active, #f6f4ef);
+  --dsh-border: var(--dsw-alias-border-l2, rgba(36, 35, 31, 0.082));
+  --dsh-border-soft: var(--dsw-alias-border-l1, rgba(36, 35, 31, 0.048));
 
-  --dsh-text: var(--skin-dsh-text, #20201d);
-  --dsh-text-soft: var(--skin-dsh-text-soft, #494741);
-  --dsh-muted: var(--skin-dsh-muted, #6e6a61);
-  --dsh-faint: var(--skin-dsh-faint, #b0aaa1);
+  --dsh-text: var(--dsw-alias-label-primary, var(--skin-dsh-text, #20201d));
+  --dsh-text-soft: var(--dsw-alias-label-secondary, var(--skin-dsh-text-soft, #494741));
+  --dsh-muted: var(--dsw-alias-label-tertiary, var(--skin-dsh-muted, #6e6a61));
+  --dsh-faint: var(--dsw-alias-label-caption, var(--skin-dsh-faint, #b0aaa1));
 
-  --dsh-accent: var(--el-color-primary, #59167e); /* Tsinghua Purple accent. */
-  --dsh-accent-soft: #f1eee8; /* Neutral soft surface; keep real purple only on --dsh-accent and icons/buttons. */
-  --dsh-accent-tint: #fbf9f5;
-  --dsh-on-accent: var(--skin-dsh-on-accent, #fffefa);
+  --dsh-accent: var(--el-color-primary, #3f6fd8);
+  --dsh-accent-soft: var(--dsw-alias-interactive-bg-hover-accent, #f1eee8);
+  --dsh-accent-tint: var(--dsw-alias-interactive-bg-hover, #fbf9f5);
+  --dsh-on-accent: var(--dsw-alias-label-primary-foreground, var(--skin-dsh-on-accent, #fffefa));
 
-  --dsh-amber: #b7791f;
-  --dsh-amber-bg: #fdf6e3;
-  --dsh-amber-border: #f0dca0;
-  --dsh-ok: #2f9e6e;
-  --dsh-danger: #c0392b;
-  --dsh-warning: #a16207;
+  --dsh-amber: var(--dsw-alias-state-warn-label, #b7791f);
+  --dsh-amber-bg: var(--dsw-alias-state-warn-tertiary, #fdf6e3);
+  --dsh-amber-border: var(--dsw-alias-state-warn-secondary, #f0dca0);
+  --dsh-ok: var(--dsw-alias-state-success-primary, #2f9e6e);
+  --dsh-danger: var(--dsw-alias-state-error-primary, #c0392b);
+  --dsh-warning: var(--dsw-alias-state-warn-primary, #a16207);
 
-  --dsh-chip-bg: rgba(36, 35, 31, 0.026);
-  --dsh-code-bg: #fbfaf6;
-  --dsh-code-text: #282722;
+  --dsh-chip-bg: var(--dsw-alias-interactive-bg-hover, rgba(36, 35, 31, 0.026));
+  --dsh-code-bg: var(--dsw-alias-markdown-code-block, #fbfaf6);
+  --dsh-code-text: var(--dsw-alias-label-primary, #282722);
   --dsh-card-shadow: 0 1px 2px rgba(36, 35, 31, 0.026), 0 8px 22px rgba(36, 35, 31, 0.038);
   --dsh-active-shadow: inset 0 0 0 1px rgba(36, 35, 31, 0.022);
-  --dsh-btn-shadow: 0 2px 8px rgba(89, 22, 126, 0.18);
-  --dsh-btn-shadow-hover: 0 4px 14px rgba(89, 22, 126, 0.24);
+  --dsh-btn-shadow: 0 2px 8px rgba(63, 111, 216, 0.18);
+  --dsh-btn-shadow-hover: 0 4px 14px rgba(63, 111, 216, 0.24);
   --dsh-ring: 0 0 0 3px rgba(36, 35, 31, 0.032);
 }
 
 /* ── Dark mode: shift pink/purple accents to neutral gray-black palette for softer black-gray look ── */
 @mixin dsh-color-dark {
-  --dsh-bg: var(--skin-dsh-bg, #36313f); /* 当前内置 base 的深色背景。 */
-  --dsh-surface-raw: var(--skin-dsh-surface, #16141b); /* Purple-black surface for chat and cards, not pure black. */
+  --dsh-bg: var(--dsw-alias-bg-base, var(--skin-dsh-bg, #36313f));
+  --dsh-surface-raw: var(--dsw-alias-bg-layer-1, var(--skin-dsh-surface, #16141b));
   --dsh-surface: var(--dsh-surface-override, var(--dsh-surface-raw));
-  --dsh-hover: var(--skin-dsh-hover, #211e29); /* Slightly brighter hover on dark cards with a touch of purple. */
-  --dsh-nav-hover: rgba(180, 150, 230, 0.09); /* Subtle purple-hover on gray surfaces. */
-  --dsh-nav-hover-solid: #413a4e;
-  --dsh-nav-action-bg: #211e29;
-  --dsh-nav-active: #16141b; /* Selected state uses chat black, matching the card color. */
-  --dsh-border: rgba(255, 255, 255, 0.09);
-  --dsh-border-soft: rgba(255, 255, 255, 0.055);
+  --dsh-hover: var(--dsw-alias-interactive-bg-hover, var(--skin-dsh-hover, #211e29));
+  --dsh-nav-hover: var(--dsw-alias-interactive-bg-hover, rgba(180, 150, 230, 0.09));
+  --dsh-nav-hover-solid: var(--dsw-alias-interactive-bg-hover-solid, #413a4e);
+  --dsh-nav-action-bg: var(--dsw-alias-bg-layer-2, #211e29);
+  --dsh-nav-active: var(--dsw-alias-interactive-bg-active, #16141b);
+  --dsh-border: var(--dsw-alias-border-l2, rgba(255, 255, 255, 0.09));
+  --dsh-border-soft: var(--dsw-alias-border-l1, rgba(255, 255, 255, 0.055));
 
-  --dsh-text: var(--skin-dsh-text, #f4f3f8); /* Pleasant white text (not #fff). */
-  --dsh-text-soft: var(--skin-dsh-text-soft, #dddbe6);
-  --dsh-muted: var(--skin-dsh-muted, #c1becb);
-  --dsh-faint: var(--skin-dsh-faint, #9894a4);
+  --dsh-text: var(--dsw-alias-label-primary, var(--skin-dsh-text, #f4f3f8));
+  --dsh-text-soft: var(--dsw-alias-label-secondary, var(--skin-dsh-text-soft, #dddbe6));
+  --dsh-muted: var(--dsw-alias-label-tertiary, var(--skin-dsh-muted, #c1becb));
+  --dsh-faint: var(--dsw-alias-label-caption, var(--skin-dsh-faint, #9894a4));
 
-  --dsh-accent: var(--el-color-primary, #8b8f9c); /* 暗色也跟随当前皮肤主色。 */
-  --dsh-accent-soft: #2a2a31; /* User bubble on dark cards. */
-  --dsh-accent-tint: #1c1c20; /* Tool block background on dark cards. */
-  --dsh-on-accent: var(--skin-dsh-on-accent, #18181b);
+  --dsh-accent: var(--el-color-primary, #78a2ff);
+  --dsh-accent-soft: var(--dsw-alias-interactive-bg-hover-accent, #2a2a31);
+  --dsh-accent-tint: var(--dsw-alias-interactive-bg-hover, #1c1c20);
+  --dsh-on-accent: var(--dsw-alias-label-primary-foreground, var(--skin-dsh-on-accent, #18181b));
 
-  --dsh-amber: #e0b341;
-  --dsh-amber-bg: #2a2417;
-  --dsh-amber-border: #4a3f1e;
-  --dsh-ok: #4ec98a;
-  --dsh-danger: #e8897c;
-  --dsh-warning: #f0b35b;
+  --dsh-amber: var(--dsw-alias-state-warn-label, #e0b341);
+  --dsh-amber-bg: var(--dsw-alias-state-warn-tertiary, #2a2417);
+  --dsh-amber-border: var(--dsw-alias-state-warn-secondary, #4a3f1e);
+  --dsh-ok: var(--dsw-alias-state-success-primary, #4ec98a);
+  --dsh-danger: var(--dsw-alias-state-error-primary, #e8897c);
+  --dsh-warning: var(--dsw-alias-state-warn-primary, #f0b35b);
 
-  --dsh-chip-bg: rgba(255, 255, 255, 0.06);
-  --dsh-code-bg: #1c1c20;
-  --dsh-code-text: #e6e4ee;
+  --dsh-chip-bg: var(--dsw-alias-interactive-bg-hover, rgba(255, 255, 255, 0.06));
+  --dsh-code-bg: var(--dsw-alias-markdown-code-block, #1c1c20);
+  --dsh-code-text: var(--dsw-alias-label-primary, #e6e4ee);
   --dsh-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.34);
   --dsh-active-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   --dsh-btn-shadow: none;
@@ -87,14 +86,27 @@
 /* Element 控件与 Agent 使用同一套正文/表面颜色；主色及其 light/dark 色阶由 apply.ts 写入。 */
 @mixin element-host-colors($scheme) {
   color-scheme: $scheme;
-  --el-bg-color: var(--skin-dsh-surface);
-  --el-bg-color-page: var(--skin-dsh-bg);
-  --el-bg-color-overlay: var(--skin-dsh-surface);
-  --el-text-color-primary: var(--skin-dsh-text);
-  --el-text-color-regular: var(--skin-dsh-text-soft);
-  --el-text-color-secondary: var(--skin-dsh-muted);
-  --el-text-color-placeholder: var(--skin-dsh-faint);
-  --el-text-color-disabled: var(--skin-dsh-faint);
+  --el-bg-color: var(--dsh-surface);
+  --el-bg-color-page: var(--dsh-bg);
+  --el-bg-color-overlay: var(--dsh-surface);
+  --el-text-color-primary: var(--dsh-text);
+  --el-text-color-regular: var(--dsh-text-soft);
+  --el-text-color-secondary: var(--dsh-muted);
+  --el-text-color-placeholder: var(--dsh-faint);
+  --el-text-color-disabled: var(--dsh-faint);
+}
+
+/* Mantine portals inherit from body, so its semantic defaults follow the same DSH token bridge. */
+@mixin mantine-host-colors {
+  --mantine-color-body: var(--dsh-bg);
+  --mantine-color-text: var(--dsh-text);
+  --mantine-color-placeholder: var(--dsh-faint);
+  --mantine-color-anchor: var(--dsh-accent);
+  --mantine-color-default: var(--dsh-surface);
+  --mantine-color-default-hover: var(--dsh-hover);
+  --mantine-color-default-color: var(--dsh-text);
+  --mantine-color-default-border: var(--dsh-border);
+  --mantine-color-dimmed: var(--dsh-muted);
 }
 
 /* ── Theme-agnostic mappings for radius/font/Workstation remap across scopes (cards/popovers) ── */
@@ -171,11 +183,28 @@ body[data-dsh-shell-titlebar='true'][data-dsh-window-full-screen='true'] .dsh-ro
   @include dsh-color-light;
   @include dsh-static;
   @include element-host-colors(light);
+  @include mantine-host-colors;
 }
 :root[data-mantine-color-scheme='dark'] {
   @include dsh-color-dark;
   @include dsh-static;
   @include element-host-colors(dark);
+  @include mantine-host-colors;
+}
+
+/* DSH's official --dsw-* aliases live on body. Repeating the bridge here lets
+   body-mounted Mantine and Element overlays consume active plugin overrides. */
+:root[data-mantine-color-scheme='light'] body {
+  @include dsh-color-light;
+  @include dsh-static;
+  @include element-host-colors(light);
+  @include mantine-host-colors;
+}
+:root[data-mantine-color-scheme='dark'] body {
+  @include dsh-color-dark;
+  @include dsh-static;
+  @include element-host-colors(dark);
+  @include mantine-host-colors;
 }
 
 /* Zoom layer: zoom compensation is handled on this element.

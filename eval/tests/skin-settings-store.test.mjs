@@ -122,7 +122,7 @@ test('versioned settings preserve a bounded Profile theme id for startup pending
   }
 });
 
-test('skins settings always converge the fallback to the only built-in theme', () => {
+test('skins settings always converge fallback to the host foundation', () => {
   const { root, store } = fixture();
   try {
     store.saveSkins({

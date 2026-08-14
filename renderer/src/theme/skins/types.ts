@@ -64,11 +64,11 @@ export interface SkinDefinition {
   source?: 'builtin' | 'user' | 'profile'
   /**
    * 仅内置皮肤使用：对应 SCSS 中 html.<htmlClass> 的选择器类名。
-   * 当前内置主题 lighting 对应 'lighting-theme'。
+   * 当前宿主底座 lighting 对应 'lighting-theme'。
    * 自定义/Profile 主题忽略此字段，只能通过 base 选取已注册的内置类。
    */
   htmlClass?: string
-  /** 自定义/Profile 主题的内置基底；缺省输入会规范化为 lighting。 */
+  /** 自定义/Profile 主题的宿主底座；缺省输入会规范化为 lighting。 */
   base?: string
   /** 明色/默认变量覆盖；v1 只允许 --el-color-primary 十六进制颜色。 */
   vars?: Record<string, string>

@@ -5664,7 +5664,7 @@ const messages = {
       dismissProfileAria: '关闭 Profile 主题警告'
     },
     builtin: {
-      lighting: { name: '清透蓝', description: '唯一内置主题，支持亮暗两种模式。' }
+      lighting: { name: '系统底座', description: '主题插件尚未就绪时使用的安全界面底座。' }
     },
     backgrounds: {
       none: '无底图', aurora: '极光', dawn: '晨曦', 'deep-sea': '深海', forest: '森林',
