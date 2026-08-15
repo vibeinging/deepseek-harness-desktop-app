@@ -4,6 +4,8 @@
 
 > [View the anime README variant](README.anime.md)
 
+[![dshfind](https://dshfind.com/api/badge/vibeinging/deepseek-harness-desktop-app?lang=en)](https://dshfind.com/en/plugins/vibeinging/deepseek-harness-desktop-app?ref=badge)
+
 DeepSeek Harness Desktop App is a local AI work desktop built on DeepSeek Harness (DSH). It brings DSH Sessions, Agents, Tools, Skills, MCP, and Profile Bundles together with projects, files, web pages, Git Worktrees, Canvas, Sites, and Office artifacts in one desktop application.
 
 | Professional blue, light | Professional blue, dark |

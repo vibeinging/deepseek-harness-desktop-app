@@ -4,6 +4,8 @@
 
 > [查看二次元版 README：二次元主题与看板娘](README.anime.md)
 
+[![dshfind](https://dshfind.com/api/badge/vibeinging/deepseek-harness-desktop-app?lang=zh)](https://dshfind.com/zh/plugins/vibeinging/deepseek-harness-desktop-app?ref=badge)
+
 DeepSeek Harness Desktop App 是建立在 DeepSeek Harness（DSH）之上的本地 AI 工作桌面。它把 DSH 的 Session、Agent、Tool、Skill、MCP 和 Profile Bundle 与项目、文件、网页、Git Worktree、Canvas、Site 和 Office 产物组织在同一个桌面应用中。
 
 | 专业蓝亮色 | 专业蓝暗色 |
