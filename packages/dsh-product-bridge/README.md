@@ -1,10 +1,10 @@
-# dsh-work Product Bridge
+# DeepSeek Harness Desktop App Product Bridge
 
 English | [中文](README.zh.md)
 
-This private Profile Bundle extends the official DSH Web Profile without importing or changing a DSH source checkout. It registers `project_list`, `conversation_list`, four dsh-work Canvas/Site tools, three Office artifact tools, and `ui_render` on the Agent-scoped DSH tool registry. Its `product.json` also contributes the review, browser, files, artifacts, and sites pages to dsh-work's `agent.workbench.tool` product position. The app shell reads these contributions from the current Profile catalog instead of maintaining a second page roster in `AgentShell`.
+This private Profile Bundle extends the official DSH Web Profile without importing or changing a DSH source checkout. It registers `project_list`, `conversation_list`, four DeepSeek Harness Desktop App Canvas/Site tools, three Office artifact tools, and `ui_render` on the Agent-scoped DSH tool registry. Its `product.json` also contributes the review, browser, files, artifacts, and sites pages to the app-owned `agent.workbench.tool` product position. The app shell reads these contributions from the current Profile catalog instead of maintaining a second page roster in `AgentShell`.
 
-The child sends only a DSH Session id. The parent binds it to one authorized dsh-work Session, user, and project, then handles project, conversation, Canvas/Site, and Office requests through one controlled IPC dispatcher. Requests cannot select another identity or project. Canvas/Site creation, editing, suggestions, and Office creation or editing require DSH approval. Every call produces normal durable DSH tool events; successful writes also project a hidden workspace event so the live interface and recovered history open the same Canvas, Site, or artifact.
+The child sends only a DSH Session id. The parent binds it to one authorized DeepSeek Harness Desktop App Session, user, and project, then handles project, conversation, Canvas/Site, and Office requests through one controlled IPC dispatcher. Requests cannot select another identity or project. Canvas/Site creation, editing, suggestions, and Office creation or editing require DSH approval. Every call produces normal durable DSH tool events; successful writes also project a hidden workspace event so the live interface and recovered history open the same Canvas, Site, or artifact.
 
 Before every model step enters, the same parent-owned binding resolves the allowed App instructions, project instructions, and global/project memory. The bridge adds them as immutable user messages to the `agent/pre-step` entering batch and logs them in the DSH Session Log with `dsh-work-context` and `dsh-work-memory` provenance. A read failure skips only that addition; it does not replace the user's messages or create a second history.
 
@@ -14,7 +14,7 @@ Runtime readiness and product IPC use callback-owned sends, so parent shutdown w
 
 The removed project Plugin mount, Skill, and MCP stores are not projected through ProductHost. Their catalog methods return an empty generation, while Profile Bundle Skills and tools remain owned by DSH's native registries.
 
-The workbench product position runs on the official rc.6 `SlotCore` and `createSlotRenderer`, but its SlotMap and host services belong to dsh-work rather than DSH Web. The main interface enters the current Profile's Client graph through the reviewed `dsh-work-shell` Client Plugin. Workbench pages render only allowlisted local components, and community Bundles containing `dsh.client` are rejected during preflight until they can run outside the privileged Electron renderer. A user-installed Bundle therefore cannot enter the Renderer through Client code or by naming a component in JSON.
+The workbench product position runs on the official rc.6 `SlotCore` and `createSlotRenderer`, but its SlotMap and host services belong to DeepSeek Harness Desktop App rather than DSH Web. The main interface enters the current Profile's Client graph through the reviewed `dsh-work-shell` Client Plugin. Workbench pages render only allowlisted local components, and community Bundles containing `dsh.client` are rejected during preflight until they can run outside the privileged Electron renderer. A user-installed Bundle therefore cannot enter the Renderer through Client code or by naming a component in JSON.
 
 ## Model Experience
 

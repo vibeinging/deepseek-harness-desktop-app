@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
           api: 'modern-compiler',
           silenceDeprecations: ['legacy-js-api'],
           // Match original project: inject responsive.scss mixins (mobile/tablet etc.) into every SCSS entry point.
-          additionalData: `@use "${pathSrc.replace(/\\\\/g, '/')}/styles/responsive.scss" as *;\n`
+          additionalData: `@use "${pathSrc.replace(/\\/g, '/')}/styles/responsive.scss" as *;\n`
         }
       }
     }

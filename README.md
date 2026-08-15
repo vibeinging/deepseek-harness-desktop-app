@@ -1,14 +1,14 @@
-# dsh-work
+# DeepSeek Harness Desktop App
 
 中文 | [English](README.en.md)
 
 > [查看二次元版 README：二次元主题与看板娘](README.anime.md)
 
-dsh-work 是建立在 DeepSeek Harness（DSH）之上的本地 AI 工作桌面。它把 DSH 的 Session、Agent、Tool、Skill、MCP 和 Profile Bundle 与项目、文件、网页、Git Worktree、Canvas、Site 和 Office 产物组织在同一个桌面应用中。
+DeepSeek Harness Desktop App 是建立在 DeepSeek Harness（DSH）之上的本地 AI 工作桌面。它把 DSH 的 Session、Agent、Tool、Skill、MCP 和 Profile Bundle 与项目、文件、网页、Git Worktree、Canvas、Site 和 Office 产物组织在同一个桌面应用中。
 
 | 专业蓝亮色 | 专业蓝暗色 |
 | --- | --- |
-| ![dsh-work 专业蓝亮色首页](docs/images/readme/dsh-work-home-professional-light.png) | ![dsh-work 专业蓝暗色首页](docs/images/readme/dsh-work-home-professional-dark.png) |
+| ![DeepSeek Harness Desktop App 专业蓝亮色首页](docs/images/readme/dsh-work-home-professional-light.png) | ![DeepSeek Harness Desktop App 专业蓝暗色首页](docs/images/readme/dsh-work-home-professional-dark.png) |
 
 ## 快速开始
 
@@ -53,15 +53,15 @@ npm run dev
 
 一个项目对话对应一个 DSH Session。右侧工作台可以添加结果与证据、浏览器、文件、产物和 Site 标签；项目文件树、Agent 工作目录、当前 Diff 和行编辑都跟随当前项目权限与活动 Worktree。
 
-![dsh-work 项目会话](docs/images/readme/dsh-work-project-session.png)
+![DeepSeek Harness Desktop App 项目会话](docs/images/readme/dsh-work-project-session.png)
 
-![dsh-work 文件面板](docs/images/readme/dsh-work-files.png)
+![DeepSeek Harness Desktop App 文件面板](docs/images/readme/dsh-work-files.png)
 
 Canvas 保存不可变版本，支持正文编辑、版本比较、精确行内建议和冲突处理。Site 使用同一套版本能力，并在隔离沙箱中提供桌面、平板和手机预览。
 
-![dsh-work Canvas 版本与冲突处理](docs/images/readme/dsh-work-canvas.png)
+![DeepSeek Harness Desktop App Canvas 版本与冲突处理](docs/images/readme/dsh-work-canvas.png)
 
-![dsh-work 本地 Site 响应式预览](docs/images/readme/dsh-work-site.png)
+![DeepSeek Harness Desktop App 本地 Site 响应式预览](docs/images/readme/dsh-work-site.png)
 
 ## Git Worktree 隔离开发
 
@@ -73,7 +73,7 @@ Canvas 保存不可变版本，支持正文编辑、版本比较、精确行内�
 4. 删除前必须切回主检出。删除工作目录后保留 Git 分支，避免误删提交。
 5. 非 Git 目录、重复分支、越界路径和异常符号链接会被拒绝；磁盘上丢失的 Worktree 会标记为不可用。
 
-![dsh-work Git Worktree 完整流程](docs/images/readme/dsh-work-worktree.gif)
+![DeepSeek Harness Desktop App Git Worktree 完整流程](docs/images/readme/dsh-work-worktree.gif)
 
 ## 主题与外观
 
@@ -97,9 +97,9 @@ Tool、Skill、MCP、Hook 等 Host Bundle 可以进入 DSH 运行时。包含第
 
 ## 与 DSH 官方 Web 的关系
 
-dsh-work 不是 DSH 官方 Web 的 iframe，也没有复制一套 Agent 运行时。Electron 启动官方 DSH Web Profile，并继续使用同一套 Session、Agent、Tool、Skill、MCP、Settings、Profile Bundle 和 Client Loader。dsh-work 在同一运行链上提供自己的桌面外壳，并增加项目管理、文件授权、Browser Workspace、Git Worktree、Canvas、Site 和 Office 产物。
+DeepSeek Harness Desktop App 不是 DSH Web 的 iframe，也没有复制一套 Agent 运行时。Electron 启动 DSH Web Profile，并继续使用同一套 Session、Agent、Tool、Skill、MCP、Settings、Profile Bundle 和 Client Loader。DeepSeek Harness Desktop App 在同一运行链上提供自己的桌面外壳，并增加项目管理、文件授权、Browser Workspace、Git Worktree、Canvas、Site 和 Office 产物。
 
-需要模型使用的产品能力通过绑定 Session 和 DSH Tool 接入；项目数据、文件权限、网页、Worktree 和产物版本仍由 dsh-work 管理。
+需要模型使用的产品能力通过绑定 Session 和 DSH Tool 接入；项目数据、文件权限、网页、Worktree 和产物版本仍由 DeepSeek Harness Desktop App 管理。
 
 ## 当前边界
 

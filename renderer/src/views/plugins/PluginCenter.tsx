@@ -92,7 +92,7 @@ function bundleInitial(bundle: ProfileBundle) {
 
 function managedLabel(value: ProfileBundle['managed_by']) {
   if (value === 'system') return 'DSH 内置'
-  if (value === 'app') return 'dsh-work 提供'
+  if (value === 'app') return 'DeepSeek Harness Desktop App 提供'
   return '用户安装'
 }
 
@@ -370,13 +370,13 @@ export default function PluginCenter({
                   </ul>
                 )}
                 {preflight.status === 'build_approval_required' && (
-                  <span>dsh-work 不会自动放开社区仓库的主机代码执行权限。插件作者应提交已构建产物，或先完成单独安全审查。</span>
+                  <span>DeepSeek Harness Desktop App 不会自动放开社区仓库的主机代码执行权限。插件作者应提交已构建产物，或先完成单独安全审查。</span>
                 )}
                 {preflight.status === 'migration_required' && (
                   <span>需要补齐 dsh.bundle.patch、当前 dsh.client / ./client 清单和正式 SDK 版本后再安装。</span>
                 )}
                 {preflight.status === 'sdk_unavailable' && (
-                  <span>请确认公开 npm registry 可读取插件声明的 SDK 版本；dsh-work 不会改为链接 DSH 源码。</span>
+                  <span>请确认公开 npm registry 可读取插件声明的 SDK 版本；DeepSeek Harness Desktop App 不会改为链接 DSH 源码。</span>
                 )}
                 {preflight.status === 'ready' && preflight.surface === 'dsh_web' && (
                   <span>这个 Bundle 会进入当前主窗口的 DSH Client 图。设置页、全局浮层和侧栏底部加法位置使用标准 Slot；整列侧栏、会话和详情仍需按插件实际贡献检查。</span>

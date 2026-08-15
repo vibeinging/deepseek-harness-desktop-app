@@ -398,7 +398,7 @@ test("AgentKernel initializes, starts a thread and completes a turn", async () =
   assert.deepEqual(
     client.requests.find((request) => request.method === "initialize")?.params,
     {
-      clientInfo: { name: "dsh-desktop", title: "dsh-work", version: "0.0.1" },
+      clientInfo: { name: "dsh-desktop", title: "DeepSeek Harness Desktop App", version: "0.0.1" },
       capabilities: {
         experimentalApi: true,
         requestAttestation: false,

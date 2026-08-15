@@ -107,7 +107,7 @@ const MetricViewRecommendationDrawer = forwardRef<
           keyChallenges: '关键挑战',
           intentReasoning: '意图推理',
           sourceTagLabel: '数据源',
-          unknownSource: '未dsh-work据源',
+          unknownSource: '未知数据源',
           appliedTag: '已存为草稿',
           editCandidate: '编辑',
           validationErrorTitle: '需要在业务视图列表里继续完善',

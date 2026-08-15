@@ -23,7 +23,7 @@ const PROJECT_TOOL_SPECS = [
     name: "project_list",
     method: "projectList",
     title: "List projects",
-    description: "List dsh-work projects available to the current user.",
+    description: "List DeepSeek Harness Desktop App projects available to the current user.",
     parameters: {
       type: "object",
       properties: {
@@ -119,7 +119,7 @@ function createProductHost(ctx) {
       process.off("message", onMessage);
       for (const request of pending.values()) {
         sendCancel(request);
-        settle(request, new ProductBridgeError("product-unavailable", "dsh-work product bridge disposed"));
+        settle(request, new ProductBridgeError("product-unavailable", "DeepSeek Harness Desktop App product bridge disposed"));
       }
     };
   }, "dsh-work product bridge IPC");
@@ -127,7 +127,7 @@ function createProductHost(ctx) {
   return {
     request(sessionId, method, payload, signal) {
       if (!process.connected || typeof process.send !== "function") {
-        return Promise.reject(new ProductBridgeError("product-unavailable", "dsh-work parent process is unavailable"));
+        return Promise.reject(new ProductBridgeError("product-unavailable", "DeepSeek Harness Desktop App parent process is unavailable"));
       }
       const id = randomUUID();
       return new Promise((resolve, reject) => {
@@ -620,7 +620,7 @@ export function apply(ctx) {
     if (PRODUCT_WRITE_TOOL_NAMES.has(exec.name)) {
       return Promise.resolve({
         kind: "ask",
-        reason: `${exec.name} changes parent-owned dsh-work product data`,
+        reason: `${exec.name} changes parent-owned DeepSeek Harness Desktop App product data`,
       });
     }
     return next();

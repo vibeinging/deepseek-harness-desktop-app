@@ -261,7 +261,10 @@ export default {
       await ui.click(`[aria-label="打开${projectName}的项目设置"]`, { timeout: 10_000 });
       await ui.waitFor('[data-testid="worktree-section"]', { timeout: 15_000 });
       await ui.waitUntil(
-        `() => !document.querySelector(${JSON.stringify(`[data-testid="worktree-deactivate-${worktreeId}"]`)})?.disabled`,
+        `() => {
+          const button = document.querySelector(${JSON.stringify(`[data-testid="worktree-deactivate-${worktreeId}"]`)});
+          return Boolean(button && !button.disabled);
+        }`,
         { timeout: 15_000, label: "Worktree 停用按钮可用" },
       );
       const deactivateClicked = await driver.raw.ev(`

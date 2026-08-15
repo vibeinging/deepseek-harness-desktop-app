@@ -651,7 +651,7 @@ export default function AgentSettings({
                 <ActionRow
                   icon={<IconBook2 size={17} stroke={1.75} />}
                   label="新手引导"
-                  desc="重新打开 dsh-work 初始引导，查看模型、项目、文件、联网和指令设置。"
+                  desc="重新打开 DeepSeek Harness Desktop App 初始引导，查看模型、项目、文件、联网和指令设置。"
                 >
                   <button type="button" className={styles.actionBtn} onClick={() => setOnboardingOpen(true)}>
                     打开引导

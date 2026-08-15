@@ -203,7 +203,7 @@ export function createProductHostDispatcher({
  */
 export const nullProductHostDispatcher = {
   async handle(message) {
-    return response(message?.id, { ok: false, error: { code: "product-unavailable", message: "productHost 未接入 dsh-work 业务服务" } });
+    return response(message?.id, { ok: false, error: { code: "product-unavailable", message: "productHost 未接入 DeepSeek Harness Desktop App 业务服务" } });
   },
   cancel() {
     return false;
@@ -240,7 +240,7 @@ export function createSessionProductHostDispatcher() {
       if (current && (current.appSessionId !== binding.appSessionId
         || current.userId !== binding.userId
         || current.projectId !== binding.projectId)) {
-        const error = new Error("同一个 DSH session 不能改绑到另一项 dsh-work 身份");
+        const error = new Error("同一个 DSH session 不能改绑到另一项 DeepSeek Harness Desktop App 身份");
         error.code = "DSH_PRODUCT_HOST_IDENTITY_CONFLICT";
         throw error;
       }
@@ -369,7 +369,7 @@ async function handleConversationMemory({
     "SELECT action_type,session_config FROM sessions WHERE id=$1 AND project_id=$2 AND created_by=$3 AND deleted_at IS NULL LIMIT 1",
     [appSessionId, projectId, userId],
   ).catch(() => null);
-  if (!session) throw productRejected("conversationMemory 找不到绑定的 dsh-work Session");
+  if (!session) throw productRejected("conversationMemory 找不到绑定的 DeepSeek Harness Desktop App Session");
   let sessionConfig = {};
   try {
     sessionConfig = typeof session.session_config === "string"
@@ -447,7 +447,7 @@ function boundOfficeRequest({ db, resolveUserId, resolveProjectId, resolveAppSes
   const projectId = String(resolveProjectId?.() || "").trim();
   const requestedProjectId = String(payload?.project_id || projectId).trim();
   const appSessionId = String(resolveAppSessionId?.() || "").trim();
-  if (!projectId || !appSessionId) throw productRejected("Office 产物工具需要活动项目和 dsh-work Session 绑定");
+  if (!projectId || !appSessionId) throw productRejected("Office 产物工具需要活动项目和 DeepSeek Harness Desktop App Session 绑定");
   if (requestedProjectId !== projectId) throw productRejected("Office 产物工具只能操作当前 DSH Session 绑定的项目");
   return {
     projectId,
@@ -468,7 +468,7 @@ function officeSource(appSessionId) {
 function boundCanvasRequest({ db, resolveUserId, resolveProjectId, resolveAppSessionId }) {
   const projectId = String(resolveProjectId?.() || "").trim();
   const appSessionId = String(resolveAppSessionId?.() || "").trim();
-  if (!projectId || !appSessionId) throw productRejected("Canvas 工具需要活动项目和 dsh-work Session 绑定");
+  if (!projectId || !appSessionId) throw productRejected("Canvas 工具需要活动项目和 DeepSeek Harness Desktop App Session 绑定");
   return {
     projectId,
     appSessionId,
@@ -619,7 +619,7 @@ async function handleCanvasSuggest(deps) {
 function handleUiRender({ resolveProjectId, resolveAppSessionId, payload }) {
   const projectId = String(resolveProjectId?.() || "").trim();
   const appSessionId = String(resolveAppSessionId?.() || "").trim();
-  if (!projectId || !appSessionId) throw productRejected("uiRender 需要活动项目和 dsh-work Session 绑定");
+  if (!projectId || !appSessionId) throw productRejected("uiRender 需要活动项目和 DeepSeek Harness Desktop App Session 绑定");
   const { document, stats } = parseGenerativeUiDocument(payload, { allowedLocalRoots: [] });
   return {
     success: true,

@@ -272,7 +272,7 @@ export function inspectReleaseSafety({
   const normalizedRoot = resolve(root);
   const checks = staticChecks(normalizedRoot, scope);
   if (!staticOnly && (scope === 'all' || scope === 'macos')) {
-    checks.push(...inspectMacBundle(resolve(appPath || join(normalizedRoot, 'release', 'mac-arm64', 'dsh-work.app'))));
+    checks.push(...inspectMacBundle(resolve(appPath || join(normalizedRoot, 'release', 'mac-arm64', 'DeepSeek Harness Desktop App.app'))));
   }
   if (!staticOnly && (scope === 'all' || scope === 'windows')) {
     checks.push(...inspectWindowsBundle(normalizedRoot, appPath ? resolve(appPath) : null));

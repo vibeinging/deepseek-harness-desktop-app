@@ -38,7 +38,7 @@ describe('homepage character', () => {
 
     expect(welcome).toContain("data-has-character={showCharacter ? 'true' : 'false'}")
     expect(welcome).toContain('data-greeting-period={greeting.period}')
-    expect(welcome).toContain('dsh-work')
+    expect(welcome).toContain('DeepSeek Harness Desktop App')
     expect(welcome).toMatch(/className=\{styles\.character\}[\s\S]*className=\{styles\.composer\}/)
     expect(styles).toContain(".interaction[data-has-character='true']")
     expect(styles).toContain('padding-top: var(--home-character-rise)')

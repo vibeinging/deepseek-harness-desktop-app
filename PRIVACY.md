@@ -1,6 +1,6 @@
 # 本地数据与隐私
 
-dsh-work 是单机桌面应用。项目、会话、查询记录和运行证据默认保存在当前电脑，不会因为打开应用或查看历史记录自动上传。
+DeepSeek Harness Desktop App 是单机桌面应用。项目、会话、查询记录和运行证据默认保存在当前电脑，不会因为打开应用或查看历史记录自动上传。
 
 ## 保存哪些内容
 
@@ -14,13 +14,13 @@ dsh-work 是单机桌面应用。项目、会话、查询记录和运行证据�
 - `agent_runtime/`：Agent 运行配置、会话标识和任务状态；
 - `sessions/`、`storages/`：DSH Profile 的会话日志与配置存储。
 
-启用 Agent 能力后，运行配置、会话标识和任务状态保存在上述 `agent_runtime/` 与 `sessions/`、`storages/` 目录。dsh-work 不使用外部账户模型，只连接用户在当前项目中配置的模型服务。
+启用 Agent 能力后，运行配置、会话标识和任务状态保存在上述 `agent_runtime/` 与 `sessions/`、`storages/` 目录。DeepSeek Harness Desktop App 不使用外部账户模型，只连接用户在当前项目中配置的模型服务。
 
 这些文件可能包含业务数据、SQL、文件路径、命令输出、模型回答和错误信息。API Key、Token、密码以及 MCP 配置中声明的敏感字段会在运行事实和日志中做脱敏，但用户主动写入文件或第三方工具返回的内容仍可能包含敏感信息。
 
 ## 什么时候会联网
 
-Agent 默认使用工作区可写沙箱和按需审批，对应技术配置为 `workspace-write` 和 `on-request`。命令、文件修改和外部工具仍受沙箱、用户审批及 dsh-work 工具权限控制。以下操作只有在用户配置或发起后才会访问外部服务：
+Agent 默认使用工作区可写沙箱和按需审批，对应技术配置为 `workspace-write` 和 `on-request`。命令、文件修改和外部工具仍受沙箱、用户审批及 DeepSeek Harness Desktop App 工具权限控制。以下操作只有在用户配置或发起后才会访问外部服务：
 
 - 调用模型或向量模型；
 - 连接当前项目配置的模型服务；Responses API 直接连接，Chat Completions API 通过只监听本机回环地址的适配器连接；

@@ -1,3 +1,15 @@
+const MODEL_COPY = {
+  intros: [
+    "填入各提供方的 API 密钥即可使用其模型。",
+    "Enter your API keys to use models from the following providers.",
+  ],
+  add: ["添加提供方", "Add provider"],
+  providerLabels: ["提供方", "Provider"],
+  apply: ["保存", "Apply"],
+  keyLabels: ["API 密钥", "API key"],
+  remove: ["删除", "Delete"],
+};
+
 export default {
   id: "dsh-model-settings-ui",
   desc: "无模型验证模型设置页直接读写 DSH Settings、Credentials 和模型目录",
@@ -65,8 +77,13 @@ export default {
       await ui.clickText("模型设置", { selector: "button", exact: true, timeout: 10_000 });
       const settingsRoot = '[data-dsh-standard-settings-section="models"]';
       await ui.waitFor(settingsRoot, { timeout: 15_000 });
+      await ui.waitUntil(`() => ${JSON.stringify(MODEL_COPY.intros)}.some((copy) => document
+        .querySelector(${JSON.stringify(settingsRoot)})?.textContent?.includes(copy))`, {
+        timeout: 15_000,
+        label: "DSH Models 插槽加载完成",
+      });
       const settingsText = await ui.text(settingsRoot);
-      assert.ok(settingsText.includes("填入各提供方的 API 密钥即可使用其模型。"), "模型页由 DSH Client 标准 Models 插槽展示", {
+      assert.ok(MODEL_COPY.intros.some((copy) => settingsText.includes(copy)), "模型页由 DSH Client 标准 Models 插槽展示", {
         criterion: "dsh.model-settings-authoritative",
       });
 
@@ -77,22 +94,28 @@ export default {
 
       await ui.waitUntil(`async () => {
         const button = [...document.querySelectorAll('button')]
-          .find((element) => element.textContent?.trim() === '添加提供方');
+          .find((element) => ${JSON.stringify(MODEL_COPY.add)}.includes(element.textContent?.trim()));
         return Boolean(button && !button.disabled);
       }`, {
         timeout: 15_000,
         label: "DSH 提供方目录入口加载完成",
       });
-      await ui.clickText("添加提供方", { selector: "button", exact: true, timeout: 10_000 });
-      await ui.waitFor('select[aria-label="提供方"]', { timeout: 10_000 });
+      await driver.raw.ev(`
+        const button = [...document.querySelectorAll('button')]
+          .find((element) => ${JSON.stringify(MODEL_COPY.add)}.includes(element.textContent?.trim()));
+        button?.click();
+      `);
+      const providerSelector = MODEL_COPY.providerLabels
+        .map((label) => `select[aria-label="${label}"]`).join(', ');
+      await ui.waitFor(providerSelector, { timeout: 10_000 });
       const providerSelected = await driver.raw.ev(`
-        const select = document.querySelector('select[aria-label="提供方"]');
+        const select = document.querySelector(${JSON.stringify(providerSelector)});
         const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
         setter?.call(select, ${JSON.stringify(route)});
         select?.dispatchEvent(new Event('change', { bubbles: true }));
         return Boolean(select);
       `);
-      await ui.waitUntil(`async () => document.querySelector('select[aria-label="提供方"]')?.value === ${JSON.stringify(route)}`, {
+      await ui.waitUntil(`async () => document.querySelector(${JSON.stringify(providerSelector)})?.value === ${JSON.stringify(route)}`, {
         timeout: 5_000,
         label: "DSH 目录提供方已选择",
       });
@@ -100,13 +123,13 @@ export default {
         criterion: "dsh.model-settings-authoritative",
       });
       const keyFilled = await driver.raw.ev(`
-        const select = document.querySelector('select[aria-label="提供方"]');
+        const select = document.querySelector(${JSON.stringify(providerSelector)});
         let editor = select?.parentElement;
         while (editor && ![...editor.querySelectorAll('button')]
-          .some((element) => element.textContent?.trim() === '保存')) {
+          .some((element) => ${JSON.stringify(MODEL_COPY.apply)}.includes(element.textContent?.trim()))) {
           editor = editor.parentElement;
         }
-        const input = editor?.querySelector('input[aria-label="API 密钥"]');
+        const input = editor?.querySelector(${JSON.stringify(MODEL_COPY.keyLabels.map((label) => `input[aria-label="${label}"]`).join(', '))});
         const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
         setter?.call(input, ${JSON.stringify(secret)});
         input?.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ${JSON.stringify(secret)} }));
@@ -116,28 +139,28 @@ export default {
         criterion: "dsh.model-credentials-write-only",
       });
       await ui.waitUntil(`async () => {
-        const select = document.querySelector('select[aria-label="提供方"]');
+        const select = document.querySelector(${JSON.stringify(providerSelector)});
         let editor = select?.parentElement;
         while (editor && ![...editor.querySelectorAll('button')]
-          .some((element) => element.textContent?.trim() === '保存')) {
+          .some((element) => ${JSON.stringify(MODEL_COPY.apply)}.includes(element.textContent?.trim()))) {
           editor = editor.parentElement;
         }
         const button = [...(editor?.querySelectorAll('button') || [])]
-          .find((element) => element.textContent?.trim() === '保存');
+          .find((element) => ${JSON.stringify(MODEL_COPY.apply)}.includes(element.textContent?.trim()));
         return Boolean(button && !button.disabled);
       }`, {
         timeout: 10_000,
         label: "DSH 提供方表单可以保存",
       });
       const saveClicked = await driver.raw.ev(`
-        const select = document.querySelector('select[aria-label="提供方"]');
+        const select = document.querySelector(${JSON.stringify(providerSelector)});
         let editor = select?.parentElement;
         while (editor && ![...editor.querySelectorAll('button')]
-          .some((element) => element.textContent?.trim() === '保存')) {
+          .some((element) => ${JSON.stringify(MODEL_COPY.apply)}.includes(element.textContent?.trim()))) {
           editor = editor.parentElement;
         }
         const button = [...(editor?.querySelectorAll('button') || [])]
-          .find((element) => element.textContent?.trim() === '保存');
+          .find((element) => ${JSON.stringify(MODEL_COPY.apply)}.includes(element.textContent?.trim()));
         button?.click();
         return Boolean(button);
       `);
@@ -167,14 +190,24 @@ export default {
         const row = [...document.querySelectorAll('li')]
           .find((element) => element.textContent?.includes(${JSON.stringify(route)}));
         const button = row && [...row.querySelectorAll('button')]
-          .find((element) => element.textContent?.trim() === '删除');
+          .find((element) => ${JSON.stringify(MODEL_COPY.remove)}.includes(element.textContent?.trim()));
         button?.click();
         return Boolean(button);
       `);
       assert.eq(deleteOpened, true, "从 DSH Models 行打开删除确认", {
         criterion: "dsh.model-settings-authoritative",
       });
-      await ui.clickText(`删除 ${route}`, { selector: "button", exact: true, timeout: 10_000 });
+      const removeConfirmLabels = MODEL_COPY.remove.map((copy) => `${copy} ${route}`);
+      await ui.waitUntil(`() => [...document.querySelectorAll('button')].some((element) =>
+        ${JSON.stringify(removeConfirmLabels)}.includes(element.textContent?.trim()))`, {
+        timeout: 10_000,
+        label: "DSH 提供方删除确认可用",
+      });
+      await driver.raw.ev(`
+        const button = [...document.querySelectorAll('button')].find((element) =>
+          ${JSON.stringify(removeConfirmLabels)}.includes(element.textContent?.trim()));
+        button?.click();
+      `);
       await ui.waitUntil(`async () => ![...document.querySelectorAll('li')]
         .some((element) => element.textContent?.includes(${JSON.stringify(route)}))`, {
         timeout: 20_000,

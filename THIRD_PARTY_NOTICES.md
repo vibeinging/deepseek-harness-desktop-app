@@ -1,6 +1,6 @@
 # 第三方组件和分发说明
 
-本文件记录dsh-work正式安装包中的关键第三方代码和原生二进制。完整依赖版本以各目录的 `package-lock.json` 为准，具体许可证文本保存在对应 npm 包或仓库文件中。
+本文件记录 DeepSeek Harness Desktop App 正式安装包中的关键第三方代码和原生二进制。完整依赖版本以各目录的 `package-lock.json` 为准，具体许可证文本保存在对应 npm 包或仓库文件中。
 
 | 组件 | 当前版本 | 许可证 | 分发说明 |
 | --- | --- | --- | --- |
@@ -24,7 +24,7 @@
 1. `server/package-lock.json` 固定来源版本和包校验值；
 2. 安装包包含 `legal/openai-agent-runtime-LICENSE.txt`；
 3. 当前 npm 分发包没有附带独立 NOTICE 文件；升级版本时必须重新检查；
-4. dsh-work没有获得 OpenAI 商标授权，不得把产品宣传成 OpenAI 官方产品；
+4. DeepSeek Harness Desktop App 没有获得 OpenAI 商标授权，不得把产品宣传成 OpenAI 官方产品；
 5. 如果以后修改上游源码，必须记录修改文件并保留明显的修改说明。
 
 ## VexDB Lite

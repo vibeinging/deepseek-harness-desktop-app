@@ -59,11 +59,11 @@ export const constantRoutes: AppRoute[] = [
         name: 'AgentWorkspace',
         view: 'views/agent/AgentWorkspaceRoute',
         hidden: true,
-        meta: { title: 'dsh-work', requireProject: false }
+        meta: { title: 'DeepSeek Harness Desktop App', requireProject: false }
       }
     ]
   },
-  // Default redirect to the main dsh-work workspace.
+  // Default redirect to the main product workspace.
   { index: true, redirectTo: '/agent', hidden: true, meta: { requireProject: false } }
 ]
 

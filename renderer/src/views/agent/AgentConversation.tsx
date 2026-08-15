@@ -506,7 +506,7 @@ function DshWorkAgentConversation({
   showThinking = true,
   showTodo = true,
   interactionMode = 'steer',
-  workspaceName = 'dsh-work',
+  workspaceName = 'DeepSeek Harness Desktop App',
   conversationTitle = '新对话',
   shellHeader = false,
   shellHeaderActionsTarget = null,

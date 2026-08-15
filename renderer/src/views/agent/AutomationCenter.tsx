@@ -712,7 +712,7 @@ export default function AutomationCenter({ projects, initialProjectId, requested
       <header className={styles.pageHeader}>
         <div>
           <Text component="h1" className={styles.title}>定时任务</Text>
-          <Text size="sm" c="dimmed">让 dsh-work 在本机按计划工作，或者只在结果变化时提醒你。</Text>
+          <Text size="sm" c="dimmed">让 DeepSeek Harness Desktop App 在本机按计划工作，或者只在结果变化时提醒你。</Text>
         </div>
         <Group gap={6}>
           {unreadCount > 0 && <Button variant="subtle" size="compact-xs" onClick={() => void markAllRead()}>全部已读</Button>}

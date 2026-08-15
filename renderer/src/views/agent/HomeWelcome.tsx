@@ -99,7 +99,7 @@ export default function HomeWelcome({ prompt, subtitle, composer, showCharacter 
           {showCharacter && (
             <>
               <div className={styles.speechBubble} data-greeting-period={greeting.period}>
-                <span className={styles.speaker}>dsh-work</span>
+                <span className={styles.speaker}>DeepSeek Harness Desktop App</span>
                 <h1 className={styles.title}>{greeting.title}</h1>
                 <p className={styles.subtitle}>{greeting.subtitle}</p>
               </div>

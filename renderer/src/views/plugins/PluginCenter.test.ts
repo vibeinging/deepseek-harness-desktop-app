@@ -16,7 +16,7 @@ describe('DSH Profile Bundle community plugin flow', () => {
 
   it('explains Profile, SDK and product-surface boundaries without exposing a second UI', () => {
     expect(source).toContain('需要补齐 dsh.bundle.patch、当前 dsh.client / ./client 清单和正式 SDK 版本后再安装')
-    expect(source).toContain('dsh-work 不会改为链接 DSH 源码')
+    expect(source).toContain('DeepSeek Harness Desktop App 不会改为链接 DSH 源码')
     expect(source).toContain('这个 Bundle 会进入当前主窗口的 DSH Client 图')
     expect(source).toContain('设置页、全局浮层和侧栏底部加法位置使用标准 Slot')
     expect(source).toContain('data-dsh-client-surface-status')

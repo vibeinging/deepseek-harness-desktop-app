@@ -334,7 +334,7 @@ export default function BrowserWorkspace({ active = true, onUsePage }: BrowserWo
       <section className={styles.unsupported} data-browser-workspace>
         <IconWorld size={28} stroke={1.5} />
         <h2>本地浏览器仅在桌面应用中可用</h2>
-        <p>请在 dsh-work 桌面应用中打开此页。</p>
+        <p>请在 DeepSeek Harness Desktop App 中打开此页。</p>
       </section>
     )
   }
