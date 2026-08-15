@@ -27,8 +27,8 @@ const isDev = !app.isPackaged;
 const APP_ROOT = isDev ? path.join(__dirname, '..') : process.resourcesPath;
 const SERVER_DIR = path.join(APP_ROOT, 'server');
 const APP_ICON = path.join(__dirname, 'icons', 'icon.png'); // application icon
-const APP_DISPLAY_NAME = 'dsh-work';
-const LEGACY_DEFAULT_APP_NAMES = new Set(['DeepSeek Harness']);
+const APP_DISPLAY_NAME = 'DeepSeek Harness Desktop App';
+const LEGACY_DEFAULT_APP_NAMES = new Set(['DeepSeek Harness', 'dsh-work']);
 const USER_DATA_DIR_NAME = 'dsh-electron';
 const LOCAL_FILE_SCHEME = 'dsh-file';
 // 用户本地底图资源协议：dsh-skin-asset://<filename> 映射到 userData/bg-images/<filename>。

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-work-shell",
-  "description": "dsh-work root Client Plugin for the current DSH Web Profile",
+  "description": "DeepSeek Harness Desktop App root Client Plugin for the current DSH Web Profile",
   "version": "0.0.1",
   "private": true,
   "type": "module",

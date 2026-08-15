@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "interface": {
-    "display_name": "dsh-work 产品桥接",
+    "display_name": "DeepSeek Harness Desktop App 产品桥接",
     "description": "把项目、对话、Canvas、Site、Office 产物和结构化界面能力接入当前 DSH Web Profile。",
-    "developer_name": "dsh-work",
+    "developer_name": "DeepSeek Harness Desktop App",
     "category": "产品能力",
     "capabilities": [
       "项目与对话读取",

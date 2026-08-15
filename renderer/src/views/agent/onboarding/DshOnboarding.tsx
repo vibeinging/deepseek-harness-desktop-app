@@ -30,14 +30,14 @@ const STEPS = [
   {
     id: 'welcome',
     label: '欢迎',
-    title: '欢迎使用 dsh-work',
+    title: '欢迎使用 DeepSeek Harness Desktop App',
     summary: '在本机聊天、处理文件、查看图片，并在需要时联网核对信息。'
   },
   {
     id: 'model',
     label: '模型',
     title: '先配置一个主模型',
-    summary: 'dsh-work 使用你在本机设置的模型，不依赖云端账户或订阅。'
+    summary: 'DeepSeek Harness Desktop App 使用你在本机设置的模型，不依赖云端账户或订阅。'
   },
   {
     id: 'projects',
@@ -106,7 +106,7 @@ export default function DshOnboarding({
       <section className={styles.panel}>
         <header className={styles.header}>
           <div>
-            <span className={styles.kicker}>dsh-work 初始引导</span>
+            <span className={styles.kicker}>DeepSeek Harness Desktop App 初始引导</span>
             <h2 id="dsh-onboarding-title">{step.title}</h2>
             <p>{step.summary}</p>
           </div>
@@ -176,7 +176,7 @@ export default function DshOnboarding({
               </button>
             )}
             <button type="button" className={styles.primary} onClick={next}>
-              {active === STEPS.length - 1 ? '进入 dsh-work' : '下一步'}
+              {active === STEPS.length - 1 ? '进入 DeepSeek Harness Desktop App' : '下一步'}
               {active < STEPS.length - 1 && <IconArrowRight size={15} />}
             </button>
           </div>

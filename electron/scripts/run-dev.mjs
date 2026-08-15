@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
 const ELECTRON_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const PRODUCT_NAME = 'dsh-work'
+const PRODUCT_NAME = 'DeepSeek Harness Desktop App'
 const DEV_APP_ID = 'ai.deepseek.dsh.dev'
 const CACHE_REVISION = '1'
 

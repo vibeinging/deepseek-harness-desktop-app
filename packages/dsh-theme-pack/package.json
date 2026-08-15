@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-theme-pack",
-  "description": "Profile-owned dsh-work themes",
+  "description": "Profile-owned DeepSeek Harness Desktop App themes",
   "version": "0.0.1",
   "private": true,
   "type": "module",

@@ -4,7 +4,7 @@ const messages = {
     Chat: '最近对话',
     History: '对话历史',
     DatabaseChat: '数据库配置',
-    home: 'dsh-work',
+    home: 'DeepSeek Harness Desktop App',
     selectProject: '选择项目',
     joinProject: '加入项目',
     sharedSession: '分享的对话',
@@ -334,7 +334,7 @@ const messages = {
   },
   sidebar: {
     logo: {
-      title: 'dsh-work'
+      title: 'DeepSeek Harness Desktop App'
     },
     tooltip: {
       collapse: '收起侧边栏',
@@ -793,7 +793,7 @@ const messages = {
       inputField: '单条接口的输入字段名，通常为 input',
       modality: '文本向量用于文本检索；多模态向量可统一表示文本、图片等内容。',
       contextWindow: '模型可接收的最大上下文 token 数，用于自动压缩与历史窗口裁剪',
-      agentApiFormat: '主模型支持 Responses；Chat Completions 会由dsh-work在本机完成协议适配。',
+      agentApiFormat: '主模型支持 Responses；Chat Completions 会由 DeepSeek Harness Desktop App 在本机完成协议适配。',
       auxiliaryApiFormat: '辅助模型不进入 主 Agent 循环，可按实际服务选择接口格式。',
       chatExtraBody: '仅用于 Chat Completions 本机适配层；Responses 主模型不支持任意请求体注入。',
       agentRuntime: '请按模型实际能力选择；自动压缩阈值必须小于上下文长度。',
@@ -2269,8 +2269,8 @@ const messages = {
       dialogTitle: '数据使用协议',
       confirm: '我已了解',
       content: {
-        title: 'dsh-work 数据使用协议',
-        intro: '欢迎使用 dsh-work。在使用本应用前，请您仔细阅读并了解本协议的全部内容。使用本应用即表示您同意接受本协议的约束。',
+        title: 'DeepSeek Harness Desktop App 数据使用协议',
+        intro: '欢迎使用 DeepSeek Harness Desktop App。在使用本应用前，请您仔细阅读并了解本协议的全部内容。使用本应用即表示您同意接受本协议的约束。',
         collection: {
           title: '数据收集',
           desc: '为了提供更好的服务，我们会收集以下信息：',
@@ -2339,10 +2339,10 @@ const messages = {
     loading: '正在加载分享内容…',
     invalidTitle: '链接已失效',
     invalidDesc: '该分享链接不存在或已被取消分享。',
-    goHome: '前往 dsh-work',
+    goHome: '前往 DeepSeek Harness Desktop App',
     readonlyNote: '这是一次对话的只读分享，无法再次提问。',
     ctaText: '想用自己的数据这样对话？',
-    ctaButton: '体验 dsh-work'
+    ctaButton: '体验 DeepSeek Harness Desktop App'
   },
   session: {
     newConversation: '新对话',
@@ -4493,7 +4493,7 @@ const messages = {
       folderDuplicate: '这个文件夹已经关联到项目。',
       folderOverlap: '所选文件夹与已关联文件夹范围重叠，请只保留其中一个。',
       writeTarget: '写入位置',
-      writeTargetHint: 'dsh-work 只会在这个文件夹中新增或修改文件，其他关联文件夹只读。',
+      writeTargetHint: 'DeepSeek Harness Desktop App 只会在这个文件夹中新增或修改文件，其他关联文件夹只读。',
       writeTargetUnavailable: '这个文件夹当前不可用，请选择另一个可用文件夹作为写入位置。',
       available: '可用',
       unavailable: '不可用',
@@ -4551,7 +4551,7 @@ const messages = {
     },
     instructions: {
       title: '项目指令',
-      description: '设置dsh-work在这个项目中的长期工作方式。保存后，项目里的每次对话都会使用这些指令。',
+      description: '设置 DeepSeek Harness Desktop App 在这个项目中的长期工作方式。保存后，项目里的每次对话都会使用这些指令。',
       fieldLabel: '指令内容',
       fieldDescription: '适合填写回答语言、表达方式、工作习惯和长期约定。项目专用要求请写在项目指令中。',
       placeholder: '例如：\n- 默认使用中文，先给结论再说明依据\n- 修改文件前先说明影响范围\n- 生成报告时保持正式、简洁的表达',

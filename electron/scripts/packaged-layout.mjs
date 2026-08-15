@@ -10,7 +10,7 @@ function isDirectory(path) {
 }
 
 function windowsExecutable(dir) {
-  const preferred = join(dir, 'dsh-work.exe');
+  const preferred = join(dir, 'DeepSeek Harness Desktop App.exe');
   if (existsSync(preferred)) return preferred;
   const candidates = readdirSync(dir)
     .filter((name) => extname(name).toLowerCase() === '.exe')

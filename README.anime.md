@@ -1,4 +1,4 @@
-# dsh-work 二次元版
+# DeepSeek Harness Desktop App 二次元版
 
 [返回正式 README](README.md) | [English](README.en.md)
 
@@ -6,9 +6,9 @@
 >
 > 让 Plugin 组队，让每一个好点子真正落地。
 
-dsh-work 是一个披着二次元外衣、认真把任务做完的本地 AI 工作桌面。看板娘负责陪你继续前进，DSH Session 负责保存消息、计划、工具、队列和运行轨迹。
+DeepSeek Harness Desktop App 是一个披着二次元外衣、认真把任务做完的本地 AI 工作桌面。看板娘负责陪你继续前进，DSH Session 负责保存消息、计划、工具、队列和运行轨迹。
 
-![dsh-work 二次元首页](docs/images/readme/dsh-work-home.png)
+![DeepSeek Harness Desktop App 二次元首页](docs/images/readme/dsh-work-home.png)
 
 ## 两套主题，两种工作状态
 

@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-product-bridge",
-  "description": "Session-scoped dsh-work product capabilities for the current DSH Web profile",
+  "description": "Session-scoped DeepSeek Harness Desktop App capabilities for the current DSH Web profile",
   "version": "0.0.1",
   "private": true,
   "type": "module",

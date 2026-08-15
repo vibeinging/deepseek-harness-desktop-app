@@ -66,7 +66,7 @@ export async function dshPromptContent(input, { fallbackText = "" } = {}) {
         || !Number.isSafeInteger(expectedSize)
         || expectedSize <= 0
         || !/^[a-f0-9]{64}$/.test(expectedSha256)) {
-        throw inputError("图片必须先通过 dsh-work 本地文件校验", "DSH_IMAGE_INPUT_INVALID");
+        throw inputError("图片必须先通过 DeepSeek Harness Desktop App 本地文件校验", "DSH_IMAGE_INPUT_INVALID");
       }
       const data = await readFile(path);
       const actualSha256 = createHash("sha256").update(data).digest("hex");

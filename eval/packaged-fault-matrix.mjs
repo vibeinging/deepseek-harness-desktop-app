@@ -7,7 +7,7 @@ import path from 'node:path';
 import { openSession } from './lib/cdp.mjs';
 import { makeDriver } from './lib/driver.mjs';
 
-const appPath = path.resolve(process.argv[2] || 'release/mac-arm64/dsh-work.app');
+const appPath = path.resolve(process.argv[2] || 'release/mac-arm64/DeepSeek Harness Desktop App.app');
 const root = mkdtempSync(path.join(tmpdir(), 'dsh-packaged-faults-'));
 const resultsDir = path.resolve(process.env.EVAL_REPORT_DIR || 'eval/results');
 const runId = new Date().toISOString().replace(/[:.]/g, '-');

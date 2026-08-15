@@ -155,7 +155,7 @@ function asBgImage(value, field) {
   if (value === undefined || value === null) return undefined;
   const image = asString(value, field, 64);
   if (!ALLOWED_BG_PRESETS.has(image)) {
-    throw themeError(`${field} 只能使用 dsh-work 内置背景预设`, "DSH_PROFILE_THEME_BG_IMAGE_FORBIDDEN");
+    throw themeError(`${field} 只能使用 DeepSeek Harness Desktop App 内置背景预设`, "DSH_PROFILE_THEME_BG_IMAGE_FORBIDDEN");
   }
   return image;
 }

@@ -49,23 +49,23 @@ beforeEach(() => {
 })
 
 describe('brand name layers', () => {
-  it('migrates the former default name to dsh-work and rewrites the disk value', async () => {
+  it('migrates the former default name to the current product name and rewrites the disk value', async () => {
     ;(window as any).electronAPI.loadBrand = vi.fn(async () => ({
       status: 'valid',
       value: {
         schema_version: 1,
         revision: 4,
         updated_at: 40,
-        name: 'DeepSeek Harness'
+        name: 'dsh-work'
       }
     }))
 
     await useBrandStore.getState().loadFromDisk()
 
-    expect(useBrandStore.getState().name).toBe('dsh-work')
+    expect(useBrandStore.getState().name).toBe('DeepSeek Harness Desktop App')
     expect(useBrandStore.getState().revision).toBe(5)
     expect((window as any).electronAPI.saveBrand).toHaveBeenLastCalledWith(expect.objectContaining({
-      name: 'dsh-work',
+      name: 'DeepSeek Harness Desktop App',
       revision: 5
     }))
   })

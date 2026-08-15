@@ -153,7 +153,7 @@ export default function Share() {
         const session = res.data.session || {}
         setSessionMeta(session)
         setMessages(parseHistoryMessages(res.data.messages))
-        document.title = `${session.title || t('share.readonlyBadge')} · dsh-work`
+        document.title = `${session.title || t('share.readonlyBadge')} · DeepSeek Harness Desktop App`
       } catch (e) {
         // Link may be invalid/revoked/not found.
         setInvalid(true)
@@ -188,8 +188,8 @@ export default function Share() {
         <header className={styles.shareHeader}>
           <div className={styles.shareHeaderInner}>
             <div className={styles.shareBrand}>
-              <DshLogo title="dsh-work" />
-              <span className={styles.shareLogo}>dsh-work</span>
+              <DshLogo title="DeepSeek Harness Desktop App" />
+              <span className={styles.shareLogo}>DeepSeek Harness Desktop App</span>
               <span className={styles.shareBadge}>{t('share.readonlyBadge')}</span>
             </div>
             {loaded && !invalid && (

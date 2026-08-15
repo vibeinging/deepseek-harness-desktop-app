@@ -1,14 +1,14 @@
-# dsh-work
+# DeepSeek Harness Desktop App
 
 [中文](README.md) | English
 
 > [View the anime README variant](README.anime.md)
 
-dsh-work is a local AI work desktop built on DeepSeek Harness (DSH). It brings DSH Sessions, Agents, Tools, Skills, MCP, and Profile Bundles together with projects, files, web pages, Git Worktrees, Canvas, Sites, and Office artifacts in one desktop application.
+DeepSeek Harness Desktop App is a local AI work desktop built on DeepSeek Harness (DSH). It brings DSH Sessions, Agents, Tools, Skills, MCP, and Profile Bundles together with projects, files, web pages, Git Worktrees, Canvas, Sites, and Office artifacts in one desktop application.
 
 | Professional blue, light | Professional blue, dark |
 | --- | --- |
-| ![dsh-work professional-blue light home](docs/images/readme/dsh-work-home-professional-light.png) | ![dsh-work professional-blue dark home](docs/images/readme/dsh-work-home-professional-dark.png) |
+| ![DeepSeek Harness Desktop App professional-blue light home](docs/images/readme/dsh-work-home-professional-light.png) | ![DeepSeek Harness Desktop App professional-blue dark home](docs/images/readme/dsh-work-home-professional-dark.png) |
 
 ## Quick start
 
@@ -53,15 +53,15 @@ The right-side Results and evidence view reads the bound DSH Session's `session.
 
 One project conversation maps to one DSH Session. The right-side workbench can show Results and evidence, browser, files, artifacts, and Sites. The project file tree, Agent working directory, current Diff, and line editing follow the current project permissions and active Worktree.
 
-![dsh-work project conversation](docs/images/readme/dsh-work-project-session.png)
+![DeepSeek Harness Desktop App project conversation](docs/images/readme/dsh-work-project-session.png)
 
-![dsh-work files panel](docs/images/readme/dsh-work-files.png)
+![DeepSeek Harness Desktop App files panel](docs/images/readme/dsh-work-files.png)
 
 Canvas keeps immutable versions and supports content editing, version comparison, exact inline suggestions, and conflict handling. Sites use the same version model and provide desktop, tablet, and mobile previews in an isolated sandbox.
 
-![dsh-work Canvas versions and conflict handling](docs/images/readme/dsh-work-canvas.png)
+![DeepSeek Harness Desktop App Canvas versions and conflict handling](docs/images/readme/dsh-work-canvas.png)
 
-![dsh-work local Site responsive preview](docs/images/readme/dsh-work-site.png)
+![DeepSeek Harness Desktop App local Site responsive preview](docs/images/readme/dsh-work-site.png)
 
 ## Isolated development with Git Worktrees
 
@@ -73,7 +73,7 @@ Project settings provide a complete Worktree workflow:
 4. Switch back to the main checkout before removal. Removing the working directory keeps its Git branch to avoid deleting commits.
 5. Non-Git directories, duplicate branches, out-of-scope paths, and unsafe symlinks are rejected; missing Worktrees are marked unavailable.
 
-![Complete dsh-work Git Worktree workflow](docs/images/readme/dsh-work-worktree.gif)
+![Complete DeepSeek Harness Desktop App Git Worktree workflow](docs/images/readme/dsh-work-worktree.gif)
 
 ## Themes and appearance
 
@@ -97,9 +97,9 @@ Host Bundles that provide Tools, Skills, MCP servers, or Hooks can enter the DSH
 
 ## Relationship with the official DSH Web
 
-dsh-work is not an iframe around the official DSH Web and does not copy the Agent runtime. Electron starts the official DSH Web Profile and continues to use its Sessions, Agents, Tools, Skills, MCP, Settings, Profile Bundles, and Client Loader. dsh-work provides its desktop shell on the same runtime path and adds project management, file authorization, Browser Workspace, Git Worktrees, Canvas, Sites, and Office artifacts.
+DeepSeek Harness Desktop App is not an iframe around DSH Web and does not copy the Agent runtime. Electron starts the DSH Web Profile and continues to use its Sessions, Agents, Tools, Skills, MCP, Settings, Profile Bundles, and Client Loader. DeepSeek Harness Desktop App provides its desktop shell on the same runtime path and adds project management, file authorization, Browser Workspace, Git Worktrees, Canvas, Sites, and Office artifacts.
 
-Product capabilities needed by the model enter through the bound Session and DSH Tools. dsh-work continues to own project data, file permissions, browser state, Worktrees, and artifact versions.
+Product capabilities needed by the model enter through the bound Session and DSH Tools. DeepSeek Harness Desktop App continues to own project data, file permissions, browser state, Worktrees, and artifact versions.
 
 ## Current boundaries
 

@@ -96,12 +96,12 @@ export function validateDshWorkProductDescriptor(descriptor, {
     }
     if (!allowHostComponents) {
       throw profileError(
-        `${packageName} 不能请求 dsh-work 宿主组件；社区页面贡献必须使用尚未开放的沙箱类型`,
+        `${packageName} 不能请求 DeepSeek Harness Desktop App 宿主组件；社区页面贡献必须使用尚未开放的沙箱类型`,
         "DSH_PRODUCT_HOST_COMPONENT_FORBIDDEN",
       );
     }
     if (DSH_WORK_HOST_COMPONENTS.get(contribution.id) !== contribution.component) {
-      throw profileError(`${packageName} 请求了未知的 dsh-work 宿主组件：${contribution.component}`, "DSH_PRODUCT_DESCRIPTOR_INVALID");
+      throw profileError(`${packageName} 请求了未知的 DeepSeek Harness Desktop App 宿主组件：${contribution.component}`, "DSH_PRODUCT_DESCRIPTOR_INVALID");
     }
     if (!DSH_WORK_HOST_ICONS.has(contribution.icon)) {
       throw profileError(`${packageName} 请求了未知的工作台图标：${contribution.icon}`, "DSH_PRODUCT_DESCRIPTOR_INVALID");
@@ -135,7 +135,7 @@ function productInterface(manifest, descriptor) {
 
 function sourceView(packageName, spec, packageDir, managed) {
   if (managed === "app" || managed === "system") {
-    return { type: managed, path: packageDir, label: managed === "app" ? "随 dsh-work 提供" : "DSH 内置" };
+    return { type: managed, path: packageDir, label: managed === "app" ? "随 DeepSeek Harness Desktop App 提供" : "DSH 内置" };
   }
   if (/^(?:github:|git\+|https?:.*\.git)/i.test(spec)) return { type: "git", spec, label: "Git 固定版本" };
   if (/^(?:file:|link:|\/|[A-Za-z]:[\\/])/.test(spec)) return { type: "local", path: packageDir, spec, label: "本地 Bundle" };
@@ -340,7 +340,7 @@ async function defaultCommandRunner(resolved, args, env) {
     }
     if (/ignored build scripts|blocked build scripts|approve-builds/i.test(stdout)) {
       throw profileError(
-        "候选插件需要在安装时执行仓库构建脚本；dsh-work 不会自动授予这项主机代码执行权限",
+        "候选插件需要在安装时执行仓库构建脚本；DeepSeek Harness Desktop App 不会自动授予这项主机代码执行权限",
         "DSH_PROFILE_BUILD_APPROVAL_REQUIRED",
         { exit_code: error?.code ?? null, command_output: output },
       );
@@ -852,7 +852,7 @@ export class DshProfilePluginService {
     const plugin = state.plugins.find((item) => item.id === packageName);
     if (!plugin) throw profileError(`Profile Bundle 不存在：${packageName}`, "PLUGIN_NOT_FOUND");
     if (plugin.managed_by !== "user" || !Object.hasOwn(state.manifest.dependencies || {}, packageName)) {
-      throw profileError(`由 ${plugin.managed_by === "app" ? "dsh-work" : "DSH"} 提供的 Bundle 不能卸载`, "PLUGIN_UNINSTALL_NOT_ALLOWED");
+      throw profileError(`由 ${plugin.managed_by === "app" ? "DeepSeek Harness Desktop App" : "DSH"} 提供的 Bundle 不能卸载`, "PLUGIN_UNINSTALL_NOT_ALLOWED");
     }
     await this.run(state.resolved, state.dshHome, ["plugin", "--profile", PROFILE_NAME, "remove", packageName]);
     await this.restartRuntime();

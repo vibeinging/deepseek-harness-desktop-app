@@ -88,7 +88,7 @@ function npmDistribution(appRoot, env) {
       manifestPath = require.resolve("@deepseek-ai/dsh/package.json");
     } catch {
       throw runtimeError(
-        "没有找到 @deepseek-ai/dsh；请在 dsh-work Server 中安装固定版本的公开 npm 包",
+        "没有找到 @deepseek-ai/dsh；请在 DeepSeek Harness Desktop App Server 中安装固定版本的公开 npm 包",
         "DSH_NPM_PACKAGE_MISSING",
       );
     }

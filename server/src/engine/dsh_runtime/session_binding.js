@@ -41,7 +41,7 @@ export async function saveDshSessionBinding(db, binding) {
     "SELECT project_id,created_by,session_config FROM sessions WHERE id=$1 AND deleted_at IS NULL LIMIT 1",
     [appSessionId],
   );
-  if (!row) throw new Error(`dsh-work 会话不存在：${appSessionId}`);
+  if (!row) throw new Error(`DeepSeek Harness Desktop App 会话不存在：${appSessionId}`);
   const config = {
     ...parseConfig(row.session_config),
     runtime_backend: "dsh",

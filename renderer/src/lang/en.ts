@@ -4,7 +4,7 @@ const messages = {
     Chat: 'Start Query',
     History: 'Chat History',
     DatabaseChat: 'Database Configuration',
-    home: 'dsh-work',
+    home: 'DeepSeek Harness Desktop App',
     selectProject: 'Select Project',
     joinProject: 'Join Project',
     sharedSession: 'Shared Conversation',
@@ -116,10 +116,10 @@ const messages = {
     breadcrumb: {
       dashboard: 'Dashboard'
     },
-    title: 'dsh-work',
+    title: 'DeepSeek Harness Desktop App',
     sidebar: {
       logo: {
-        title: 'dsh-work'
+        title: 'DeepSeek Harness Desktop App'
       },
       tooltip: {
         collapse: 'Collapse Sidebar',
@@ -337,7 +337,7 @@ const messages = {
   },
   sidebar: {
     logo: {
-      title: 'dsh-work'
+      title: 'DeepSeek Harness Desktop App'
     },
     tooltip: {
       collapse: 'Collapse Sidebar',
@@ -2275,8 +2275,8 @@ const messages = {
       dialogTitle: 'Data Usage Agreement',
       confirm: 'I Understand',
       content: {
-        title: 'dsh-work Data Usage Agreement',
-        intro: 'Welcome to dsh-work. Before using this application, please carefully read and understand the entire contents of this agreement. Using this application indicates your acceptance of the terms of this agreement.',
+        title: 'DeepSeek Harness Desktop App Data Usage Agreement',
+        intro: 'Welcome to DeepSeek Harness Desktop App. Before using this application, please carefully read and understand the entire contents of this agreement. Using this application indicates your acceptance of the terms of this agreement.',
         collection: {
           title: 'Data Collection',
           desc: 'To provide better services, we collect the following information:',
@@ -2345,10 +2345,10 @@ const messages = {
     loading: 'Loading shared content…',
     invalidTitle: 'Link expired',
     invalidDesc: 'This share link does not exist or has been revoked.',
-    goHome: 'Go to dsh-work',
+    goHome: 'Go to DeepSeek Harness Desktop App',
     readonlyNote: 'This is a read-only shared conversation. New questions are not allowed.',
     ctaText: 'Want to chat with your own data like this?',
-    ctaButton: 'Try dsh-work'
+    ctaButton: 'Try DeepSeek Harness Desktop App'
   },
   session: {
     newConversation: 'New Conversation',
@@ -4502,7 +4502,7 @@ const messages = {
       folderDuplicate: 'This folder is already linked to the project.',
       folderOverlap: 'This folder overlaps a linked folder. Keep only one of them.',
       writeTarget: 'Write location',
-      writeTargetHint: 'dsh-work can create or change files only in this folder. Other linked folders are read-only.',
+      writeTargetHint: 'DeepSeek Harness Desktop App can create or change files only in this folder. Other linked folders are read-only.',
       writeTargetUnavailable: 'This folder is unavailable. Choose another available folder as the write location.',
       available: 'Available',
       unavailable: 'Unavailable',
@@ -4560,7 +4560,7 @@ const messages = {
     },
     instructions: {
       title: 'Project Instructions',
-      description: 'Set persistent guidance for how dsh-work should work in this project. Every project conversation uses it after you save.',
+      description: 'Set persistent guidance for how DeepSeek Harness Desktop App should work in this project. Every project conversation uses it after you save.',
       fieldLabel: 'Instructions',
       fieldDescription: 'Use this for language, response style, work habits, and lasting conventions. Keep project-specific rules in project instructions.',
       placeholder: 'For example:\n- Reply in English and lead with the conclusion\n- Explain the impact before changing files\n- Keep generated reports formal and concise',

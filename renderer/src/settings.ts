@@ -30,7 +30,7 @@ export function featureEnabled(value: unknown, defaultValue = true): boolean {
 }
 
 export const settings: AppSettings = {
-  title: 'dsh-work',
+  title: 'DeepSeek Harness Desktop App',
   sidebarLogo: true,
   showNavbarTitle: false,
   ShowDropDown: true,

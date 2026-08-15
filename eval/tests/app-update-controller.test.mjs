@@ -179,7 +179,7 @@ test('desktop updater restores cached release notes without trusting them as an 
 })
 
 
-test('desktop updater stays disabled until dsh-work has an explicit HTTPS update source', () => {
+test('desktop updater stays disabled until the app has an explicit HTTPS update source', () => {
   const userDataPath = mkdtempSync(join(tmpdir(), 'dsh-updater-disabled-'))
   const controller = new AppUpdateController({
     app: { getVersion: () => '1.0.0' },

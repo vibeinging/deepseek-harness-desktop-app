@@ -64,13 +64,13 @@ export default function AppInstructions() {
     <div className={styles.page} data-app-instructions>
       <h1>全局指令</h1>
       <p className={styles.lead}>
-        设置 dsh-work 在所有普通聊天和项目中的通用回答偏好。保存后从下一轮消息开始生效。
+        设置 DeepSeek Harness Desktop App 在所有普通聊天和项目中的通用回答偏好。保存后从下一轮消息开始生效。
       </p>
 
       <section className={styles.card}>
         <div className={styles.headingRow}>
           <div>
-            <h2>给 dsh-work 的指令</h2>
+            <h2>给 DeepSeek Harness Desktop App 的指令</h2>
             <p>例如常用语言、回答风格、代码习惯或希望一直遵守的工作方式。</p>
           </div>
           <span>{instructions.length.toLocaleString()} / {maxLength.toLocaleString()}</span>

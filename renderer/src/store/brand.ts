@@ -3,8 +3,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import i18n, { langTitle, setAppNameProvider } from '@/lang'
 
-export const DEFAULT_APP_NAME = 'dsh-work'
-const LEGACY_DEFAULT_APP_NAMES = new Set(['DeepSeek Harness'])
+export const DEFAULT_APP_NAME = 'DeepSeek Harness Desktop App'
+const LEGACY_DEFAULT_APP_NAMES = new Set(['DeepSeek Harness', 'dsh-work'])
 const SETTINGS_SCHEMA_VERSION = 1
 const STORE_SCHEMA_VERSION = 2
 const DISK_KEY = 'brand'
