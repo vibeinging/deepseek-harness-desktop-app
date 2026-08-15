@@ -47,6 +47,11 @@ jobs:
             server/package-lock.json
             electron/package-lock.json
 
+      - name: Use pnpm 11.7.0
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
       - name: Install
         run: npm ci --no-audit --no-fund
         env:

@@ -440,7 +440,7 @@ test("Agent dynamic tool bridge puts deferred tools in a namespace", () => {
   assert.deepEqual(bridge.specs, [{
     type: "namespace",
     name: "dsh",
-    description: "dsh-work项目数据与工作流工具",
+    description: "DeepSeek Harness Desktop App项目数据与工作流工具",
     tools: [{
       type: "function",
       name: "update_plan",

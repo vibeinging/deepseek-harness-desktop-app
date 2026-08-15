@@ -37,7 +37,9 @@ const ONE_PIXEL_PNG = Buffer.from(
   "base64",
 );
 
-test("DSH runtime locator keeps source and npm distributions behind one seat", () => {
+test("DSH runtime locator keeps source and npm distributions behind one seat", {
+  skip: DSH_RUNTIME_VERSION ? false : `missing DSH source checkout: ${DSH_SOURCE_ROOT}`,
+}, () => {
   assert.equal(resolveDshRuntimeDistribution({ env: {} }), null);
   const source = resolveDshRuntimeDistribution({
     env: { DSH_RUNTIME_DISTRIBUTION: "source", DSH_SOURCE_ROOT },
@@ -228,11 +230,11 @@ test("DSH runtime opens current mux and host WebSockets before reporting ready",
   child.disconnect = () => { child.connected = false; };
   child.kill = () => {};
   const client = new DshRuntimeClient({
-    env: { DSH_RUNTIME_DISTRIBUTION: "source", DSH_SOURCE_ROOT },
+    env: { DSH_RUNTIME_DISTRIBUTION: "npm" },
     spawn: () => {
       queueMicrotask(() => {
         child.emit("message", { type: "client-ready", url: "http://127.0.0.1:3080/" });
-        child.emit("message", { type: "ready", distribution: "source", version: DSH_RUNTIME_VERSION });
+        child.emit("message", { type: "ready", distribution: "npm", version: DSH_NPM_VERSION });
       });
       return child;
     },
