@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const read = (relative: string) => readFileSync(fileURLToPath(new URL(relative, import.meta.url)), 'utf8')
+  .replace(/\r\n/g, '\n')
 
 describe('dsh-work Client shell contract', () => {
   it('owns the standard settings child Slots and renders them inside the existing settings page', () => {

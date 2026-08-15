@@ -72,7 +72,7 @@ describe('assistant process detail presentation', () => {
     const source = readFileSync(
       fileURLToPath(new URL('./conversation/AssistantContent.tsx', import.meta.url)),
       'utf8'
-    )
+    ).replace(/\r\n/g, '\n')
     expect(source).toContain("if (b.type === 'evidence_validation')")
     expect(source).toContain('data-query-validation')
     expect(source).toContain('aria-controls={detailId}')
