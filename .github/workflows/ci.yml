@@ -65,8 +65,13 @@ jobs:
       - name: Audit production dependencies
         run: npm run audit:prod
 
-      - name: Test
+      - name: Test full desktop stack
+        if: runner.os == 'macOS'
         run: npm test
+
+      - name: Test Windows renderer
+        if: runner.os == 'Windows'
+        run: npm --prefix renderer run typecheck && npm --prefix renderer test
 
       - name: Run deterministic UI Eval
         if: runner.os == 'macOS'

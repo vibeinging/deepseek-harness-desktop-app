@@ -65,6 +65,11 @@ export default {
       await ui.clickText("模型设置", { selector: "button", exact: true, timeout: 10_000 });
       const settingsRoot = '[data-dsh-standard-settings-section="models"]';
       await ui.waitFor(settingsRoot, { timeout: 15_000 });
+      await ui.waitUntil(`() => document.querySelector(${JSON.stringify(settingsRoot)})
+        ?.textContent?.includes("填入各提供方的 API 密钥即可使用其模型。")`, {
+        timeout: 15_000,
+        label: "DSH Models 插槽加载完成",
+      });
       const settingsText = await ui.text(settingsRoot);
       assert.ok(settingsText.includes("填入各提供方的 API 密钥即可使用其模型。"), "模型页由 DSH Client 标准 Models 插槽展示", {
         criterion: "dsh.model-settings-authoritative",
