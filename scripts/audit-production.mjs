@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveNpmCli } from './project-runtime.mjs';
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const targets = ['server', 'renderer', 'electron'];
+const npmCli = resolveNpmCli(process.execPath);
 
 // React Router 7.18.1 only reports this issue for RSC server actions. This app
 // uses createHashRouter in an Electron renderer and has no RSC/SSR server.
@@ -46,7 +47,7 @@ function advisoryUrls(name, vulnerabilities, seen = new Set()) {
 let failed = false;
 
 for (const target of targets) {
-  const result = spawnSync(npmCommand, ['audit', '--omit=dev', '--json'], {
+  const result = spawnSync(process.execPath, [npmCli, 'audit', '--omit=dev', '--json'], {
     cwd: join(APP_DIR, target),
     encoding: 'utf8',
     shell: false,
@@ -54,9 +55,10 @@ for (const target of targets) {
 
   let report;
   try {
-    report = JSON.parse(result.stdout);
+    report = JSON.parse(String(result.stdout || '').replace(/^\uFEFF/, ''));
   } catch {
     console.error(`[audit] ${target}: 无法读取 npm audit 结果`);
+    if (result.error) console.error(result.error.message);
     if (result.stderr) console.error(result.stderr.trim());
     failed = true;
     continue;

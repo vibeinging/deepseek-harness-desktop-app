@@ -97,6 +97,7 @@
     "vitest": "^2.1.4"
   },
   "overrides": {
-    "dompurify": "$dompurify"
+    "dompurify": "$dompurify",
+    "js-yaml": "4.3.1"
   }
 }
